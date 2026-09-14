@@ -1,7 +1,7 @@
 // ============================================================
 // ISutra — Procurement Intelligence Dashboard
-// Professional Enterprise Workspace for Procurement Officers
-// Full-width responsive layout with Space Grotesk & Inter typography
+// Compact, enterprise-grade procurement intelligence workspace
+// Strictly fits within viewport with zero horizontal overflow
 // ============================================================
 
 import { useState } from 'react';
@@ -12,6 +12,13 @@ import {
   FileText,
   UploadCloud,
   AlertCircle,
+  Sparkles,
+  Layers,
+  Sliders,
+  BookOpen,
+  Compass,
+  FileArchive,
+  ClipboardList,
 } from 'lucide-react';
 import { useAnalysis } from '../hooks/useAnalysis';
 import type { InputType } from '../types';
@@ -21,22 +28,45 @@ const EXAMPLE_SPECS = [
   {
     title: 'Outdoor LED Street Lighting',
     type: 'product_description' as InputType,
-    text: 'Outdoor LED street lighting system, 100W, weather resistant, pole mounted.',
+    text: 'Outdoor LED street lighting system, 100W, weather resistant, pole mounted, IP65 enclosure, surge protection 10kV.',
   },
   {
-    title: 'Water Storage Tanks (500 units)',
+    title: 'Water Storage Tanks',
     type: 'product_description' as InputType,
-    text: 'Procure 500 stainless steel water storage tanks for a government facility.',
+    text: 'Procure 500 stainless steel water storage tanks for a municipal government facility, corrosion resistant Grade 304.',
   },
   {
     title: 'High-Temp Electrical Cables',
     type: 'technical_specification' as InputType,
-    text: 'Supply industrial electrical cables suitable for high temperature environments.',
+    text: 'Supply industrial electrical cables suitable for high temperature environments, 1.1kV grade XLPE insulated copper conductor.',
   },
   {
     title: 'Vague Input Test',
     type: 'product_description' as InputType,
     text: 'Need LED street lights.',
+  },
+];
+
+const INTELLIGENCE_POINTS = [
+  {
+    icon: Layers,
+    title: 'Product Category',
+    desc: 'Classifies item domain & BIS committee scope',
+  },
+  {
+    icon: Sliders,
+    title: 'Technical Requirements',
+    desc: 'Extracts parameters, ratings & operating limits',
+  },
+  {
+    icon: BookOpen,
+    title: 'Relevant BIS Standards',
+    desc: 'Maps applicable IS codes & mandatory clauses',
+  },
+  {
+    icon: Compass,
+    title: 'Matching Rationale',
+    desc: 'Scores confidence & clause-level alignment',
   },
 ];
 
@@ -59,19 +89,19 @@ export default function DashboardPage() {
   const [validationError, setValidationError] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
 
+
+
+
+
   const handleStartAnalysis = async () => {
-    // 1. Validation check
     if (!inputText || inputText.trim().length === 0) {
-      setValidationError('Please enter a procurement specification.');
+      setValidationError('Please enter a procurement specification before analyzing.');
       return;
     }
 
     setValidationError(null);
-
-    // 2. Call backend POST /api/analyze
     const result = await analyze();
 
-    // 3. Navigate to display extracted requirements
     if (result && result.analysis_id) {
       navigate(`/analysis/${result.analysis_id}/review`, {
         state: { analysis: result },
@@ -91,6 +121,7 @@ export default function DashboardPage() {
         size: file.size,
         status: 'uploaded',
       });
+      setValidationError(null);
     }
   };
 
@@ -104,12 +135,13 @@ export default function DashboardPage() {
         size: file.size,
         status: 'uploaded',
       });
+      setValidationError(null);
     }
   };
 
   const handleAnalyzeDocument = async () => {
     if (!uploadedFile) {
-      setValidationError('Please select or upload a document first.');
+      setValidationError('Please select or upload a tender document first.');
       return;
     }
     setValidationError(null);
@@ -129,69 +161,77 @@ export default function DashboardPage() {
     );
   }
 
-  const userEnteredCharCount = inputText.length;
+  const charCount = inputText.length;
 
   return (
-    <div className="w-full space-y-8 pb-12 animate-fade-in text-[#243B53]">
+    <div className="w-full max-w-full space-y-4 sm:space-y-5 pb-6 animate-fade-in box-border">
       {/* ============================================================
-          1. PAGE HEADING & SUBTITLE
-          Desktop: 36px / 16px | Tablet: 30-32px / 15px | Mobile: 26-28px / 14px
+          1. PAGE TITLE & VALUE PROPOSITION
+          Compact vertical footprint for first viewport visibility
          ============================================================ */}
-      <div className="space-y-1.5">
-        <h1 className="text-[26px] sm:text-[30px] xl:text-[36px] font-bold text-[#102A43] tracking-tight leading-[1.1] font-display">
+      <div className="space-y-1">
+        <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#0F766E]/8 border border-[#0F766E]/20 text-[11px] font-semibold text-[#0F766E] uppercase tracking-wider">
+          <Sparkles className="w-3 h-3 text-[#0F766E]" />
+          <span>BIS Standards Recommendation Engine</span>
+        </div>
+
+        <h1 className="text-[24px] sm:text-[28px] lg:text-[32px] font-bold text-[#102A43] tracking-tight leading-tight font-display">
           Procurement Intelligence
         </h1>
-        <p className="text-[14px] sm:text-[15px] xl:text-[16px] text-[#627D98] leading-relaxed max-w-4xl">
-          Analyze your procurement requirements and identify the specifications needed to determine applicable Indian Standards.
+
+        <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-3xl">
+          Analyze procurement requirements and identify relevant Indian Standards. ISutra helps procurement teams translate specifications into actionable BIS compliance standards.
         </p>
       </div>
 
-      {/* Global Error Notice if any */}
+      {/* Global Error Notice */}
       {error && (
-        <div className="p-4 bg-[#FEF2F2] border border-[#C53030]/20 rounded-xl flex items-center gap-3 text-[14px] text-[#C53030]">
-          <AlertCircle className="w-5 h-5 shrink-0" />
+        <div className="p-3 bg-red-50 border border-red-200 rounded-xl flex items-center gap-2.5 text-xs sm:text-sm text-red-700">
+          <AlertCircle className="w-4 h-4 shrink-0 text-red-500" />
           <span>{error}</span>
         </div>
       )}
 
       {/* ============================================================
-          2. START A NEW ANALYSIS CARD
-          Occupies 100% of available viewport width
+          2. SINGLE ANALYSIS WORKSPACE CARD
          ============================================================ */}
-      <div className="bg-white rounded-2xl border border-[#243B53]/10 shadow-xs overflow-hidden w-full box-border">
-        {/* Card Header & Input Type Selector */}
-        <div className="border-b border-[#243B53]/10 p-5 sm:p-6 bg-[#F7F9FC]/60 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h2 className="text-[17px] sm:text-[18px] xl:text-[20px] font-bold text-[#102A43] uppercase tracking-wider font-display">
+      <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden w-full max-w-full box-border">
+        {/* Card Header: Section Title + Responsive Segmented Tabs */}
+        <div className="border-b border-slate-100 p-3.5 sm:p-4 bg-slate-50/60 flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div className="shrink-0">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block font-display">
               Start a New Analysis
+            </span>
+            <h2 className="text-[15px] sm:text-[17px] font-bold text-[#102A43]">
+              Input Specification
             </h2>
-            <p className="text-[13px] sm:text-[14px] text-[#627D98] mt-0.5">
-              Select your specification input method:
-            </p>
           </div>
 
-          {/* Specification Tabs (Flex, properly spaced, horizontal scroll on mobile) */}
-          <div className="flex items-center gap-1.5 p-1.5 bg-[#F7F9FC] border border-[#243B53]/10 rounded-xl overflow-x-auto max-w-full shrink-0">
+          {/* Responsive Segmented Tabs: wraps into clean columns on mobile/tablet, never clips */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 md:flex md:items-center gap-1 p-1 bg-slate-100 rounded-xl border border-slate-200/70 w-full md:w-auto max-w-full">
             {[
-              { id: 'product_description', label: 'Product Description' },
-              { id: 'technical_specification', label: 'Technical Specification' },
-              { id: 'tender_document', label: 'Tender Document' },
+              { id: 'product_description', label: 'Product Description', icon: FileText },
+              { id: 'technical_specification', label: 'Technical Specification', icon: ClipboardList },
+              { id: 'tender_document', label: 'Tender Document', icon: FileArchive },
             ].map((tab) => {
               const isActive = inputType === tab.id;
+              const Icon = tab.icon;
               return (
                 <button
                   key={tab.id}
+                  type="button"
                   onClick={() => {
                     setInputType(tab.id as InputType);
                     setValidationError(null);
                   }}
-                  className={`px-4 py-2.5 rounded-lg text-[14px] sm:text-[15px] font-medium transition-all whitespace-nowrap ${
+                  className={`min-w-0 flex items-center justify-center gap-1.5 px-3 py-2 sm:py-1.5 rounded-lg text-xs sm:text-[13px] transition-all font-medium cursor-pointer ${
                     isActive
-                      ? 'bg-white text-[#102A43] shadow-xs font-semibold border border-[#243B53]/10'
-                      : 'text-[#627D98] hover:text-[#102A43] hover:bg-white/60'
+                      ? 'bg-white text-[#102A43] shadow-xs font-semibold border border-slate-200/80'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
                   }`}
                 >
-                  {tab.label}
+                  <Icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-[#0F766E]' : 'text-slate-400'}`} />
+                  <span className="truncate sm:whitespace-nowrap">{tab.label}</span>
                 </button>
               );
             })}
@@ -199,22 +239,28 @@ export default function DashboardPage() {
         </div>
 
         {/* Card Body */}
-        <div className="p-5 sm:p-7 xl:p-9 space-y-6">
-          {/* Quick Test Inputs (Spacing gap: 8px, wrap naturally) */}
+        <div className="p-3.5 sm:p-5 space-y-3.5 sm:space-y-4">
+          {/* Quick Test Inputs */}
           <div>
-            <span className="text-[12px] xl:text-[13px] font-bold text-[#627D98] uppercase tracking-wider block mb-2.5 font-display">
-              Quick Test Inputs:
-            </span>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 font-display">
+                Quick Test Inputs
+              </span>
+              <span className="text-[11px] text-slate-400 hidden sm:inline">
+                Click any sample to populate
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
               {EXAMPLE_SPECS.map((ex, i) => (
                 <button
                   key={i}
+                  type="button"
                   onClick={() => {
                     setInputType(ex.type);
                     setInputText(ex.text);
                     setValidationError(null);
                   }}
-                  className="px-3 py-1.5 rounded-lg text-[13px] sm:text-[14px] font-medium bg-[#F7F9FC] hover:bg-[#0F766E]/5 text-[#243B53] hover:text-[#0F766E] border border-[#243B53]/10 hover:border-[#0F766E]/30 transition-all text-left shadow-2xs"
+                  className="px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-50 hover:bg-[#0F766E]/8 text-slate-700 hover:text-[#0F766E] border border-slate-200 hover:border-[#0F766E]/40 transition-all text-left shadow-2xs cursor-pointer max-w-full truncate"
                 >
                   {ex.title}
                 </button>
@@ -222,37 +268,37 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Mode 1 & 2: Large Textarea */}
+          {/* Mode 1 & 2: Calibrated Textarea (160-180px desktop, 140-160px mobile) */}
           {inputType !== 'tender_document' ? (
-            <div className="space-y-3">
-              <label className="block text-[14px] sm:text-[15px] font-bold text-[#102A43]">
-                {inputType === 'product_description'
-                  ? 'Product Description'
-                  : 'Technical Specification'}
-              </label>
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <label className="text-xs sm:text-sm font-semibold text-[#102A43]">
+                  {inputType === 'product_description'
+                    ? 'Product Description'
+                    : 'Technical Specification Requirements'}
+                </label>
+                <span className="text-xs text-slate-400 font-mono">
+                  {charCount} character{charCount === 1 ? '' : 's'}
+                </span>
+              </div>
 
-              {/* Textarea: Desktop 220px, Tablet 200px, Mobile 180px */}
               <textarea
                 value={inputText}
                 onChange={(e) => {
                   setInputText(e.target.value);
                   if (validationError) setValidationError(null);
                 }}
-                placeholder="Example: Outdoor LED street lighting system, 100W, weather resistant, pole mounted..."
-                className="w-full text-[15px] sm:text-[16px] text-[#243B53] bg-[#F7F9FC] border border-[#243B53]/15 rounded-xl p-4 sm:p-5 focus:ring-2 focus:ring-[#0F766E]/20 focus:border-[#0F766E] outline-hidden transition-all placeholder:text-[#9FB3C8] placeholder:text-[14px] sm:placeholder:text-[15px] leading-relaxed min-h-[180px] md:min-h-[200px] xl:min-h-[220px]"
+                placeholder="Example: Outdoor LED street lighting system, 100W, weather resistant, pole mounted, IP65 enclosure, operating temperature -10°C to 55°C, minimum luminous efficacy 120 lm/W, surge protection 10kV..."
+                className="w-full h-[150px] sm:h-[160px] lg:h-[170px] text-xs sm:text-sm text-slate-800 bg-slate-50/50 border border-slate-200 rounded-xl p-3 sm:p-3.5 focus:bg-white focus:ring-2 focus:ring-[#0F766E]/20 focus:border-[#0F766E] outline-hidden transition-all placeholder:text-slate-400 leading-relaxed resize-none"
               />
 
-              {/* Helper text & Character count */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[13px] sm:text-[14px] text-[#627D98] pt-1">
-                <span>Enter technical parameters, environment, application, and ratings.</span>
-                <span className="font-medium text-[#243B53]/80 shrink-0">
-                  {userEnteredCharCount} character{userEnteredCharCount === 1 ? '' : 's'}
-                </span>
+              <div className="flex items-center justify-between text-[11px] sm:text-xs text-slate-500">
+                <span>Tip: Include electrical/mechanical ratings, operating environment, and certifications for highest standard precision.</span>
               </div>
             </div>
           ) : (
             /* Mode 3: Tender Document Upload */
-            <div className="space-y-4">
+            <div className="space-y-3">
               <div
                 onDragOver={(e) => {
                   e.preventDefault();
@@ -260,24 +306,24 @@ export default function DashboardPage() {
                 }}
                 onDragLeave={() => setDragActive(false)}
                 onDrop={handleFileDrop}
-                className={`border-2 border-dashed rounded-2xl p-8 sm:p-12 text-center transition-all ${
+                className={`border-2 border-dashed rounded-xl p-5 sm:p-6 text-center transition-all ${
                   dragActive
                     ? 'border-[#0F766E] bg-[#0F766E]/5'
-                    : 'border-[#243B53]/15 hover:border-[#0F766E]/50 bg-[#F7F9FC]/60'
+                    : 'border-slate-200 hover:border-[#0F766E]/50 bg-slate-50/50'
                 }`}
               >
-                <div className="w-14 h-14 rounded-2xl bg-white shadow-2xs border border-[#243B53]/10 flex items-center justify-center mx-auto mb-4 text-[#0F766E]">
-                  <UploadCloud className="w-7 h-7" />
+                <div className="w-10 h-10 rounded-xl bg-white shadow-2xs border border-slate-200 flex items-center justify-center mx-auto mb-2 text-[#0F766E]">
+                  <UploadCloud className="w-5 h-5" />
                 </div>
-                <h3 className="text-[16px] sm:text-[17px] font-bold text-[#102A43] mb-1 font-display">
+                <h3 className="text-xs sm:text-sm font-semibold text-[#102A43] mb-0.5 font-display">
                   Drop tender document here, or browse
                 </h3>
-                <p className="text-[13px] sm:text-[14px] text-[#627D98] mb-5 max-w-md mx-auto">
-                  Supports PDF, DOCX, or TXT tender document extracts (Max 10MB).
+                <p className="text-[11px] text-slate-500 mb-3 max-w-sm mx-auto">
+                  Upload tender extract or technical schedule (PDF, DOCX, or TXT up to 10MB).
                 </p>
-                <label className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white hover:bg-[#F7F9FC] text-[#102A43] border border-[#243B53]/15 text-[14px] font-semibold cursor-pointer shadow-2xs transition-all">
-                  <FileText className="w-4 h-4 text-[#0F766E]" />
-                  Select File
+                <label className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-[#102A43] border border-slate-200 text-xs font-semibold cursor-pointer shadow-2xs transition-all">
+                  <FileText className="w-3.5 h-3.5 text-[#0F766E]" />
+                  <span>Choose File</span>
                   <input
                     type="file"
                     accept=".pdf,.docx,.txt"
@@ -288,21 +334,22 @@ export default function DashboardPage() {
               </div>
 
               {uploadedFile && (
-                <div className="flex items-center justify-between p-4 bg-[#F7F9FC] border border-[#243B53]/10 rounded-xl">
-                  <div className="flex items-center gap-3">
-                    <FileText className="w-5 h-5 text-[#0F766E]" />
-                    <div>
-                      <p className="text-[14px] font-semibold text-[#102A43]">
+                <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <FileText className="w-4 h-4 text-[#0F766E] shrink-0" />
+                    <div className="min-w-0 truncate">
+                      <p className="text-xs font-semibold text-[#102A43] truncate">
                         {uploadedFile.name}
                       </p>
-                      <p className="text-[12px] text-[#627D98]">
-                        {(uploadedFile.size / 1024).toFixed(1)} KB
+                      <p className="text-[11px] text-slate-400">
+                        {(uploadedFile.size / 1024).toFixed(1)} KB • Ready for extraction
                       </p>
                     </div>
                   </div>
                   <button
+                    type="button"
                     onClick={() => setUploadedFile(null)}
-                    className="text-[13px] text-[#C53030] hover:underline font-medium"
+                    className="text-xs text-red-600 hover:underline font-medium shrink-0 ml-3"
                   >
                     Remove
                   </button>
@@ -311,48 +358,90 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {/* Action Footer: Validation error & Analyze Button */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 pt-5 border-t border-[#243B53]/10">
-            <div>
-              {validationError && (
-                <div className="flex items-center gap-2 text-[13px] sm:text-[14px] text-[#C53030] bg-[#FEF2F2] px-3.5 py-2 rounded-lg border border-[#C53030]/20 animate-fade-in">
-                  <AlertCircle className="w-4 h-4 shrink-0" />
-                  <span>{validationError}</span>
-                </div>
-              )}
+          {/* ============================================================
+              3. INTELLIGENCE CONTEXT PANEL: WHAT ISUTRA IDENTIFIES
+              Desktop (>= 1200px): 4 cols
+              1024-1199px & 768-1023px: 2 cols x 2 rows
+              < 768px: 1 col
+             ============================================================ */}
+          <div className="rounded-xl bg-slate-50/70 border border-slate-200/70 p-3 sm:p-3.5 w-full box-border">
+            <div className="flex items-center gap-1.5 mb-2">
+              <Sparkles className="w-3.5 h-3.5 text-[#0F766E]" />
+              <span className="text-[11px] font-bold uppercase tracking-wider text-[#0F766E]">
+                What ISutra Identifies
+              </span>
             </div>
 
-            <div className="flex items-center gap-3 justify-end w-full sm:w-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 min-[1200px]:grid-cols-4 gap-2 sm:gap-2.5 w-full">
+              {INTELLIGENCE_POINTS.map((pt, idx) => {
+                const Icon = pt.icon;
+                return (
+                  <div
+                    key={idx}
+                    className="flex items-start gap-2 p-2 rounded-lg bg-white border border-slate-200/60 shadow-2xs min-w-0"
+                  >
+                    <div className="w-6 h-6 rounded-md bg-[#0F766E]/8 flex items-center justify-center text-[#0F766E] shrink-0 mt-0.5">
+                      <Icon className="w-3 h-3" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h4 className="text-xs font-semibold text-[#102A43] leading-snug truncate">
+                        {pt.title}
+                      </h4>
+                      <p className="text-[11px] text-slate-500 leading-tight mt-0.5 line-clamp-2">
+                        {pt.desc}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Validation error notice */}
+          {validationError && (
+            <div className="flex items-center gap-2 text-xs sm:text-sm text-red-700 bg-red-50 px-3 py-2 rounded-lg border border-red-200 animate-fade-in">
+              <AlertCircle className="w-4 h-4 shrink-0 text-red-500" />
+              <span>{validationError}</span>
+            </div>
+          )}
+
+          {/* Action Row: Clear & Primary Analyze Button */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 pt-2.5 border-t border-slate-100">
+            <div>
               {inputText && (
                 <button
                   type="button"
                   onClick={clear}
-                  className="px-4 py-2 text-[14px] text-[#627D98] hover:text-[#102A43] hover:bg-[#F7F9FC] rounded-lg transition-colors font-medium flex items-center gap-1.5"
+                  className="px-2.5 py-1 text-xs text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors font-medium inline-flex items-center gap-1.5 cursor-pointer"
                 >
-                  <RotateCcw className="w-4 h-4" />
-                  <span>Clear</span>
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>Clear Input</span>
                 </button>
               )}
+            </div>
 
+            <div className="flex items-center gap-2 justify-end w-full sm:w-auto">
               {inputType !== 'tender_document' ? (
                 <button
+                  type="button"
                   onClick={handleStartAnalysis}
-                  className="w-full sm:w-auto min-h-[46px] px-7 rounded-xl bg-[#0F766E] hover:bg-[#0D655E] text-white text-[15px] sm:text-[16px] font-semibold shadow-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
+                  className="w-full sm:w-auto h-10 sm:h-11 px-6 rounded-xl bg-[#0F766E] hover:bg-[#0D655E] text-white text-xs sm:text-sm font-semibold shadow-xs flex items-center justify-center gap-2 transition-all cursor-pointer shrink-0 active:scale-[0.99]"
                 >
-                  <Send className="w-4 h-4" />
+                  <Send className="w-3.5 h-3.5" />
                   <span>Analyze Specification</span>
                 </button>
               ) : (
                 <button
+                  type="button"
                   onClick={handleAnalyzeDocument}
                   disabled={!uploadedFile}
-                  className={`w-full sm:w-auto min-h-[46px] px-7 rounded-xl text-white text-[15px] sm:text-[16px] font-semibold shadow-xs flex items-center justify-center gap-2 transition-all ${
+                  className={`w-full sm:w-auto h-10 sm:h-11 px-6 rounded-xl text-white text-xs sm:text-sm font-semibold shadow-xs flex items-center justify-center gap-2 transition-all shrink-0 ${
                     uploadedFile
-                      ? 'bg-[#0F766E] hover:bg-[#0D655E] cursor-pointer'
-                      : 'bg-[#9FB3C8] cursor-not-allowed'
+                      ? 'bg-[#0F766E] hover:bg-[#0D655E] cursor-pointer active:scale-[0.99]'
+                      : 'bg-slate-300 cursor-not-allowed'
                   }`}
                 >
-                  <Send className="w-4 h-4" />
+                  <Send className="w-3.5 h-3.5" />
                   <span>Analyze Tender Document</span>
                 </button>
               )}

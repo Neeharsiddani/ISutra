@@ -1,9 +1,9 @@
 // ============================================================
-// ISutra — Main App Layout Shell
-// Full Viewport Architecture:
-// Desktop (>= 1200px): Fixed 250px Sidebar + Flexible Width Main (100% remaining space)
-// Tablet (768–1199px): 72px Compact Sidebar + Flexible Width Main
-// Mobile (< 768px): 100% Width Main + Off-Canvas Drawer (No fixed desktop sidebar)
+// ISutra — Main Application Layout Shell
+// CSS Grid Architecture:
+// Desktop (>= 1024px): grid-cols-[250px_minmax(0,1fr)]
+// Mobile (< 1024px): 100% Single Column + Off-Canvas Drawer
+// Mathematical guarantee: Column 2 NEVER exceeds 100vw - 250px
 // ============================================================
 
 import { useState } from 'react';
@@ -16,36 +16,34 @@ export default function Layout() {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   return (
-    <div className="flex w-full min-h-screen bg-[#F7F9FC] text-[#243B53] antialiased overflow-x-hidden">
-      {/* 1. Desktop & Tablet Sidebar Column (occupies physical space in document flow) */}
-      <div className="isutra-sidebar-col">
-        <div className="isutra-sidebar-fixed">
-          <Sidebar />
-        </div>
-      </div>
+    <div className="isutra-layout-root text-slate-800 antialiased">
+      {/* 1. Desktop Sidebar Column: Sticky 250px on >= 1024px */}
+      <aside className="hidden lg:block w-[250px] h-screen sticky top-0 bg-[#102A43] border-r border-[#1E3E5C] z-30 shrink-0">
+        <Sidebar />
+      </aside>
 
-      {/* 2. Mobile Drawer (< 768px off-canvas overlay) */}
+      {/* 2. Mobile & Tablet Drawer (< 1024px) */}
       {mobileSidebarOpen && (
-        <div className="fixed inset-0 z-50 md:hidden animate-fade-in isutra-drawer">
+        <div className="fixed inset-0 z-50 lg:hidden">
           {/* Backdrop */}
           <div
-            className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity"
+            className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity"
             onClick={() => setMobileSidebarOpen(false)}
             aria-hidden="true"
           />
-          {/* Drawer container (250px) */}
-          <div className="fixed top-0 bottom-0 left-0 w-[250px] z-50 shadow-2xl">
+          {/* Drawer container */}
+          <div className="fixed inset-y-0 left-0 w-[250px] z-50 drawer-enter">
             <Sidebar isDrawer onClose={() => setMobileSidebarOpen(false)} />
           </div>
         </div>
       )}
 
-      {/* 3. Main Content Area (Uses ALL remaining horizontal space) */}
-      <div className="flex-1 flex flex-col min-w-0 w-full min-h-screen">
+      {/* 3. Main Workspace Column: Exactly minmax(0, 1fr) */}
+      <div className="isutra-content-column">
         <Header onToggleSidebar={() => setMobileSidebarOpen(true)} />
 
-        {/* Content Container: Mobile 16px, Tablet 24px, Desktop 32px/40px, Large Desktop 40px/48px */}
-        <main className="flex-1 w-full p-4 md:p-6 xl:py-8 xl:px-10 2xl:py-10 2xl:px-12">
+        {/* Content Area */}
+        <main className="flex-1 w-full max-w-full p-4 sm:p-5 lg:p-6 xl:p-8 flex flex-col box-border">
           <Outlet />
         </main>
 

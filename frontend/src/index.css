@@ -45,8 +45,13 @@
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
   --font-display: 'Space Grotesk', system-ui, sans-serif;
 
-  /* --- Breakpoints (Desktop >= 1200px) --- */
-  --breakpoint-xl: 1200px;
+  /* --- Breakpoints --- */
+  --breakpoint-xs: 480px;
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
 
   /* --- Shadows --- */
   --shadow-card: 0 1px 3px rgba(16, 42, 67, 0.06), 0 1px 2px rgba(16, 42, 67, 0.04);
@@ -67,35 +72,67 @@
 }
 
 /* ============================================================
-   Base Styles
+   Base Styles in @layer base
    ============================================================ */
 
-*,
-*::before,
-*::after {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    color: var(--color-text-primary);
+    background-color: var(--color-surface);
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  #root {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
 }
 
-html {
-  scroll-behavior: smooth;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
+/* ============================================================
+   Application Layout Shell Rules
+   Desktop (>= 1024px): 250px sticky sidebar + minmax(0, 1fr) content
+   Remaining content width: strictly calc(100vw - 250px)
+   ============================================================ */
 
-body {
-  font-family: var(--font-sans);
-  color: var(--color-text-primary);
-  background-color: var(--color-surface);
-  line-height: 1.6;
-  min-height: 100vh;
-}
+@layer components {
+  .isutra-layout-root {
+    min-height: 100vh;
+    width: 100%;
+    max-width: 100%;
+    background-color: #F8FAFC;
+    box-sizing: border-box;
+  }
 
-#root {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
+  @media (min-width: 1024px) {
+    .isutra-layout-root {
+      display: grid !important;
+      grid-template-columns: 250px minmax(0, 1fr) !important;
+      width: 100% !important;
+      max-width: 100% !important;
+    }
+  }
+
+  .isutra-content-column {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
+    min-height: 100vh;
+    box-sizing: border-box;
+  }
 }
 
 /* ============================================================
@@ -177,83 +214,17 @@ body {
   color: var(--color-navy);
 }
 
-/* ============================================================
-   ISutra Responsive Layout Shell
-   - Desktop (>= 1200px): 250px full sidebar with all labels
-   - Tablet (768px - 1199px): 72px compact icon sidebar
-   - Mobile (< 768px): Desktop sidebar hidden, drawer used
-   ============================================================ */
-
-.isutra-sidebar-col {
-  display: none;
+/* Drawer animation */
+.drawer-enter {
+  animation: slide-in-left 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@media (min-width: 768px) {
-  .isutra-sidebar-col {
-    display: block;
-    width: 72px;
-    flex-shrink: 0;
+@keyframes slide-in-left {
+  from {
+    transform: translateX(-100%);
   }
-  .isutra-sidebar-fixed {
-    position: fixed;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    width: 72px;
-    z-index: 30;
-  }
-  .isutra-sidebar-text,
-  .isutra-sidebar-text-inline {
-    display: none;
-  }
-  .isutra-sidebar-nav-item {
-    justify-content: center;
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
-  }
-  .isutra-brand-link {
-    justify-content: center;
-    width: 100%;
+  to {
+    transform: translateX(0);
   }
 }
 
-@media (min-width: 1200px) {
-  .isutra-sidebar-col {
-    width: 250px;
-  }
-  .isutra-sidebar-fixed {
-    width: 250px;
-  }
-  .isutra-sidebar-text {
-    display: block;
-  }
-  .isutra-sidebar-text-inline {
-    display: inline;
-  }
-  .isutra-sidebar-nav-item {
-    justify-content: flex-start;
-    padding-left: 0.75rem;
-    padding-right: 0.75rem;
-  }
-  .isutra-brand-link {
-    justify-content: flex-start;
-    width: auto;
-  }
-}
-
-/* Mobile / Off-Canvas Drawer overrides */
-.isutra-drawer .isutra-sidebar-text {
-  display: block !important;
-}
-.isutra-drawer .isutra-sidebar-text-inline {
-  display: inline !important;
-}
-.isutra-drawer .isutra-sidebar-nav-item {
-  justify-content: flex-start !important;
-  padding-left: 0.75rem !important;
-  padding-right: 0.75rem !important;
-}
-.isutra-drawer .isutra-brand-link {
-  justify-content: flex-start !important;
-  width: auto !important;
-}

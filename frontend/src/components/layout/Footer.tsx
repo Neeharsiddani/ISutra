@@ -1,24 +1,21 @@
 // ============================================================
-// ISutra — Clean Enterprise Footer
-// Desktop: 12-13px | Mobile: 11-12px | Subtle & readable
+// ISutra — Minimal Application Footer
+// Low vertical profile (py-2.5) with required SIH prototype notice
 // ============================================================
 
 import { Link } from 'react-router-dom';
 
 export default function Footer() {
   return (
-    <footer className="bg-white border-t border-[#E2E8F0] mt-auto py-3.5 px-4 sm:px-6 xl:px-8 shrink-0 w-full">
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-2.5 text-[11px] sm:text-[12px] xl:text-[13px] text-[#627D98]">
+    <footer className="bg-white/80 border-t border-slate-200/80 mt-auto py-2.5 px-4 sm:px-6 shrink-0 w-full">
+      <div className="flex flex-col xs:flex-row items-center justify-between gap-2 text-[11px] sm:text-xs text-slate-500">
         <div className="flex items-center gap-2">
-          <span className="font-semibold text-[#102A43]">ISutra</span>
-          <span>—</span>
-          <span>AI-Powered Indian Standards Intelligence</span>
+          <span className="font-semibold text-slate-700">ISutra</span>
+          <span className="text-slate-300">•</span>
+          <span className="text-slate-400">SIH Prototype • Not an official BIS service</span>
         </div>
 
-        <div className="flex items-center gap-4 font-medium">
-          <Link to="/dashboard" className="hover:text-[#0F766E] transition-colors">
-            Dashboard
-          </Link>
+        <div className="flex items-center gap-3 sm:gap-4 font-medium">
           <Link to="/standards" className="hover:text-[#0F766E] transition-colors">
             Standards
           </Link>
@@ -26,14 +23,8 @@ export default function Footer() {
             History
           </Link>
           <Link to="/about" className="hover:text-[#0F766E] transition-colors">
-            Help
+            Documentation
           </Link>
-        </div>
-
-        <div>
-          <span className="text-[#9FB3C8]">
-            SIH Prototype • Not an official BIS service
-          </span>
         </div>
       </div>
     </footer>
