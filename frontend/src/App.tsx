@@ -8,6 +8,7 @@ import Layout from './components/layout/Layout';
 import HomePage from './pages/HomePage';
 import DashboardPage from './pages/DashboardPage';
 import RequirementReviewPage from './pages/RequirementReviewPage';
+import RecommendationsResultsPage from './pages/RecommendationsResultsPage';
 import AnalysisHistoryPage from './pages/AnalysisHistoryPage';
 import StandardsSearchPage from './pages/StandardsSearchPage';
 import StandardDetailsPage from './pages/StandardDetailsPage';
@@ -23,6 +24,7 @@ export default function App() {
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/analyze" element={<DashboardPage />} />
           <Route path="/analysis/:id/review" element={<RequirementReviewPage />} />
+          <Route path="/analysis/:id/recommendations" element={<RecommendationsResultsPage />} />
           <Route path="/history" element={<AnalysisHistoryPage />} />
           <Route path="/standards" element={<StandardsSearchPage />} />
           <Route path="/standards/:id" element={<StandardDetailsPage />} />

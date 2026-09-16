@@ -7,7 +7,7 @@
 // ============================================================
 
 import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, useSearchParams, useLocation, Link } from 'react-router-dom';
 import {
   ArrowLeft,
   Calendar,
@@ -30,6 +30,10 @@ import ErrorState from '../components/ui/ErrorState';
 
 export default function StandardDetailsPage() {
   const { id } = useParams<{ id: string }>();
+  const [searchParams] = useSearchParams();
+  const location = useLocation();
+  const fromAnalysis = searchParams.get('fromAnalysis') || location.state?.fromAnalysisId;
+
   const [standard, setStandard] = useState<Standard | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -103,14 +107,24 @@ export default function StandardDetailsPage() {
   return (
     <div className="w-full space-y-8 pb-16 animate-fade-in text-[#243B53]">
       {/* Back Navigation */}
-      <div className="flex items-center gap-2 text-[13px] text-[#627D98]">
-        <Link
-          to="/standards"
-          className="inline-flex items-center gap-1.5 hover:text-[#0F766E] transition-colors font-medium"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span>Back to Standards Directory</span>
-        </Link>
+      <div className="flex flex-wrap items-center gap-2 text-[13px] text-[#627D98]">
+        {fromAnalysis ? (
+          <Link
+            to={`/analysis/${fromAnalysis}/recommendations`}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 text-[#0F766E] hover:bg-emerald-100 transition-colors font-semibold border border-emerald-200 shadow-xs"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Back to Recommendations</span>
+          </Link>
+        ) : (
+          <Link
+            to="/standards"
+            className="inline-flex items-center gap-1.5 hover:text-[#0F766E] transition-colors font-medium"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Back to Standards Directory</span>
+          </Link>
+        )}
         <span className="text-[#9FB3C8]">/</span>
         <span className="text-[#243B53] font-semibold truncate font-display">
           {stdNumber}
@@ -133,11 +147,10 @@ export default function StandardDetailsPage() {
               </h1>
 
               <span
-                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[12px] font-semibold border ${
-                  isCurrent
+                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[12px] font-semibold border ${isCurrent
                     ? 'bg-emerald-50 text-[#16803C] border-emerald-300'
                     : 'bg-amber-50 text-[#D97706] border-amber-300'
-                }`}
+                  }`}
               >
                 {isCurrent ? (
                   <CheckCircle2 className="w-3.5 h-3.5 text-[#16803C]" />
@@ -187,14 +200,14 @@ export default function StandardDetailsPage() {
           </div>
         </div>
 
-        {/* Disclaimer Bar */}
+        {/* Provenance & Disclaimer Bar */}
         <div className="mt-5 pt-4 border-t border-[#243B53]/10 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[12px] text-[#627D98]">
-          <span className="inline-flex items-center gap-1.5 font-medium text-[#102A43]">
+          <span className="inline-flex items-center gap-1.5 font-semibold text-[#102A43]">
             <ShieldCheck className="w-4 h-4 text-[#0F766E]" />
-            Verified BIS reference dataset
+            Source: Official BIS reference | ISutra verified reference dataset
           </span>
           <span className="text-[#9FB3C8]">
-            ISutra is a prototype reference system and is not an official BIS service.
+            ISutra is an SIH prototype. Recommendations are based on the current reference dataset and should be independently verified against official BIS publications before procurement or compliance decisions.
           </span>
         </div>
       </div>

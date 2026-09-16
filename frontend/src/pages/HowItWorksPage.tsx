@@ -102,8 +102,8 @@ export default function HowItWorksPage() {
           />
           <ArchCard
             icon={<Database className="w-5 h-5" />}
-            title="Vector Search"
-            description="Semantic similarity search using embeddings and pgvector for accurate standards matching."
+            title="Multi-Signal Matching"
+            description="Explainable multi-signal matching using product, scope, application, environment, technical, and safety signals."
             planned
           />
           <ArchCard

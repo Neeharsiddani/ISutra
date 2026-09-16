@@ -7,6 +7,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import standardsRoutes from './routes/standards';
 import analysisRoutes from './routes/analysis';
+import recommendationsRoutes from './routes/recommendations';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 import { isSupabaseConfigured } from './database/supabase';
 
@@ -32,7 +33,7 @@ app.get('/api/health', (_req, res) => {
   res.json({
     status: 'ok',
     service: 'ISutra — AI-Powered Indian Standards Intelligence',
-    phase: 'Phase 2 — AI Requirement Understanding',
+    phase: 'Phase 4 — Intelligent BIS Standards Matching Engine',
     supabase: isSupabaseConfigured() ? 'configured' : 'not configured (in-memory & demo fallback)',
     timestamp: new Date().toISOString(),
   });
@@ -42,6 +43,7 @@ app.get('/api/health', (_req, res) => {
 app.use('/api/standards', standardsRoutes);
 app.use('/api/analyze', analysisRoutes);
 app.use('/api/analysis', analysisRoutes);
+app.use('/api/recommendations', recommendationsRoutes);
 
 // --- Error Handling ---
 app.use('/api/*', notFoundHandler);
@@ -57,8 +59,7 @@ app.listen(PORT, () => {
   console.log(`  🚀 Server running on port ${PORT}`);
   console.log(`  📡 API: http://localhost:${PORT}/api`);
   console.log(
-    `  💾 Supabase: ${
-      isSupabaseConfigured() ? '✅ Configured' : '⚠️  Not configured (in-memory & demo data)'
+    `  💾 Supabase: ${isSupabaseConfigured() ? '✅ Configured' : '⚠️  Not configured (in-memory & demo data)'
     }`
   );
   console.log('═══════════════════════════════════════════');

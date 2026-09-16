@@ -264,3 +264,114 @@ export interface InputTypeOption {
   description: string;
   icon: string;
 }
+
+// --- Phase 4: Matching Engine & Recommendation Models ---
+
+export type FactorStatus = 'matched' | 'not_matched' | 'not_available';
+
+export interface FactorDetail {
+  status: FactorStatus;
+  score: number;
+  weight: number;
+  contribution: number;
+  evidence: string[];
+  label: string;
+}
+
+export interface MatchedFactorsSummary {
+  productCategory: boolean;
+  keywords: string[];
+  application: string[];
+  environment: string[];
+  technicalParameters: string[];
+  safetyTesting: string[];
+}
+
+// ============================================================
+// Phase 5: Evidence, Traceability & Trust Models
+// ============================================================
+
+export type EvidenceSourceType =
+  | 'user_requirement'
+  | 'extracted_requirement'
+  | 'standard_data'
+  | 'official_bis_source';
+
+export interface MatchEvidenceItem {
+  sourceType: EvidenceSourceType;
+  label: string;
+  value: string;
+  matched: boolean;
+  field?: string;
+}
+
+export type TraceabilityStage =
+  | 'user_input'
+  | 'extracted_requirement'
+  | 'matching_signal'
+  | 'bis_standard'
+  | 'official_bis_source';
+
+export interface TraceabilityChainStep {
+  step: number;
+  stage: TraceabilityStage;
+  title: string;
+  description: string;
+  sourceType: EvidenceSourceType;
+  badge?: string;
+}
+
+export interface RequirementStandardComparison {
+  field: string;
+  requirementValue: string | null;
+  standardValue: string | null;
+  status: FactorStatus;
+  note?: string;
+}
+
+export interface StandardRecommendation {
+  rank: number;
+  standardId: string;
+  standard: Standard;
+  score: number;
+  relevancePercentage: number;
+  category: 'high' | 'related' | 'low';
+  categoryLabel: 'HIGH RELEVANCE' | 'RELATED' | 'LOW RELEVANCE';
+  matchedFactors: MatchedFactorsSummary;
+  factorStatuses: {
+    productCategory: FactorDetail;
+    keywordsTitleScope: FactorDetail;
+    application: FactorDetail;
+    environment: FactorDetail;
+    technicalParameters: FactorDetail;
+    safetyTesting: FactorDetail;
+  };
+  reason: string;
+  evidence: MatchEvidenceItem[];
+  traceabilityChain: TraceabilityChainStep[];
+  comparison: RequirementStandardComparison[];
+}
+
+export interface MatchingMetadata {
+  standardsEvaluated: number;
+  matchingMethod: string;
+  minimumThreshold: number;
+  insufficientInformation: boolean;
+  insufficientReason?: string;
+  guidance?: string[];
+  weightsUsed?: Record<string, number>;
+  timestamp: string;
+  datasetName?: string;
+  datasetCount?: number;
+  sourceProvenance?: string;
+  disclaimer?: string;
+}
+
+export interface RecommendationsResponse {
+  success: boolean;
+  analysisId?: string;
+  confirmed?: boolean;
+  requirements?: StructuredRequirements;
+  recommendations: StandardRecommendation[];
+  metadata: MatchingMetadata;
+}

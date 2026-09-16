@@ -17,6 +17,7 @@ import {
   Compass,
   MapPin,
   Cpu,
+  Sparkles,
 } from 'lucide-react';
 import { getAnalysisById, updateAnalysisRequirements } from '../services/api';
 import type {
@@ -305,7 +306,7 @@ export default function RequirementReviewPage() {
                 Ready for Standards Matching
               </p>
               <p className="text-xs text-[#243B53]/80 mt-1.5 leading-relaxed max-w-2xl">
-                The validated procurement profile has been securely recorded. In Phase 3, these confirmed technical parameters will be used for semantic vector matching against Indian Standards.
+                The validated procurement profile has been securely recorded. These confirmed requirements will be evaluated using ISutra's explainable multi-signal matching engine against the verified BIS reference dataset.
               </p>
               <div className="mt-4 flex flex-wrap items-center gap-3">
                 <Link
@@ -867,13 +868,23 @@ export default function RequirementReviewPage() {
               )}
             </button>
           ) : (
-            <Link
-              to="/history"
-              className="min-h-[44px] px-5 py-2.5 rounded-xl border border-[#243B53]/20 hover:bg-surface text-[#243B53] text-xs font-semibold transition-all text-center flex items-center justify-center gap-2"
-            >
-              <span>View in Analysis History</span>
-              <ArrowRight className="w-4 h-4" />
-            </Link>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+              <Link
+                to="/history"
+                className="min-h-[44px] px-4 py-2.5 rounded-xl border border-[#243B53]/20 hover:bg-slate-50 text-[#243B53] text-xs font-semibold transition-all text-center flex items-center justify-center gap-1.5"
+              >
+                <span>Analysis History</span>
+              </Link>
+              <Link
+                to={`/analysis/${analysis.analysis_id}/recommendations`}
+                state={{ analysis, requirements }}
+                className="min-h-[44px] px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#0F766E] to-[#0D9488] hover:from-[#0C5D57] hover:to-[#0F766E] text-white text-xs font-semibold transition-all text-center flex items-center justify-center gap-2 shadow-xs active:scale-[0.99]"
+              >
+                <Sparkles className="w-4 h-4 text-emerald-200" />
+                <span>Find Relevant BIS Standards</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
           )}
         </div>
       </div>

@@ -7,6 +7,8 @@ import { Router } from 'express';
 import multer from 'multer';
 import * as analysisController from '../controllers/analysisController';
 
+import * as recommendationsController from '../controllers/recommendationsController';
+
 const router = Router();
 
 // Multer configuration for tender document uploads
@@ -43,5 +45,9 @@ router.put('/:id/requirements', analysisController.updateRequirements);
 
 // POST /api/analysis/upload — Upload and analyze tender document
 router.post('/upload', upload.single('document'), analysisController.uploadDocument);
+
+// POST /api/analysis/:id/recommendations — Match requirements of an analysis to BIS standards
+router.post('/:id/recommendations', recommendationsController.getAnalysisRecommendations);
+router.get('/:id/recommendations', recommendationsController.getAnalysisRecommendations);
 
 export default router;

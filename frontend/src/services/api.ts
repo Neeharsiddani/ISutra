@@ -13,6 +13,7 @@ import type {
   StandardRelationship,
   StandardsSearchParams,
   StandardsSearchResponse,
+  RecommendationsResponse,
 } from '../types';
 import {
   DEMO_STANDARDS,
@@ -21,7 +22,7 @@ import {
   DEMO_RELATIONSHIPS,
 } from '../data/demoData';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 // Helper for generic API requests
 async function fetchApi<T>(
@@ -218,4 +219,36 @@ export async function getCertifications(
     const certs = DEMO_CERTIFICATIONS.filter((c) => c.standard_id === id);
     return { data: certs, demo: true };
   }
+}
+
+// --- Phase 4: Recommendations Endpoints ---
+
+export async function getRecommendations(
+  requirements: StructuredRequirements
+): Promise<RecommendationsResponse> {
+  const response = await fetch(`${API_BASE_URL}/recommendations`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ requirements }),
+  });
+
+  if (!response.ok) {
+    const errBody = await response.json().catch(() => null);
+    throw new Error(errBody?.error?.message || `Recommendations error: ${response.status}`);
+  }
+
+  return await response.json();
+}
+
+export async function getAnalysisRecommendations(
+  analysisId: string
+): Promise<RecommendationsResponse> {
+  const response = await fetch(`${API_BASE_URL}/recommendations/analysis/${analysisId}`);
+
+  if (!response.ok) {
+    const errBody = await response.json().catch(() => null);
+    throw new Error(errBody?.error?.message || `Recommendations error: ${response.status}`);
+  }
+
+  return await response.json();
 }

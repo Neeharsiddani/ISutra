@@ -167,14 +167,41 @@ export function extractWithPatternMatching(inputText: string, inputType: string)
 
   // 5. Environment
   const environment: TaggedRequirementItem[] = [];
-  if (/weather\s+resistant/i.test(text)) {
-    environment.push({ name: 'Weather resistant', confidence: 'high', source_text: 'weather resistant' });
+
+  const outdoorMatch = text.match(/\b(?:outdoor\s+installation|outdoor\s+use|external\s+use|exterior\s+use|outdoor)\b/i);
+  if (outdoorMatch) {
+    environment.push({
+      name: 'Outdoor',
+      confidence: 'high',
+      source_text: outdoorMatch[0],
+    });
   }
-  if (/high\s+temperature/i.test(text)) {
-    environment.push({ name: 'High temperature', confidence: 'high', source_text: 'high temperature' });
+
+  const weatherMatch = text.match(/\b(?:weather\s+resistant|weather-?proof)\b/i);
+  if (weatherMatch) {
+    environment.push({
+      name: 'Weather resistant',
+      confidence: 'high',
+      source_text: weatherMatch[0],
+    });
   }
-  if (/corrosive|saline|marine/i.test(text)) {
-    environment.push({ name: 'Corrosive / Marine', confidence: 'medium', source_text: text.match(/corrosive|saline|marine/i)?.[0] });
+
+  const tempMatch = text.match(/\b(?:high\s+temperature|heat\s+resistant)\b/i);
+  if (tempMatch) {
+    environment.push({
+      name: 'High temperature',
+      confidence: 'high',
+      source_text: tempMatch[0],
+    });
+  }
+
+  const corrosiveMatch = text.match(/\b(?:corrosive|saline|marine)\b/i);
+  if (corrosiveMatch) {
+    environment.push({
+      name: 'Corrosive / Marine',
+      confidence: 'medium',
+      source_text: corrosiveMatch[0],
+    });
   }
 
   // 6. Installation
