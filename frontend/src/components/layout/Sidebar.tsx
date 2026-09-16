@@ -134,7 +134,7 @@ export default function Sidebar({ onClose, isDrawer = false }: SidebarProps) {
 
       {/* 4. Footer Meta */}
       <div className="px-4 py-3 border-t border-white/10 text-[11px] text-white/40 flex items-center justify-between shrink-0">
-        <span>ISutra v2.0</span>
+        <span>ISutra</span>
         <div className="flex items-center gap-1.5">
           <span className="inline-block w-2 h-2 rounded-full bg-emerald-400" />
           <span className="text-[10px] text-emerald-400 font-medium">Ready</span>

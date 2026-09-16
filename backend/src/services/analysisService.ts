@@ -240,20 +240,21 @@ export async function getAnalysisHistory(): Promise<Array<{
   return historyList.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 }
 
-export async function analyzeDocument(fileName: string) {
-  const sampleExtractedText = `Tender Specification Document: ${fileName}\nRequirement for Municipal LED Street Lighting Luminaire 100W, outdoor weather-resistant housing, pole mounted with surge protection.`;
+export async function analyzeDocument(_fileName?: string) {
+  const demoFileName = 'Sample_Municipal_LED_Streetlight_Tender_Extract.pdf';
+  const sampleExtractedText = `Demonstration Tender Extract (${demoFileName}):\nRequirement for Municipal LED Street Lighting Luminaire 100W, outdoor weather-resistant housing, pole mounted with surge protection.`;
 
   const extraction = await runRequirementExtractionPipeline(sampleExtractedText, 'tender_document');
   const analysisId = `doc-analysis-${Date.now()}`;
   const createdAt = new Date().toISOString();
-  const limitationWarning = 'Prototype limitation: arbitrary uploaded documents are not parsed in this version. Use procurement text input or the provided sample for demonstration.';
+  const limitationWarning = 'Arbitrary document parsing is not implemented in this prototype.';
 
   const record: StoredAnalysis = {
     id: analysisId,
     analysis_id: analysisId,
     input_type: 'tender_document',
     input_text: sampleExtractedText,
-    file_name: fileName,
+    file_name: demoFileName,
     status: 'completed',
     created_at: createdAt,
     requirements: extraction.requirements,
@@ -271,7 +272,7 @@ export async function analyzeDocument(fileName: string) {
   return {
     analysis_id: analysisId,
     status: 'completed' as const,
-    file_name: fileName,
+    file_name: demoFileName,
     requirements: extraction.requirements,
     missing_information: extraction.requirements.missing_information,
     clarification_questions: extraction.requirements.clarification_questions,
@@ -280,6 +281,6 @@ export async function analyzeDocument(fileName: string) {
     provider_used: extraction.provider_used,
     demo: true,
     warning: limitationWarning,
-    message: `Demonstration tender extract processed. Note: arbitrary file parsing is disabled in this prototype.`,
+    message: 'Demonstration tender extract processed. Note: arbitrary file parsing is disabled in this prototype.',
   };
 }

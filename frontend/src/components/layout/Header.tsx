@@ -19,6 +19,8 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
 
   const getContextLabel = () => {
     if (currentAnalysisId) return 'Requirement Review';
+    if (location.pathname === '/' || location.pathname === '/dashboard') return 'Dashboard';
+    if (location.pathname.startsWith('/analyze')) return 'Procurement Workspace';
     if (location.pathname.startsWith('/standards')) return 'Standards Directory';
     if (location.pathname.startsWith('/history')) return 'Analysis History';
     if (location.pathname.startsWith('/about')) return 'About & Help';

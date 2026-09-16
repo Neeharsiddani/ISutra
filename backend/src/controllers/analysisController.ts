@@ -172,11 +172,12 @@ export async function uploadDocument(
       return;
     }
 
-    const result = await analysisService.analyzeDocument(file.originalname);
+    const result = await analysisService.analyzeDocument();
 
     res.json({
       data: result,
-      demo: false,
+      demo: true,
+      warning: 'Arbitrary document parsing is not implemented in this prototype.',
     });
   } catch (error) {
     next(error);

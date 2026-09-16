@@ -1,486 +1,380 @@
 // ============================================================
-// ISutra — Procurement Intelligence Dashboard
-// Compact, enterprise-grade procurement intelligence workspace
+// ISutra — Procurement Intelligence Overview Dashboard
+// Overview workspace: answers "What can I do with ISutra?"
 // Strictly fits within viewport with zero horizontal overflow
 // ============================================================
 
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import {
-  Send,
-  RotateCcw,
-  FileText,
-  UploadCloud,
-  AlertCircle,
   Sparkles,
-  Layers,
+  Plus,
+  ArrowRight,
   Sliders,
-  BookOpen,
   Compass,
-  FileArchive,
-  ClipboardList,
+  FileCheck,
+  Layers,
+  BookOpen,
+  History,
+  ShieldCheck,
+  FileText,
 } from 'lucide-react';
-import { useAnalysis } from '../hooks/useAnalysis';
-import type { InputType } from '../types';
-import AnalysisLoading from '../components/analysis/AnalysisLoading';
-
-const EXAMPLE_SPECS = [
-  {
-    title: 'Outdoor LED Street Lighting',
-    type: 'product_description' as InputType,
-    text: 'Outdoor LED street lighting system, 100W, weather resistant, pole mounted, IP65 enclosure, surge protection 10kV.',
-  },
-  {
-    title: 'Water Storage Tanks',
-    type: 'product_description' as InputType,
-    text: 'Procure 500 stainless steel water storage tanks for a municipal government facility, corrosion resistant Grade 304.',
-  },
-  {
-    title: 'High-Temp Electrical Cables',
-    type: 'technical_specification' as InputType,
-    text: 'Supply industrial electrical cables suitable for high temperature environments, 1.1kV grade XLPE insulated copper conductor.',
-  },
-  {
-    title: 'Vague Input Test',
-    type: 'product_description' as InputType,
-    text: 'Need LED street lights.',
-  },
-];
-
-const INTELLIGENCE_POINTS = [
-  {
-    icon: Layers,
-    title: 'Product Category',
-    desc: 'Classifies item domain & BIS committee scope',
-  },
-  {
-    icon: Sliders,
-    title: 'Technical Requirements',
-    desc: 'Extracts parameters, ratings & operating limits',
-  },
-  {
-    icon: BookOpen,
-    title: 'Relevant BIS Standards',
-    desc: 'Maps applicable IS codes & documented scope',
-  },
-  {
-    icon: Compass,
-    title: 'Matching Rationale',
-    desc: 'Scores explainable multi-signal alignment',
-  },
-];
+import { getAnalysisHistory } from '../services/api';
+import type { AnalysisHistoryItem } from '../types';
 
 export default function DashboardPage() {
   const navigate = useNavigate();
-  const {
-    inputType,
-    setInputType,
-    inputText,
-    setInputText,
-    uploadedFile,
-    setUploadedFile,
-    status,
-    error,
-    analyze,
-    analyzeFile,
-    clear,
-  } = useAnalysis();
+  const [recentAnalyses, setRecentAnalyses] = useState<AnalysisHistoryItem[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(true);
 
-  const [validationError, setValidationError] = useState<string | null>(null);
-  const [dragActive, setDragActive] = useState(false);
+  useEffect(() => {
+    getAnalysisHistory()
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setRecentAnalyses(data.slice(0, 3));
+        }
+      })
+      .catch(() => setRecentAnalyses([]))
+      .finally(() => setLoadingHistory(false));
+  }, []);
 
-
-
-
-
-  const handleStartAnalysis = async () => {
-    if (!inputText || inputText.trim().length === 0) {
-      setValidationError('Please enter a procurement specification before analyzing.');
-      return;
-    }
-
-    setValidationError(null);
-    const result = await analyze();
-
-    if (result && result.analysis_id) {
-      navigate(`/analysis/${result.analysis_id}/review`, {
-        state: { analysis: result },
+  const formatDate = (isoString: string) => {
+    try {
+      const d = new Date(isoString);
+      return d.toLocaleDateString('en-IN', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
       });
+    } catch {
+      return isoString;
     }
   };
-
-  const handleFileDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setDragActive(false);
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      const file = e.dataTransfer.files[0];
-      setUploadedFile({
-        file,
-        name: file.name,
-        type: file.type,
-        size: file.size,
-        status: 'uploaded',
-      });
-      setValidationError(null);
-    }
-  };
-
-  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setUploadedFile({
-        file,
-        name: file.name,
-        type: file.type,
-        size: file.size,
-        status: 'uploaded',
-      });
-      setValidationError(null);
-    }
-  };
-
-  const handleAnalyzeDocument = async () => {
-    if (!uploadedFile) {
-      setValidationError('Please select or upload a tender document first.');
-      return;
-    }
-    setValidationError(null);
-    const result = await analyzeFile(uploadedFile.file);
-    if (result && result.analysis_id) {
-      navigate(`/analysis/${result.analysis_id}/review`, {
-        state: { analysis: result },
-      });
-    }
-  };
-
-  if (status === 'processing') {
-    return (
-      <div className="py-12 w-full">
-        <AnalysisLoading />
-      </div>
-    );
-  }
-
-  const charCount = inputText.length;
 
   return (
-    <div className="w-full max-w-full space-y-4 sm:space-y-5 pb-6 animate-fade-in box-border">
+    <div className="w-full max-w-full space-y-5 sm:space-y-6 pb-8 animate-fade-in box-border">
       {/* ============================================================
-          1. PAGE TITLE & VALUE PROPOSITION
-          Compact vertical footprint for first viewport visibility
+          1. HERO HEADER: PROCUREMENT INTELLIGENCE OVERVIEW
          ============================================================ */}
-      <div className="space-y-1">
-        <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#0F766E]/8 border border-[#0F766E]/20 text-[11px] font-semibold text-[#0F766E] uppercase tracking-wider">
-          <Sparkles className="w-3 h-3 text-[#0F766E]" />
-          <span>BIS Standards Recommendation Engine</span>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200/80 pb-4 sm:pb-5">
+        <div className="space-y-1">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#0F766E]/8 border border-[#0F766E]/20 text-[11px] font-semibold text-[#0F766E] uppercase tracking-wider">
+            <Sparkles className="w-3 h-3 text-[#0F766E]" />
+            <span>BIS Standards Recommendation Engine</span>
+          </div>
+
+          <h1 className="text-[24px] sm:text-[28px] lg:text-[32px] font-bold text-[#102A43] tracking-tight leading-tight font-display">
+            Procurement Intelligence
+          </h1>
+
+          <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-2xl">
+            Turn procurement requirements into explainable, traceable BIS reference standards with transparent multi-signal verification.
+          </p>
         </div>
 
-        <h1 className="text-[24px] sm:text-[28px] lg:text-[32px] font-bold text-[#102A43] tracking-tight leading-tight font-display">
-          Procurement Intelligence
-        </h1>
-
-        <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-3xl">
-          Analyze procurement requirements and identify relevant Indian Standards. ISutra helps procurement teams translate specifications into actionable verified BIS reference standards.
-        </p>
+        <div className="shrink-0 flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => navigate('/analyze')}
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#0F766E] hover:bg-[#0D655E] text-white text-xs sm:text-sm font-semibold shadow-xs transition-all active:scale-[0.99] cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Start New Analysis</span>
+          </button>
+        </div>
       </div>
 
-      {/* Global Error Notice */}
-      {error && (
-        <div className="p-3 bg-red-50 border border-red-200 rounded-xl flex items-center gap-2.5 text-xs sm:text-sm text-red-700">
-          <AlertCircle className="w-4 h-4 shrink-0 text-red-500" />
-          <span>{error}</span>
+      {/* ============================================================
+          2. SECTION A: QUICK START BANNER
+         ============================================================ */}
+      <div className="bg-gradient-to-br from-white to-slate-50/80 rounded-2xl border border-slate-200/90 p-4 sm:p-6 shadow-xs relative overflow-hidden">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 relative z-10">
+          <div className="max-w-2xl space-y-1.5">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-[#0F766E] font-display">
+              Quick Start
+            </span>
+            <h2 className="text-base sm:text-lg font-bold text-[#102A43] font-display">
+              Start a new procurement analysis
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+              Describe your procurement requirement and ISutra will structure it, identify relevant BIS reference standards, explain the matching signals, and highlight information that needs verification.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2.5 shrink-0 pt-1 lg:pt-0">
+            <button
+              type="button"
+              onClick={() => navigate('/analyze')}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0F766E] hover:bg-[#0D655E] text-white text-xs sm:text-sm font-semibold shadow-xs transition-all active:scale-[0.99] cursor-pointer"
+            >
+              <span>Start New Analysis</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+
+            <Link
+              to="/standards"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-[#102A43] border border-slate-200 text-xs sm:text-sm font-semibold transition-colors"
+            >
+              <BookOpen className="w-4 h-4 text-slate-500" />
+              <span>Browse Directory</span>
+            </Link>
+          </div>
         </div>
-      )}
+      </div>
 
       {/* ============================================================
-          2. SINGLE ANALYSIS WORKSPACE CARD
+          3. SECTION B: WHAT ISUTRA DOES (4 CORE CAPABILITIES)
          ============================================================ */}
-      <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden w-full max-w-full box-border">
-        {/* Card Header: Section Title + Responsive Segmented Tabs */}
-        <div className="border-b border-slate-100 p-3.5 sm:p-4 bg-slate-50/60 flex flex-col md:flex-row md:items-center justify-between gap-3">
-          <div className="shrink-0">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block font-display">
-              Start a New Analysis
-            </span>
-            <h2 className="text-[15px] sm:text-[17px] font-bold text-[#102A43]">
-              Input Specification
-            </h2>
+      <div className="space-y-3">
+        <div className="flex items-center gap-1.5">
+          <Sparkles className="w-3.5 h-3.5 text-[#0F766E]" />
+          <h2 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-[#102A43] font-display">
+            What ISutra Does
+          </h2>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          {/* Card 1 */}
+          <div className="bg-white rounded-xl border border-slate-200/80 p-4 shadow-2xs hover:shadow-xs transition-shadow flex flex-col justify-between">
+            <div>
+              <div className="w-9 h-9 rounded-lg bg-[#0F766E]/10 flex items-center justify-center text-[#0F766E] mb-3">
+                <Sliders className="w-4 h-4" />
+              </div>
+              <h3 className="text-xs sm:text-sm font-bold text-[#102A43] mb-1 font-display">
+                1. Requirement Extraction
+              </h3>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Turn unstructured procurement text into structured requirements.
+              </p>
+            </div>
           </div>
 
-          {/* Responsive Segmented Tabs: wraps into clean columns on mobile/tablet, never clips */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 md:flex md:items-center gap-1 p-1 bg-slate-100 rounded-xl border border-slate-200/70 w-full md:w-auto max-w-full">
-            {[
-              { id: 'product_description', label: 'Product Description', icon: FileText },
-              { id: 'technical_specification', label: 'Technical Specification', icon: ClipboardList },
-              { id: 'tender_document', label: 'Tender Document', icon: FileArchive },
-            ].map((tab) => {
-              const isActive = inputType === tab.id;
-              const Icon = tab.icon;
-              return (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => {
-                    setInputType(tab.id as InputType);
-                    setValidationError(null);
-                  }}
-                  className={`min-w-0 flex items-center justify-center gap-1.5 px-3 py-2 sm:py-1.5 rounded-lg text-xs sm:text-[13px] transition-all font-medium cursor-pointer ${
-                    isActive
-                      ? 'bg-white text-[#102A43] shadow-xs font-semibold border border-slate-200/80'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
-                  }`}
-                >
-                  <Icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-[#0F766E]' : 'text-slate-400'}`} />
-                  <span className="truncate sm:whitespace-nowrap">{tab.label}</span>
-                </button>
-              );
-            })}
+          {/* Card 2 */}
+          <div className="bg-white rounded-xl border border-slate-200/80 p-4 shadow-2xs hover:shadow-xs transition-shadow flex flex-col justify-between">
+            <div>
+              <div className="w-9 h-9 rounded-lg bg-[#0F766E]/10 flex items-center justify-center text-[#0F766E] mb-3">
+                <Compass className="w-4 h-4" />
+              </div>
+              <h3 className="text-xs sm:text-sm font-bold text-[#102A43] mb-1 font-display">
+                2. Explainable BIS Matching
+              </h3>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Match requirements against the verified BIS reference dataset using transparent multi-signal scoring.
+              </p>
+            </div>
+          </div>
+
+          {/* Card 3 */}
+          <div className="bg-white rounded-xl border border-slate-200/80 p-4 shadow-2xs hover:shadow-xs transition-shadow flex flex-col justify-between">
+            <div>
+              <div className="w-9 h-9 rounded-lg bg-[#0F766E]/10 flex items-center justify-center text-[#0F766E] mb-3">
+                <FileCheck className="w-4 h-4" />
+              </div>
+              <h3 className="text-xs sm:text-sm font-bold text-[#102A43] mb-1 font-display">
+                3. Evidence & Gap Analysis
+              </h3>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                See why a standard matched and identify information that needs verification.
+              </p>
+            </div>
+          </div>
+
+          {/* Card 4 */}
+          <div className="bg-white rounded-xl border border-slate-200/80 p-4 shadow-2xs hover:shadow-xs transition-shadow flex flex-col justify-between">
+            <div>
+              <div className="w-9 h-9 rounded-lg bg-[#0F766E]/10 flex items-center justify-center text-[#0F766E] mb-3">
+                <Layers className="w-4 h-4" />
+              </div>
+              <h3 className="text-xs sm:text-sm font-bold text-[#102A43] mb-1 font-display">
+                4. Standards Comparison
+              </h3>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Compare relevant standards side-by-side using documented reference fields.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ============================================================
+          4. SECTION E: COMPACT 4-STEP HOW IT WORKS
+         ============================================================ */}
+      <div className="bg-slate-50/70 rounded-2xl border border-slate-200/70 p-4 sm:p-5">
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 font-display">
+            How It Works
+          </span>
+          <Link
+            to="/how-it-works"
+            className="text-xs text-[#0F766E] hover:underline font-medium inline-flex items-center gap-1"
+          >
+            <span>Learn more</span>
+            <ArrowRight className="w-3 h-3" />
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+          <div className="bg-white p-3 rounded-xl border border-slate-200/60 shadow-2xs">
+            <span className="text-[10px] font-bold text-[#0F766E] uppercase tracking-wider block mb-0.5">
+              Step 01
+            </span>
+            <h4 className="text-xs font-bold text-[#102A43]">Describe</h4>
+            <p className="text-[11px] text-slate-500 mt-0.5">
+              Enter procurement specification or load the demo tender extract.
+            </p>
+          </div>
+
+          <div className="bg-white p-3 rounded-xl border border-slate-200/60 shadow-2xs">
+            <span className="text-[10px] font-bold text-[#0F766E] uppercase tracking-wider block mb-0.5">
+              Step 02
+            </span>
+            <h4 className="text-xs font-bold text-[#102A43]">Extract</h4>
+            <p className="text-[11px] text-slate-500 mt-0.5">
+              Review and confirm structured product parameters and conditions.
+            </p>
+          </div>
+
+          <div className="bg-white p-3 rounded-xl border border-slate-200/60 shadow-2xs">
+            <span className="text-[10px] font-bold text-[#0F766E] uppercase tracking-wider block mb-0.5">
+              Step 03
+            </span>
+            <h4 className="text-xs font-bold text-[#102A43]">Match</h4>
+            <p className="text-[11px] text-slate-500 mt-0.5">
+              Evaluate ranked recommendations with transparent 5-stage traceability.
+            </p>
+          </div>
+
+          <div className="bg-white p-3 rounded-xl border border-slate-200/60 shadow-2xs">
+            <span className="text-[10px] font-bold text-[#0F766E] uppercase tracking-wider block mb-0.5">
+              Step 04
+            </span>
+            <h4 className="text-xs font-bold text-[#102A43]">Verify</h4>
+            <p className="text-[11px] text-slate-500 mt-0.5">
+              Conduct gap analysis, checklist checks, and side-by-side comparison.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* ============================================================
+          5. SECTION C & D: REFERENCE DATASET & RECENT ANALYSES
+         ============================================================ */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
+        {/* Card D: Reference Dataset */}
+        <div className="bg-white rounded-2xl border border-slate-200/90 p-4 sm:p-5 shadow-xs flex flex-col justify-between">
+          <div className="space-y-2">
+            <div className="flex items-center gap-1.5">
+              <ShieldCheck className="w-4 h-4 text-[#0F766E]" />
+              <span className="text-[11px] font-bold uppercase tracking-wider text-[#0F766E] font-display">
+                Reference Dataset
+              </span>
+            </div>
+
+            <h3 className="text-sm sm:text-base font-bold text-[#102A43] font-display">
+              Verified BIS Reference Dataset
+            </h3>
+
+            <p className="text-xs text-slate-600 leading-relaxed">
+              ISutra currently demonstrates its workflow against a curated reference dataset of 40 verified BIS standards across selected infrastructure sectors.
+            </p>
+
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200/70 text-[11px] text-slate-500 leading-relaxed">
+              <strong className="text-slate-700 font-semibold">Scope note: </strong>
+              Covers representative Indian Standards across Road & Street Lighting, Electrical Cables, Construction, Pipes & Water Supply, and Renewable Systems.
+            </div>
+          </div>
+
+          <div className="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between">
+            <span className="text-xs font-semibold text-slate-700">
+              40 Verified Records
+            </span>
+            <Link
+              to="/standards"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#0F766E] hover:text-[#0D655E]"
+            >
+              <span>Explore Standards</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
           </div>
         </div>
 
-        {/* Card Body */}
-        <div className="p-3.5 sm:p-5 space-y-3.5 sm:space-y-4">
-          {/* Quick Test Inputs */}
+        {/* Card C: Recent Analyses */}
+        <div className="bg-white rounded-2xl border border-slate-200/90 p-4 sm:p-5 shadow-xs flex flex-col justify-between">
           <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 font-display">
-                Quick Test Inputs
-              </span>
-              <span className="text-[11px] text-slate-400 hidden sm:inline">
-                Click any sample to populate
-              </span>
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              {EXAMPLE_SPECS.map((ex, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => {
-                    setInputType(ex.type);
-                    setInputText(ex.text);
-                    setValidationError(null);
-                  }}
-                  className="px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-50 hover:bg-[#0F766E]/8 text-slate-700 hover:text-[#0F766E] border border-slate-200 hover:border-[#0F766E]/40 transition-all text-left shadow-2xs cursor-pointer max-w-full truncate"
-                >
-                  {ex.title}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Mode 1 & 2: Calibrated Textarea (160-180px desktop, 140-160px mobile) */}
-          {inputType !== 'tender_document' ? (
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <label className="text-xs sm:text-sm font-semibold text-[#102A43]">
-                  {inputType === 'product_description'
-                    ? 'Product Description'
-                    : 'Technical Specification Requirements'}
-                </label>
-                <span className="text-xs text-slate-400 font-mono">
-                  {charCount} character{charCount === 1 ? '' : 's'}
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-1.5">
+                <History className="w-4 h-4 text-[#0F766E]" />
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[#0F766E] font-display">
+                  Recent Analyses
                 </span>
               </div>
-
-              <textarea
-                value={inputText}
-                onChange={(e) => {
-                  setInputText(e.target.value);
-                  if (validationError) setValidationError(null);
-                }}
-                placeholder="Example: Outdoor LED street lighting system, 100W, weather resistant, pole mounted, IP65 enclosure, operating temperature -10°C to 55°C, minimum luminous efficacy 120 lm/W, surge protection 10kV..."
-                className="w-full h-[150px] sm:h-[160px] lg:h-[170px] text-xs sm:text-sm text-slate-800 bg-slate-50/50 border border-slate-200 rounded-xl p-3 sm:p-3.5 focus:bg-white focus:ring-2 focus:ring-[#0F766E]/20 focus:border-[#0F766E] outline-hidden transition-all placeholder:text-slate-400 leading-relaxed resize-none"
-              />
-
-              <div className="flex items-center justify-between text-[11px] sm:text-xs text-slate-500">
-                <span>Tip: Include electrical/mechanical ratings, operating environment, and certifications for highest standard precision.</span>
-              </div>
-            </div>
-          ) : (
-            /* Mode 3: Tender Document Upload */
-            <div className="space-y-3">
-              {/* Prominent Prototype Limitation Notice */}
-              <div className="p-3.5 bg-amber-50/90 border border-amber-200 rounded-xl text-xs text-amber-900 flex items-start gap-2.5 shadow-2xs">
-                <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-                <div className="leading-relaxed">
-                  <strong className="font-semibold text-amber-950">Prototype limitation: </strong>
-                  <span>
-                    Arbitrary uploaded documents are not parsed in this version. Use procurement text input or the provided sample for demonstration.
-                  </span>
-                </div>
-              </div>
-
-              <div
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  setDragActive(true);
-                }}
-                onDragLeave={() => setDragActive(false)}
-                onDrop={handleFileDrop}
-                className={`border-2 border-dashed rounded-xl p-5 sm:p-6 text-center transition-all ${
-                  dragActive
-                    ? 'border-[#0F766E] bg-[#0F766E]/5'
-                    : 'border-slate-200 hover:border-[#0F766E]/50 bg-slate-50/50'
-                }`}
+              <Link
+                to="/history"
+                className="text-xs text-slate-500 hover:text-slate-800 font-medium"
               >
-                <div className="w-10 h-10 rounded-xl bg-white shadow-2xs border border-slate-200 flex items-center justify-center mx-auto mb-2 text-[#0F766E]">
-                  <UploadCloud className="w-5 h-5" />
-                </div>
-                <h3 className="text-xs sm:text-sm font-semibold text-[#102A43] mb-0.5 font-display">
-                  Drop demo tender document here, or browse
-                </h3>
-                <p className="text-[11px] text-slate-500 mb-3 max-w-sm mx-auto">
-                  Upload tender extract (PDF, DOCX, or TXT up to 10MB) to load sample demonstration specifications.
-                </p>
-                <div className="flex flex-wrap items-center justify-center gap-2">
-                  <label className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-[#102A43] border border-slate-200 text-xs font-semibold cursor-pointer shadow-2xs transition-all">
-                    <FileText className="w-3.5 h-3.5 text-[#0F766E]" />
-                    <span>Choose File</span>
-                    <input
-                      type="file"
-                      accept=".pdf,.docx,.txt"
-                      onChange={handleFileInputChange}
-                      className="hidden"
-                    />
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const mockFile = new window.File(
-                        ['Sample Tender Document Content'],
-                        'Municipal_LED_Streetlight_Tender_Sample.pdf',
-                        { type: 'application/pdf' }
-                      );
-                      setUploadedFile({
-                        file: mockFile,
-                        name: mockFile.name,
-                        type: mockFile.type,
-                        size: 45200,
-                        status: 'uploaded',
-                      });
-                      setValidationError(null);
-                    }}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-teal-50 hover:bg-teal-100 text-[#0F766E] border border-teal-200 text-xs font-semibold cursor-pointer transition-all"
-                  >
-                    <Sparkles className="w-3.5 h-3.5 text-[#0F766E]" />
-                    <span>Load Demo Sample Document</span>
-                  </button>
-                </div>
+                View History
+              </Link>
+            </div>
+
+            <h3 className="text-sm sm:text-base font-bold text-[#102A43] font-display mb-2">
+              Recent Procurement Records
+            </h3>
+
+            {loadingHistory ? (
+              <div className="py-6 text-center text-xs text-slate-400">
+                Loading session history...
               </div>
-
-              {uploadedFile && (
-                <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-xl">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <FileText className="w-4 h-4 text-[#0F766E] shrink-0" />
-                    <div className="min-w-0 truncate">
-                      <p className="text-xs font-semibold text-[#102A43] truncate">
-                        {uploadedFile.name}
-                      </p>
-                      <p className="text-[11px] text-amber-700 font-medium">
-                        {(uploadedFile.size / 1024).toFixed(1)} KB • Demo tender extract (Sample analysis mode)
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setUploadedFile(null)}
-                    className="text-xs text-red-600 hover:underline font-medium shrink-0 ml-3 cursor-pointer"
+            ) : recentAnalyses.length > 0 ? (
+              <div className="space-y-2">
+                {recentAnalyses.map((item) => (
+                  <Link
+                    key={item.id}
+                    to={`/analysis/${item.analysis_id}/review`}
+                    className="block p-2.5 rounded-xl bg-slate-50 hover:bg-[#0F766E]/5 border border-slate-200/80 transition-colors"
                   >
-                    Remove
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* ============================================================
-              3. INTELLIGENCE CONTEXT PANEL: WHAT ISUTRA IDENTIFIES
-              Desktop (>= 1200px): 4 cols
-              1024-1199px & 768-1023px: 2 cols x 2 rows
-              < 768px: 1 col
-             ============================================================ */}
-          <div className="rounded-xl bg-slate-50/70 border border-slate-200/70 p-3 sm:p-3.5 w-full box-border">
-            <div className="flex items-center gap-1.5 mb-2">
-              <Sparkles className="w-3.5 h-3.5 text-[#0F766E]" />
-              <span className="text-[11px] font-bold uppercase tracking-wider text-[#0F766E]">
-                What ISutra Identifies
-              </span>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 min-[1200px]:grid-cols-4 gap-2 sm:gap-2.5 w-full">
-              {INTELLIGENCE_POINTS.map((pt, idx) => {
-                const Icon = pt.icon;
-                return (
-                  <div
-                    key={idx}
-                    className="flex items-start gap-2 p-2 rounded-lg bg-white border border-slate-200/60 shadow-2xs min-w-0"
-                  >
-                    <div className="w-6 h-6 rounded-md bg-[#0F766E]/8 flex items-center justify-center text-[#0F766E] shrink-0 mt-0.5">
-                      <Icon className="w-3 h-3" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <h4 className="text-xs font-semibold text-[#102A43] leading-snug truncate">
-                        {pt.title}
-                      </h4>
-                      <p className="text-[11px] text-slate-500 leading-tight mt-0.5 line-clamp-2">
-                        {pt.desc}
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-xs font-semibold text-[#102A43] truncate font-display">
+                        {item.product_name || 'Procurement Analysis'}
                       </p>
+                      <span className="text-[10px] text-slate-400 shrink-0">
+                        {formatDate(item.created_at)}
+                      </span>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
+                    <p className="text-[11px] text-slate-500 truncate mt-0.5">
+                      {item.short_description || 'View extracted requirements & standards'}
+                    </p>
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <div className="p-4 bg-slate-50 rounded-xl border border-slate-200/70 text-center space-y-2 my-1">
+                <FileText className="w-6 h-6 text-slate-400 mx-auto" />
+                <p className="text-xs text-slate-600">
+                  No previous analyses recorded in this session.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => navigate('/analyze')}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs font-semibold text-[#0F766E] hover:bg-slate-50 transition-colors cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Start First Analysis</span>
+                </button>
+              </div>
+            )}
           </div>
 
-          {/* Validation error notice */}
-          {validationError && (
-            <div className="flex items-center gap-2 text-xs sm:text-sm text-red-700 bg-red-50 px-3 py-2 rounded-lg border border-red-200 animate-fade-in">
-              <AlertCircle className="w-4 h-4 shrink-0 text-red-500" />
-              <span>{validationError}</span>
-            </div>
-          )}
-
-          {/* Action Row: Clear & Primary Analyze Button */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 pt-2.5 border-t border-slate-100">
-            <div>
-              {inputText && (
-                <button
-                  type="button"
-                  onClick={clear}
-                  className="px-2.5 py-1 text-xs text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors font-medium inline-flex items-center gap-1.5 cursor-pointer"
-                >
-                  <RotateCcw className="w-3.5 h-3.5" />
-                  <span>Clear Input</span>
-                </button>
-              )}
-            </div>
-
-            <div className="flex items-center gap-2 justify-end w-full sm:w-auto">
-              {inputType !== 'tender_document' ? (
-                <button
-                  type="button"
-                  onClick={handleStartAnalysis}
-                  className="w-full sm:w-auto h-10 sm:h-11 px-6 rounded-xl bg-[#0F766E] hover:bg-[#0D655E] text-white text-xs sm:text-sm font-semibold shadow-xs flex items-center justify-center gap-2 transition-all cursor-pointer shrink-0 active:scale-[0.99]"
-                >
-                  <Send className="w-3.5 h-3.5" />
-                  <span>Analyze Specification</span>
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={handleAnalyzeDocument}
-                  disabled={!uploadedFile}
-                  className={`w-full sm:w-auto h-10 sm:h-11 px-6 rounded-xl text-white text-xs sm:text-sm font-semibold shadow-xs flex items-center justify-center gap-2 transition-all shrink-0 ${
-                    uploadedFile
-                      ? 'bg-[#0F766E] hover:bg-[#0D655E] cursor-pointer active:scale-[0.99]'
-                      : 'bg-slate-300 cursor-not-allowed'
-                  }`}
-                >
-                  <Send className="w-3.5 h-3.5" />
-                  <span>Analyze Demo Tender Document</span>
-                </button>
-              )}
-            </div>
+          <div className="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between">
+            <span className="text-[11px] text-slate-500">
+              Audit trails & requirement confirmation records
+            </span>
+            <Link
+              to="/history"
+              className="inline-flex items-center gap-1 text-xs font-semibold text-[#0F766E] hover:text-[#0D655E]"
+            >
+              <span>Review Analysis History</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
           </div>
         </div>
       </div>

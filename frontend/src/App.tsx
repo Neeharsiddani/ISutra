@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/layout/Layout';
 import HomePage from './pages/HomePage';
 import DashboardPage from './pages/DashboardPage';
+import AnalyzePage from './pages/AnalyzePage';
 import RequirementReviewPage from './pages/RequirementReviewPage';
 import RecommendationsResultsPage from './pages/RecommendationsResultsPage';
 import RequirementGapAnalysisPage from './pages/RequirementGapAnalysisPage';
@@ -24,7 +25,7 @@ export default function App() {
         <Route element={<Layout />}>
           <Route path="/" element={<HomePage />} />
           <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/analyze" element={<DashboardPage />} />
+          <Route path="/analyze" element={<AnalyzePage />} />
           <Route path="/analysis/:id/review" element={<RequirementReviewPage />} />
           <Route path="/analysis/:id/recommendations" element={<RecommendationsResultsPage />} />
           <Route path="/analysis/:id/recommendations/:standardId/gap-analysis" element={<RequirementGapAnalysisPage />} />
