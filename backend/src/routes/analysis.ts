@@ -50,4 +50,8 @@ router.post('/upload', upload.single('document'), analysisController.uploadDocum
 router.post('/:id/recommendations', recommendationsController.getAnalysisRecommendations);
 router.get('/:id/recommendations', recommendationsController.getAnalysisRecommendations);
 
+// GET & POST /api/analysis/:id/recommendations/:standardId/gap-analysis — Phase 6: Gap analysis for standard
+router.get('/:id/recommendations/:standardId/gap-analysis', recommendationsController.getRequirementGapAnalysis);
+router.post('/:id/recommendations/:standardId/gap-analysis', recommendationsController.getRequirementGapAnalysis);
+
 export default router;

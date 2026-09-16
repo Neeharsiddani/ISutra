@@ -375,3 +375,72 @@ export interface RecommendationsResponse {
   recommendations: StandardRecommendation[];
   metadata: MatchingMetadata;
 }
+
+// ============================================================
+// Phase 6: Procurement Requirement Gap Analysis & Review Models
+// ============================================================
+
+export type RequirementGapStatus =
+  | 'supported'
+  | 'not_supported'
+  | 'not_available'
+  | 'needs_verification';
+
+export interface RequirementGapItem {
+  requirementId: string;
+  category: 'product' | 'application' | 'environment' | 'installation' | 'technical_parameter' | 'material' | 'safety' | 'testing';
+  requirementLabel: string;
+  requirementValue: string;
+  sourceText?: string;
+
+  standardField?: string;
+  standardEvidence?: string;
+
+  status: RequirementGapStatus;
+  statusLabel: string;
+
+  explanation: string;
+
+  evidence?: MatchEvidenceItem[];
+}
+
+export interface RequirementGapAnalysis {
+  standardId: string;
+  standardNumber: string;
+  standardTitle: string;
+  standardCategory: string;
+  officialSourceUrl: string;
+
+  totalRequirements: number;
+  supportedCount: number;
+  notSupportedCount: number;
+  notAvailableCount: number;
+  needsVerificationCount: number;
+
+  referenceCoverage: number | null;
+  referenceCoverageLabel: string;
+  referenceCoverageExplanation: string;
+
+  items: RequirementGapItem[];
+
+  verificationActions: string[];
+
+  disclaimer: string;
+  metadata: {
+    datasetName: string;
+    standardsEvaluated: number;
+    sourceProvenance: string;
+    timestamp: string;
+  };
+}
+
+export interface GapAnalysisResponse {
+  success: boolean;
+  analysisId?: string;
+  gapAnalysis: RequirementGapAnalysis;
+  error?: {
+    message: string;
+    statusCode: number;
+    guidance?: string[];
+  };
+}

@@ -19,6 +19,7 @@ import {
   Check,
   Minus,
   ShieldCheck,
+  Scale,
 } from 'lucide-react';
 import { getAnalysisRecommendations, getRecommendations } from '../services/api';
 import type {
@@ -759,6 +760,15 @@ export default function RecommendationsResultsPage() {
                     </button>
 
                     <div className="flex flex-wrap items-center gap-2">
+                      <Link
+                        to={`/analysis/${id || ''}/recommendations/${rec.standard.id}/gap-analysis`}
+                        state={{ fromAnalysisId: id, standard: rec.standard, requirements: reqs }}
+                        className="min-h-[36px] px-3.5 py-1.5 rounded-lg bg-teal-50 hover:bg-teal-100 text-[#0F766E] border border-teal-200 text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-2xs"
+                      >
+                        <Scale className="w-3.5 h-3.5 text-[#0F766E]" />
+                        <span>Check Requirement Gaps</span>
+                      </Link>
+
                       <Link
                         to={`/standards/${rec.standard.id}?fromAnalysis=${id || ''}`}
                         state={{ fromAnalysisId: id }}

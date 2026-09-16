@@ -14,6 +14,7 @@ import type {
   StandardsSearchParams,
   StandardsSearchResponse,
   RecommendationsResponse,
+  GapAnalysisResponse,
 } from '../types';
 import {
   DEMO_STANDARDS,
@@ -248,6 +249,42 @@ export async function getAnalysisRecommendations(
   if (!response.ok) {
     const errBody = await response.json().catch(() => null);
     throw new Error(errBody?.error?.message || `Recommendations error: ${response.status}`);
+  }
+
+  return await response.json();
+}
+
+// --- Phase 6: Requirement Gap Analysis Endpoints ---
+
+export async function getRequirementGapAnalysis(
+  analysisId: string,
+  standardId: string
+): Promise<GapAnalysisResponse> {
+  const response = await fetch(
+    `${API_BASE_URL}/analysis/${analysisId}/recommendations/${standardId}/gap-analysis`
+  );
+
+  if (!response.ok) {
+    const errBody = await response.json().catch(() => null);
+    throw new Error(errBody?.error?.message || `Gap analysis error: ${response.status}`);
+  }
+
+  return await response.json();
+}
+
+export async function analyzeRequirementGapsDirect(
+  requirements: StructuredRequirements,
+  standardId: string
+): Promise<GapAnalysisResponse> {
+  const response = await fetch(`${API_BASE_URL}/recommendations/gap-analysis`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ requirements, standardId }),
+  });
+
+  if (!response.ok) {
+    const errBody = await response.json().catch(() => null);
+    throw new Error(errBody?.error?.message || `Gap analysis error: ${response.status}`);
   }
 
   return await response.json();

@@ -17,4 +17,7 @@ router.post('/analysis/:id', recommendationsController.getAnalysisRecommendation
 // GET /api/recommendations/analysis/:id — Convenience GET route for analysis recommendations
 router.get('/analysis/:id', recommendationsController.getAnalysisRecommendations);
 
+// POST /api/recommendations/gap-analysis — Phase 6: Requirement Gap Analysis for a selected standard
+router.post('/gap-analysis', recommendationsController.getRequirementGapAnalysis);
+
 export default router;
