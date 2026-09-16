@@ -33,7 +33,7 @@ export default function AboutPage() {
           specifications and tender documents.
         </p>
         <p className="text-xs sm:text-sm text-text-muted leading-relaxed">
-          Currently, procurement officials must search manually through thousands of standards to find applicable ones, identify normative references, check for latest amendments, and determine certification requirements. ISutra automates this workflow with an intelligent requirement understanding layer and semantic standards recommendation.
+          Currently, procurement officials must search manually through thousands of standards to find applicable ones, identify normative references, check for latest amendments, and determine relevant standards. ISutra streamlines this workflow with an intelligent requirement understanding layer and explainable standards recommendations.
         </p>
       </Card>
 
@@ -51,8 +51,10 @@ export default function AboutPage() {
             'Identify key equipment parameters, operating environments, and installation constraints',
             'Detect missing information and generate dynamic clarification questions',
             'Provide human-in-the-loop verification and editing for procurement officers',
-            'Maintain audit trails and analysis history for tender compliance',
-            'Phase 3 preparation: semantic matching against the Indian Standards Knowledge Base',
+            'Score standards using an explainable, deterministic multi-signal matching engine',
+            'Provide 5-stage traceability from raw text to official BIS portal records',
+            'Perform requirement gap analysis with conservative Reference Coverage metrics',
+            'Side-by-side standards comparison workspace across 11 structured dimensions',
           ].map((item, i) => (
             <li key={i} className="flex items-start gap-2.5 text-xs sm:text-sm text-text-muted">
               <div className="w-1.5 h-1.5 rounded-full bg-teal shrink-0 mt-1.5" />
@@ -67,11 +69,11 @@ export default function AboutPage() {
         <div className="flex items-start gap-3 mb-2">
           <Layers className="w-5 h-5 text-teal shrink-0 mt-0.5" />
           <h2 className="text-base font-bold text-text-primary">
-            Phase 2 Scope & Disclaimer
+            Prototype Scope & Disclaimer
           </h2>
         </div>
         <p className="text-xs sm:text-sm text-text-muted leading-relaxed mb-2">
-          ISutra is in <strong>Phase 2 (AI Requirement Understanding)</strong>. In this phase, the system extracts, validates, and stores procurement requirements. It strictly does not invent Indian Standards or claim to provide official recommendations.
+          ISutra is a Smart India Hackathon (SIH) prototype demonstrating an end-to-end procurement intelligence workflow across Phases 1 through 7. Recommendations are evaluated against a curated reference dataset of 40 verified BIS standards and must be independently verified against official BIS publications before procurement or compliance decisions.
         </p>
         <p className="text-[11px] text-text-light">
           Smart India Hackathon (SIH) Prototype • Not an official service of the Bureau of Indian Standards (BIS).

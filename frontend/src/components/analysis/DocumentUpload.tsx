@@ -109,8 +109,8 @@ export default function DocumentUpload({
             <X className="w-4 h-4" />
           </button>
         </div>
-        <p className="text-[11px] text-text-muted mt-3 italic">
-          Document processing will be available in a later phase. The file has been uploaded for demonstration purposes.
+        <p className="text-[11px] text-amber-700 mt-3 italic font-medium">
+          Prototype limitation: arbitrary uploaded documents are not parsed in this version. Use procurement text input or the provided sample for demonstration.
         </p>
       </div>
     );

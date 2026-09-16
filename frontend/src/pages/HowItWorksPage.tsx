@@ -38,7 +38,7 @@ export default function HowItWorksPage() {
           details={[
             'Enter a product description — describe the product being procured',
             'Paste technical specifications — include detailed technical parameters',
-            'Upload a tender document — PDF, DOC, or DOCX files are supported',
+            'Upload a tender document — Demonstration pathway with pre-configured sample specifications',
           ]}
         />
         <StepCard
@@ -50,22 +50,20 @@ export default function HowItWorksPage() {
             'Natural Language Processing (NLP) extracts key requirements',
             'Technical parameters and product categories are identified',
             'Entity recognition identifies specific product types and attributes',
-            'Semantic understanding captures the intent of the specification',
+            'Human-in-the-loop review allows refining parameters before matching',
           ]}
-          badge="Planned — Phase 2-3"
         />
         <StepCard
           step={3}
           icon={<Search className="w-6 h-6" />}
           title="Standards Matching"
-          description="Extracted requirements are matched against the Indian Standards database:"
+          description="Extracted requirements are matched against verified Indian Standards records:"
           details={[
-            'Semantic search finds standards with matching scope and requirements',
-            'Relevance scoring ranks standards by applicability',
-            'Each recommendation includes an explanation of why it was selected',
-            'Related and allied standards are identified through the relationship graph',
+            'Explainable multi-signal matching finds standards with aligned scope and requirements',
+            'Relevance scoring ranks standards by product, scope, application, and environment',
+            'Each recommendation includes an explainable score breakdown and 5-stage traceability',
+            'Requirement gap analysis highlights reference coverage and physical verification actions',
           ]}
-          badge="Planned — Phase 3"
         />
         <StepCard
           step={4}
@@ -73,12 +71,11 @@ export default function HowItWorksPage() {
           title="Comprehensive Results"
           description="You receive a complete package of standards information:"
           details={[
-            'Ranked list of recommended Indian Standards with relevance scores',
-            'Allied and normative reference standards',
-            'Test methods and safety standards',
-            'Installation requirements',
-            'Applicable certification requirements (BIS, CRS, Hallmarking)',
-            'Latest version and amendment information',
+            'Ranked list of recommended Indian Standards with explainable relevance breakdown',
+            'Side-by-side comparison workspace across 11 structured dimensions',
+            'Targeted physical document verification checklists',
+            'Direct verification links to official BIS portal records (bis.gov.in)',
+            'Latest edition year and revision status',
           ]}
         />
       </div>
@@ -92,30 +89,27 @@ export default function HowItWorksPage() {
           <ArchCard
             icon={<Layers className="w-5 h-5" />}
             title="Standards Database"
-            description="Structured PostgreSQL database storing Indian Standards metadata, relationships, amendments, and certification requirements."
+            description="Verified Indian Standards reference records with official BIS metadata, scope, and authenticated portal URLs."
           />
           <ArchCard
             icon={<Cpu className="w-5 h-5" />}
             title="AI/NLP Engine"
             description="Natural language processing pipeline for extracting technical requirements from procurement specifications."
-            planned
           />
           <ArchCard
             icon={<Database className="w-5 h-5" />}
             title="Multi-Signal Matching"
             description="Explainable multi-signal matching using product, scope, application, environment, technical, and safety signals."
-            planned
           />
           <ArchCard
             icon={<Zap className="w-5 h-5" />}
             title="Recommendation Engine"
-            description="Intelligent ranking system that scores and explains standards relevance based on specification analysis."
-            planned
+            description="Deterministic ranking system that scores and explains standards relevance with full mathematical transparency."
           />
           <ArchCard
             icon={<FileText className="w-5 h-5" />}
-            title="Document Processing"
-            description="PDF and DOCX processing pipeline for extracting specifications from tender documents."
+            title="Document Processing (OCR)"
+            description="Future pipeline for arbitrary PDF and DOCX text extraction from scanned tender documents."
             planned
           />
           <ArchCard

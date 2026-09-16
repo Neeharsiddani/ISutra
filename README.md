@@ -10,36 +10,120 @@
 
 ## 📋 Problem Statement
 
-Government departments, Public Sector Enterprises (PSUs), procurement agencies, and private organizations need to identify applicable Indian Standards (IS) when preparing procurement specifications. 
+Government departments, Public Sector Enterprises (PSUs), municipal corporations, and private procurement agencies frequently need to identify applicable Indian Standards (IS) when drafting procurement specifications and tender schedules.
 
-**ISutra** bridges this gap using an AI understanding layer that analyzes product descriptions, technical specifications, and tender documents, extracts structured procurement requirements, tracks provenance, and prepares the verified specifications for semantic standards matching.
+Today, procurement teams often rely on manual catalog lookups or copy-pasting from outdated tenders, leading to obsolete standard citations, restrictive specifications, vendor disputes, and tender cancellations.
+
+**ISutra** addresses this challenge through an explainable, end-to-end procurement intelligence workflow. It ingests procurement requirements, extracts structured parameters with provenance tracking, maps them to verified Indian Standards using deterministic multi-signal scoring, performs conservative requirement gap analysis, and provides side-by-side comparison across complementary standards.
 
 ---
 
-## 📌 Current Status: Phase 2 Completed
+## 📌 Implementation Status: Phases 1–7 Completed
 
-### Phase 2: AI Requirement Understanding + UI Redesign
-In Phase 2, ISutra has evolved from an informational concept into an enterprise-quality procurement intelligence workspace:
+ISutra implements a complete, 7-phase procurement intelligence lifecycle:
 
-1. **Enterprise SaaS Redesign**:
-   - Deep Navy (`#102A43`) persistent sidebar with clean workspace navigation.
-   - Clean procurement intelligence working area without promotional marketing fluff.
-   - 3 input modes: Product Description, Technical Specification, Tender Document.
-   - Verified progressive 4-step pipeline loading indicator.
+```
+Procurement Specification
+        ↓
+Phase 2: AI Requirement Extraction & Provenance Tracking
+        ↓
+Phase 2: Human-in-the-Loop Requirement Review & Confirmation
+        ↓
+Phase 4: Specificity-Aware Deterministic BIS Matching (6-Factor Scoring)
+        ↓
+Phase 4: Ranked BIS Recommendations
+        ↓
+Phase 5: 5-Stage Traceability Chain & Factor Score Transparency
+        ↓
+Phase 6: Procurement Requirement Gap Analysis ("Reference Coverage")
+        ↓
+Phase 7: Procurement Standards Comparison Workspace (Side-by-Side 11-Dimension Matrix)
+        ↓
+Official BIS Portal Records (bis.gov.in)
+```
 
-2. **AI Requirement Extraction Engine**:
-   - Modular AI architecture in `backend/src/services/ai/` supporting Google Gemini, OpenAI, and a built-in offline NLP pattern extraction engine for instant execution without mandatory API keys.
-   - Extracts 20 requirement dimensions: Product, Category, Application, Industry, Technical Parameters (with units & values), Materials, Environmental Conditions, Safety Requirements, Performance Requirements, Testing Requirements, Installation Requirements, Certification Mentions, Quantity, and Constraints.
-   - **Provenance Tracking**: Preserves exact source text snippets for every extracted parameter.
-   - **Confidence Scoring**: Highlights extraction certainty (`high`, `medium`, `needs_review`).
-   - **Missing Information Detection**: Pinpoints missing technical dimensions and provides interactive clarification questions with single-click options.
+### Summary of Completed Phases
 
-3. **Human-in-the-Loop Requirement Review**:
-   - Procurement officers can edit, add, and remove extracted parameters and tagged items.
-   - Formal confirmation flow with status: *"Requirements confirmed. Ready for Standards Matching."* (Phase 2 strictly stops here before standards recommendation).
+1. **Phase 1 — Core Foundation & Standards Directory**:
+   - Modern enterprise procurement interface with responsive navigation.
+   - Searchable directory of verified Indian Standards with category filtering.
 
-4. **Analysis History**:
-   - Complete history view tracking previous specifications, extraction counts, and confirmation statuses.
+2. **Phase 2 — AI Requirement Understanding**:
+   - Extraction of structured procurement requirements across 20 dimensions (Product, Category, Application, Industry, Technical Parameters, Environment, Installation, Safety, and Constraints).
+   - Provenance tracking preserving exact source text snippets for every extracted parameter.
+   - Interactive clarification flow pinpointing missing technical dimensions.
+   - Human-in-the-loop review allowing procurement officers to edit, add, and verify parameters before matching.
+
+3. **Phase 3 — Verified BIS Reference Dataset**:
+   - 40 strictly verified BIS reference records across three critical public procurement sectors:
+     - **Electrical & Lighting**: Road & street lighting luminaires, LED lamps, LED modules, floodlights, emergency lighting.
+     - **Cables & Power Distribution**: PVC insulated cables, XLPE insulated cables, heavy-duty industrial cables.
+     - **Civil Construction & Safety**: Plain and reinforced concrete (IS 456), high-strength deformed steel bars (IS 1786), structural steel, Portland and slag cements, industrial safety helmets, and safety footwear.
+   - Every standard contains authenticated metadata, scopes, and direct links to official BIS portals (`bis.gov.in` and `services.bis.gov.in`).
+
+4. **Phase 4 — Specificity-Aware Deterministic BIS Matching Engine**:
+   - Multi-signal scoring engine combining 6 weighted factors:
+     - Product & Category Match (30%)
+     - Keywords, Title & Scope Alignment (25%)
+     - Application Domain Fit (15%)
+     - Environmental Conditions (10%)
+     - Technical Parameter Ratings (10%)
+     - Safety & Testing Specifications (10%)
+   - Specificity-aware ranking: Distinguishes finished assemblies from subcomponents (e.g. dedicated street light luminaires strictly outrank generic LED lamps for street lighting tenders).
+   - Mathematical score transparency: Total relevance percentage is the exact sum of weighted factor contributions.
+   - 100% deterministic and reproducible across consecutive runs.
+   - Defensive guardrails returning `insufficientInformation` states for vague inputs and zero matches for unrelated domains.
+
+5. **Phase 5 — Evidence, Traceability & Trust Architecture**:
+   - 5-stage verification chain on every recommendation:
+     `User Input` → `Extracted Requirement` → `Matching Signal` → `BIS Standard` → `Official BIS Source`.
+   - Requirement vs. Standard comparison matrix for direct auditability.
+   - Zero evidence fabrication: Parameters absent in the reference record are explicitly cataloged as `not_available` rather than hallucinated.
+
+6. **Phase 6 — Procurement Requirement Gap Analysis & Review**:
+   - Analyzes coverage between user tender requirements and the selected BIS standard.
+   - Conservative 4-state taxonomy: `supported`, `not_supported`, `not_available`, and `needs_verification`.
+   - **Reference Coverage** metric: Transparently calculated as $\frac{\text{Supported}}{\text{Supported} + \text{Not Supported} + \text{Needs Verification}} \times 100$. Never mislabeled as "compliance percentage" or "certification score".
+   - Targeted physical document verification checklists directing officers to inspect official publications.
+
+7. **Phase 7 — Procurement Standards Comparison Workspace**:
+   - Side-by-side workspace comparing 2–3 selected standards simultaneously.
+   - Evaluates 11 structured dimensions: Documented Scope, Product Alignment, Application, Environment, Category, Product Types, Keywords, Technical Parameters, Safety Features, Testing Requirements, and Performance Specs.
+   - Set-difference technical distinctions derived strictly from recorded catalog attributes.
+   - Consolidated verification action checklist tagging applicable standards.
+   - Strictly neutral: Never declares a "winner", "best standard", or comparative score, reflecting that standards are often complementary references across tender schedule clauses.
+   - Responsive design with dedicated mobile standard tab switching.
+
+---
+
+## 🏛 Architecture: AI Perception vs. Deterministic Decision Logic
+
+ISutra enforces a strict separation between natural-language understanding and procurement verification:
+
+| Layer | Responsibility | Technology | Nature |
+|:---|:---|:---|:---|
+| **Perception Layer** | Extract structured procurement parameters from unstructured specification text | Google Gemini / OpenAI (structured JSON prompt); built-in offline NLP pattern extractor fallback | Generative AI / NLP |
+| **Decision Layer** | Match requirements against BIS standards | 6-factor weighted multi-signal engine (`standardsMatcher.ts`) | 100% Deterministic |
+| **Audit Layer** | Traceability chain & factor contribution breakdown | Provenance generator (`standardsMatcher.ts`) | 100% Deterministic |
+| **Gap Analysis Layer** | Requirement coverage evaluation & physical verification checklist | 4-state ontology analyzer (`requirementGapAnalyzer.ts`) | 100% Deterministic |
+| **Comparison Layer** | Side-by-side matrix & set-difference distinctions | Multi-standard relational comparator (`standardsComparator.ts`) | 100% Deterministic |
+| **Reference Data** | Authentic standard metadata, scopes, and URLs | Verified BIS reference dataset (`verifiedStandards.ts`) | Curated Reference Data |
+
+> **Why this matters for Government Procurement**:
+> A black-box LLM that hallucinates clause numbers or invents compliance claims creates legal liability in public tenders. ISutra leverages AI strictly to comprehend ambiguous human language, while using deterministic, auditable mathematics to evaluate standards alignment.
+
+---
+
+## ⚠️ Prototype Boundaries & Honest Disclaimers
+
+1. **Curated Reference Dataset (40 Standards)**:
+   ISutra currently demonstrates its workflow against a curated verified reference dataset of 40 BIS standards covering municipal lighting, electrical cables, civil construction, and industrial safety. The prototype is not an exhaustive BIS catalogue. Uncataloged products return clean insufficient-information states.
+
+2. **Document Upload Pathway**:
+   Arbitrary uploaded documents are not parsed in this version. Document OCR parsing is scheduled for future releases. The tender document upload tab currently demonstrates the workflow using a pre-scanned tender extract. The primary live flow operates via direct text specification input.
+
+3. **Decision-Support, Not Statutory Certification**:
+   ISutra is an educational and hackathon research prototype. It is not affiliated with or endorsed by the Bureau of Indian Standards (BIS). Recommendations indicate reference data alignment and do not constitute legal compliance determinations. Users must independently verify specifications against official BIS publications.
 
 ---
 
@@ -47,82 +131,67 @@ In Phase 2, ISutra has evolved from an informational concept into an enterprise-
 
 | Layer | Technology |
 |-------|-----------|
-| **Frontend** | React 19, TypeScript, Tailwind CSS v4, React Router 7, Vite 8 |
-| **Backend** | Node.js, Express, TypeScript (tsx watch) |
-| **AI / NLP** | Modular AI Engine (Google Gemini / OpenAI / Built-in Regex & NLP Engine) |
-| **Database** | Supabase (PostgreSQL) + Local in-memory fallback store |
-| **Icons** | Lucide React |
-| **File Upload** | Multer |
+| **Frontend** | React 19, TypeScript, Vite 8, Tailwind CSS v4, React Router 7, Lucide React |
+| **Backend** | Node.js, Express, TypeScript (compiles cleanly via `tsc`) |
+| **AI / NLP** | Modular AI client supporting Google Gemini, OpenAI, and built-in offline regex NLP engine |
+| **Persistence** | In-memory operational store + Supabase PostgreSQL schema |
 
 ---
 
-## 📁 Project Structure
+## 🔌 API Endpoints
 
-```
-proqurement/
-├── frontend/                    # React + TypeScript + Tailwind CSS v4
-│   ├── src/
-│   │   ├── components/
-│   │   │   ├── layout/          # Sidebar, Header, Footer, Layout
-│   │   │   ├── ui/              # Button, Card, Badge, DemoBanner, etc.
-│   │   │   ├── analysis/        # InputTypeSelector, Textarea, Upload, AnalysisLoading
-│   │   │   └── standards/       # StandardCard, Table, Score, Certs
-│   │   ├── pages/
-│   │   │   ├── DashboardPage.tsx          # Primary Procurement Workspace
-│   │   │   ├── RequirementReviewPage.tsx  # Editable Extracted Requirements & Confirm
-│   │   │   ├── AnalysisHistoryPage.tsx    # Previous Analyses History
-│   │   │   ├── StandardsSearchPage.tsx    # Standards Directory (Phase 1 retained)
-│   │   │   ├── StandardDetailsPage.tsx    # Standard Details (Phase 1 retained)
-│   │   │   └── AboutPage.tsx              # About ISutra
-│   │   ├── services/            # api.ts (Analysis & Standards API client)
-│   │   ├── hooks/               # useAnalysis.ts
-│   │   ├── types/               # index.ts (Structured Requirements & Models)
-│   │   ├── data/                # demoData.ts
-│   │   └── App.tsx              # Application Routing
-├── backend/
-│   ├── src/
-│   │   ├── services/
-│   │   │   ├── ai/              # Modular AI Engine
-│   │   │   │   ├── types.ts                # Structured requirements schema
-│   │   │   │   ├── promptTemplates.ts      # LLM prompts & guidelines
-│   │   │   │   ├── aiClient.ts             # Gemini / OpenAI / Fallback client
-│   │   │   │   ├── validation.ts           # Output sanitization & confidence
-│   │   │   │   ├── nlpExtractor.ts         # High-precision offline NLP engine
-│   │   │   │   └── requirementExtractor.ts # Main extraction coordinator
-│   │   │   ├── analysisService.ts          # Analysis business logic & persistence
-│   │   │   └── standardsService.ts         # Standards search & retrieval
-│   │   ├── controllers/         # analysisController.ts, standardsController.ts
-│   │   ├── routes/              # analysis.ts, standards.ts
-│   │   ├── database/            # supabase.ts, demoData.ts
-│   │   ├── index.ts             # Server entry point
-│   │   └── test_extraction.ts   # Automated AI extraction verification suite
-├── database/
-│   └── migrations/
-│       ├── 001_initial_schema.sql         # Core standards tables
-│       └── 002_analysis_requirements.sql  # Requirements & provenance schema
-├── .env.example
-└── README.md
-```
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/analyze` | Analyze text specification and extract structured requirements |
+| `GET` | `/api/analysis/history` | Retrieve previous analysis records |
+| `GET` | `/api/analysis/:id` | Get specific analysis record with requirements and provenance |
+| `PUT` | `/api/analysis/:id/requirements` | Update requirements and confirm verification state |
+| `POST` | `/api/analysis/upload` | Upload demo tender document for sample requirement analysis |
+| `GET` | `/api/analysis/:id/recommendations` | Match confirmed analysis requirements against BIS standards |
+| `POST` | `/api/recommendations` | Stateless direct matching against arbitrary structured requirements |
+| `GET` | `/api/analysis/:id/recommendations/:stdId/gap-analysis` | Generate requirement gap analysis for a selected standard |
+| `POST` | `/api/recommendations/gap-analysis` | Stateless direct requirement gap analysis |
+| `GET` | `/api/analysis/:id/compare?standards=id1,id2` | Side-by-side comparison of 2–3 standards for an analysis session |
+| `POST` | `/api/recommendations/compare` | Stateless direct comparison of 2–3 standards against requirements |
+| `GET` | `/api/standards` | Search and filter verified BIS reference directory |
+| `GET` | `/api/standards/:id` | Get verified standard details, scope, and official BIS URL |
 
 ---
 
-## 🚀 How to Run
+## 🧪 Automated Test Suites
+
+ISutra includes comprehensive automated test suites verifying scoring calibration, traceability, gap analysis, and comparison boundaries:
+
+```bash
+# 1. Run Phase 4 Matching Engine Verification (54 assertions)
+node backend/test_phase4.mjs
+
+# 2. Run Phase 6 Gap Analysis Verification (30 assertions)
+node backend/test_phase6.mjs
+
+# 3. Run Phase 7 Standards Comparator Verification (29 assertions)
+node backend/test_phase7.mjs
+```
+
+**Total Automated Test Assertions**: 113 / 113 passing.
+
+---
+
+## 🚀 How to Run Locally
 
 ### Prerequisites
-- Node.js v18+ (tested with v24.15.0)
+- Node.js v18+ (tested with v24.21.0)
 - npm v9+
 
 ### 1. Start the Backend API
-
 ```bash
 cd backend
 npm install
 npm run dev
 ```
-The backend API starts at `http://localhost:3001` with endpoint `http://localhost:3001/api`.
+The backend API starts at `http://localhost:3001` with base URL `http://localhost:3001/api`.
 
 ### 2. Start the Frontend Workspace
-
 ```bash
 cd frontend
 npm install
@@ -130,63 +199,11 @@ npm run dev
 ```
 The frontend dashboard starts at `http://localhost:5173`.
 
-### 3. Run Automated Tests
-
-To run the automated verification test suite covering all required extraction cases:
-
+### 3. Build Verification
 ```bash
-cd backend
-npm test
+# Build backend
+npm --prefix backend run build
+
+# Build frontend
+npm --prefix frontend run build
 ```
-
----
-
-## 🔌 API Endpoints (Phase 2)
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/api/health` | Service health status and phase info |
-| `POST` | `/api/analyze` | Analyze specification and extract structured requirements |
-| `GET` | `/api/analysis/history` | Retrieve previous analysis records |
-| `GET` | `/api/analysis/:id` | Get specific analysis with all requirements & provenance |
-| `PUT` | `/api/analysis/:id/requirements` | Update requirements & confirm verification state |
-| `POST` | `/api/analysis/upload` | Upload tender document for requirement analysis |
-| `GET` | `/api/standards` | Search and filter demo Indian Standards directory |
-| `GET` | `/api/standards/:id` | Get standard details and amendments |
-
----
-
-## 🧪 Verified Test Cases
-
-The AI Requirement Understanding engine was verified against the following real specifications:
-
-1. **Test 1: Outdoor LED Street Lighting**
-   - *Input:* `"Outdoor LED street lighting system, 100W, weather resistant, pole mounted."`
-   - *Extracted:* Product: `Outdoor LED Street Lighting System`, Power: `100W`, Environment: `Weather Resistant, Outdoor`, Installation: `Pole Mounted`.
-2. **Test 2: Stainless Steel Water Tanks**
-   - *Input:* `"Procure 500 stainless steel water storage tanks for a government facility."`
-   - *Extracted:* Product: `Water Storage Tank`, Quantity: `500`, Material: `Stainless Steel`, Application: `Government Facility`.
-3. **Test 3: Industrial High-Temp Cables**
-   - *Input:* `"Supply industrial electrical cables suitable for high temperature environments."`
-   - *Extracted:* Product: `Industrial Electrical Cables`, Environment: `High Temperature Environment`.
-4. **Test 4: Vague Input & Clarification Flow**
-   - *Input:* `"Need LED street lights."`
-   - *Output:* Successfully flags missing technical dimensions (Power rating, Mounting type, Environment) and generates interactive clarification questions.
-
----
-
-## 🗺 Roadmap & Next Steps (Phase 3)
-
-In accordance with project guidelines, **Phase 2 stops at Requirement Confirmation** without predicting or fabricating unofficial standards recommendations.
-
-### What Remains for Phase 3:
-- **Vector Embeddings**: Generate text embeddings from verified requirement schemas.
-- **Knowledge Base Ingestion**: Official BIS Indian Standards corpus parsing and chunking.
-- **Semantic Search & Ranking**: Hybrid BM25 + pgvector semantic search.
-- **Explainable Recommendation Engine**: Match confirmed technical specifications to applicable IS standards with citation & relevance justifications.
-
----
-
-## 📜 Notice & Disclaimer
-
-*ISutra is an educational and hackathon prototype. Not affiliated with the Bureau of Indian Standards (BIS) or any ministry. Demo data is clearly flagged.*

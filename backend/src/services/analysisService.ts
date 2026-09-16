@@ -246,6 +246,7 @@ export async function analyzeDocument(fileName: string) {
   const extraction = await runRequirementExtractionPipeline(sampleExtractedText, 'tender_document');
   const analysisId = `doc-analysis-${Date.now()}`;
   const createdAt = new Date().toISOString();
+  const limitationWarning = 'Prototype limitation: arbitrary uploaded documents are not parsed in this version. Use procurement text input or the provided sample for demonstration.';
 
   const record: StoredAnalysis = {
     id: analysisId,
@@ -261,8 +262,8 @@ export async function analyzeDocument(fileName: string) {
     ready_for_matching: true,
     confirmed: false,
     provider_used: extraction.provider_used,
-    demo: extraction.demo,
-    warning: extraction.warning,
+    demo: true,
+    warning: limitationWarning,
   };
 
   inMemoryStore.set(analysisId, record);
@@ -277,8 +278,8 @@ export async function analyzeDocument(fileName: string) {
     ready_for_matching: true,
     created_at: createdAt,
     provider_used: extraction.provider_used,
-    demo: extraction.demo,
-    warning: extraction.warning,
-    message: `Document text extracted from ${fileName}. Requirements parsed and ready for verification.`,
+    demo: true,
+    warning: limitationWarning,
+    message: `Demonstration tender extract processed. Note: arbitrary file parsing is disabled in this prototype.`,
   };
 }

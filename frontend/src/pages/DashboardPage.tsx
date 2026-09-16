@@ -61,12 +61,12 @@ const INTELLIGENCE_POINTS = [
   {
     icon: BookOpen,
     title: 'Relevant BIS Standards',
-    desc: 'Maps applicable IS codes & mandatory clauses',
+    desc: 'Maps applicable IS codes & documented scope',
   },
   {
     icon: Compass,
     title: 'Matching Rationale',
-    desc: 'Scores confidence & clause-level alignment',
+    desc: 'Scores explainable multi-signal alignment',
   },
 ];
 
@@ -180,7 +180,7 @@ export default function DashboardPage() {
         </h1>
 
         <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-3xl">
-          Analyze procurement requirements and identify relevant Indian Standards. ISutra helps procurement teams translate specifications into actionable BIS compliance standards.
+          Analyze procurement requirements and identify relevant Indian Standards. ISutra helps procurement teams translate specifications into actionable verified BIS reference standards.
         </p>
       </div>
 
@@ -299,6 +299,17 @@ export default function DashboardPage() {
           ) : (
             /* Mode 3: Tender Document Upload */
             <div className="space-y-3">
+              {/* Prominent Prototype Limitation Notice */}
+              <div className="p-3.5 bg-amber-50/90 border border-amber-200 rounded-xl text-xs text-amber-900 flex items-start gap-2.5 shadow-2xs">
+                <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                <div className="leading-relaxed">
+                  <strong className="font-semibold text-amber-950">Prototype limitation: </strong>
+                  <span>
+                    Arbitrary uploaded documents are not parsed in this version. Use procurement text input or the provided sample for demonstration.
+                  </span>
+                </div>
+              </div>
+
               <div
                 onDragOver={(e) => {
                   e.preventDefault();
@@ -316,21 +327,45 @@ export default function DashboardPage() {
                   <UploadCloud className="w-5 h-5" />
                 </div>
                 <h3 className="text-xs sm:text-sm font-semibold text-[#102A43] mb-0.5 font-display">
-                  Drop tender document here, or browse
+                  Drop demo tender document here, or browse
                 </h3>
                 <p className="text-[11px] text-slate-500 mb-3 max-w-sm mx-auto">
-                  Upload tender extract or technical schedule (PDF, DOCX, or TXT up to 10MB).
+                  Upload tender extract (PDF, DOCX, or TXT up to 10MB) to load sample demonstration specifications.
                 </p>
-                <label className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-[#102A43] border border-slate-200 text-xs font-semibold cursor-pointer shadow-2xs transition-all">
-                  <FileText className="w-3.5 h-3.5 text-[#0F766E]" />
-                  <span>Choose File</span>
-                  <input
-                    type="file"
-                    accept=".pdf,.docx,.txt"
-                    onChange={handleFileInputChange}
-                    className="hidden"
-                  />
-                </label>
+                <div className="flex flex-wrap items-center justify-center gap-2">
+                  <label className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-[#102A43] border border-slate-200 text-xs font-semibold cursor-pointer shadow-2xs transition-all">
+                    <FileText className="w-3.5 h-3.5 text-[#0F766E]" />
+                    <span>Choose File</span>
+                    <input
+                      type="file"
+                      accept=".pdf,.docx,.txt"
+                      onChange={handleFileInputChange}
+                      className="hidden"
+                    />
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const mockFile = new window.File(
+                        ['Sample Tender Document Content'],
+                        'Municipal_LED_Streetlight_Tender_Sample.pdf',
+                        { type: 'application/pdf' }
+                      );
+                      setUploadedFile({
+                        file: mockFile,
+                        name: mockFile.name,
+                        type: mockFile.type,
+                        size: 45200,
+                        status: 'uploaded',
+                      });
+                      setValidationError(null);
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-teal-50 hover:bg-teal-100 text-[#0F766E] border border-teal-200 text-xs font-semibold cursor-pointer transition-all"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-[#0F766E]" />
+                    <span>Load Demo Sample Document</span>
+                  </button>
+                </div>
               </div>
 
               {uploadedFile && (
@@ -341,15 +376,15 @@ export default function DashboardPage() {
                       <p className="text-xs font-semibold text-[#102A43] truncate">
                         {uploadedFile.name}
                       </p>
-                      <p className="text-[11px] text-slate-400">
-                        {(uploadedFile.size / 1024).toFixed(1)} KB • Ready for extraction
+                      <p className="text-[11px] text-amber-700 font-medium">
+                        {(uploadedFile.size / 1024).toFixed(1)} KB • Demo tender extract (Sample analysis mode)
                       </p>
                     </div>
                   </div>
                   <button
                     type="button"
                     onClick={() => setUploadedFile(null)}
-                    className="text-xs text-red-600 hover:underline font-medium shrink-0 ml-3"
+                    className="text-xs text-red-600 hover:underline font-medium shrink-0 ml-3 cursor-pointer"
                   >
                     Remove
                   </button>
@@ -442,7 +477,7 @@ export default function DashboardPage() {
                   }`}
                 >
                   <Send className="w-3.5 h-3.5" />
-                  <span>Analyze Tender Document</span>
+                  <span>Analyze Demo Tender Document</span>
                 </button>
               )}
             </div>

@@ -159,7 +159,7 @@ export default function StandardsSearchPage() {
             Verified BIS Reference Dataset
           </span>
           <p className="mt-0.5 text-[#243B53]/85">
-            This directory contains verified metadata for Indian Standards in the Electrical & Lighting sector. ISutra is a prototype reference system and is not an official BIS service.
+            This directory contains verified metadata for Indian Standards across critical infrastructure sectors (Electrical, Lighting, Power Cables, Civil Construction, Steel, and Safety PPE). ISutra is a prototype reference system and is not an official BIS service.
           </p>
         </div>
       </div>
