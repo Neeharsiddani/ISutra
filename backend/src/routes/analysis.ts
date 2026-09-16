@@ -54,4 +54,8 @@ router.get('/:id/recommendations', recommendationsController.getAnalysisRecommen
 router.get('/:id/recommendations/:standardId/gap-analysis', recommendationsController.getRequirementGapAnalysis);
 router.post('/:id/recommendations/:standardId/gap-analysis', recommendationsController.getRequirementGapAnalysis);
 
+// GET & POST /api/analysis/:id/compare — Phase 7: Side-by-side comparison for analysis standards
+router.get('/:id/compare', recommendationsController.compareStandardsHandler);
+router.post('/:id/compare', recommendationsController.compareStandardsHandler);
+
 export default router;

@@ -444,3 +444,78 @@ export interface GapAnalysisResponse {
     guidance?: string[];
   };
 }
+
+// ============================================================
+// Phase 7: Procurement Standards Comparison Workspace Models
+// ============================================================
+
+export interface StandardOverviewItem {
+  id: string;
+  standardNumber: string;
+  title: string;
+  category: string;
+  subcategory: string;
+  editionYear: number;
+  officialSourceUrl: string;
+  productTypes: string[];
+  keywords: string[];
+  scope: string;
+  referenceCoverage: number | null;
+  referenceCoverageLabel: string;
+}
+
+export interface DimensionValue {
+  value: string;
+  evidenceSource: 'standard_record' | 'gap_analysis' | 'not_available';
+  status?: RequirementGapStatus;
+  statusLabel?: string;
+}
+
+export interface DimensionComparisonRow {
+  dimensionId: string;
+  dimensionLabel: string;
+  dimensionGroup: 'metadata' | 'scope_and_products' | 'technical_and_testing' | 'requirement_alignment';
+  values: Record<string, DimensionValue>;
+  factualDifferenceNote?: string;
+}
+
+export interface StandardTechnicalDistinction {
+  standardId: string;
+  standardNumber: string;
+  standardTitle: string;
+  categoryClassification: string;
+  documentedScope: string;
+  uniqueProductTypes: string[];
+  uniqueKeywords: string[];
+}
+
+export interface ConsolidatedVerificationAction {
+  action: string;
+  applicableStandards: string[];
+}
+
+export interface StandardsComparisonResult {
+  standards: StandardOverviewItem[];
+  matrixRows: DimensionComparisonRow[];
+  technicalDistinctions: StandardTechnicalDistinction[];
+  gapAnalyses: Record<string, RequirementGapAnalysis>;
+  consolidatedVerificationActions: ConsolidatedVerificationAction[];
+  disclaimer: string;
+  metadata: {
+    datasetName: string;
+    standardsEvaluated: number;
+    comparedCount: number;
+    sourceProvenance: string;
+    timestamp: string;
+  };
+}
+
+export interface ComparisonResponse {
+  success: boolean;
+  analysisId?: string | null;
+  comparison: StandardsComparisonResult;
+  error?: {
+    message: string;
+    statusCode: number;
+  };
+}

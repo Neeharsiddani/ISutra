@@ -181,3 +181,111 @@ export async function getRequirementGapAnalysis(
     next(error);
   }
 }
+
+export async function compareStandardsHandler(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const analysisId = req.params.id || req.body.analysisId;
+    let requirements = req.body.requirements;
+
+    // Resolve standard IDs from query or body
+    let rawIds: unknown = req.query.standards || req.body.standardIds || req.body.standards;
+    let standardIds: string[] = [];
+
+    if (typeof rawIds === 'string') {
+      standardIds = rawIds.split(',').map((s) => s.trim()).filter(Boolean);
+    } else if (Array.isArray(rawIds)) {
+      standardIds = rawIds.map((s) => String(s).trim()).filter(Boolean);
+    }
+
+    if (standardIds.length < 2 || standardIds.length > 3) {
+      res.status(400).json({
+        success: false,
+        error: {
+          message: `Comparison requires between 2 and 3 standards. Provided: ${standardIds.length}.`,
+          statusCode: 400,
+        },
+      });
+      return;
+    }
+
+    // If analysisId is present, retrieve stored requirements
+    if (analysisId) {
+      const analysis = await analysisService.getAnalysisById(analysisId);
+      if (!analysis) {
+        res.status(404).json({
+          success: false,
+          error: {
+            message: `Analysis record '${analysisId}' not found.`,
+            statusCode: 404,
+          },
+        });
+        return;
+      }
+      requirements = analysis.requirements;
+    }
+
+    if (!requirements || typeof requirements !== 'object') {
+      res.status(400).json({
+        success: false,
+        error: {
+          message: 'Structured requirements object or valid analysisId is required.',
+          statusCode: 400,
+        },
+      });
+      return;
+    }
+
+    // Check for vague / insufficient requirements
+    const productName = requirements.product?.name?.toLowerCase().trim() || '';
+    if (
+      !productName ||
+      productName === 'need something' ||
+      productName === 'unspecified' ||
+      requirements.ready_for_matching === false
+    ) {
+      res.status(400).json({
+        success: false,
+        error: {
+          message:
+            'Insufficient requirement details to perform comparison. Please supply a specific product, application, and parameters.',
+          statusCode: 400,
+        },
+      });
+      return;
+    }
+
+    // Resolve standards from verified reference dataset
+    const resolvedStandards = [];
+    for (const sid of standardIds) {
+      const std = VERIFIED_BIS_STANDARDS.find(
+        (s) => s.id === sid || s.standard_number === sid
+      );
+      if (!std) {
+        res.status(404).json({
+          success: false,
+          error: {
+            message: `Standard with ID or number '${sid}' was not found in the verified BIS reference dataset.`,
+            statusCode: 404,
+          },
+        });
+        return;
+      }
+      resolvedStandards.push(std);
+    }
+
+    const { compareStandards } = await import('../services/standardsComparator');
+    const comparisonResult = compareStandards(requirements, resolvedStandards);
+
+    res.json({
+      success: true,
+      analysisId: analysisId || null,
+      comparison: comparisonResult,
+    });
+  } catch (error) {
+    next(error);
+  }
+}

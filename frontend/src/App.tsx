@@ -10,6 +10,7 @@ import DashboardPage from './pages/DashboardPage';
 import RequirementReviewPage from './pages/RequirementReviewPage';
 import RecommendationsResultsPage from './pages/RecommendationsResultsPage';
 import RequirementGapAnalysisPage from './pages/RequirementGapAnalysisPage';
+import StandardsComparisonPage from './pages/StandardsComparisonPage';
 import AnalysisHistoryPage from './pages/AnalysisHistoryPage';
 import StandardsSearchPage from './pages/StandardsSearchPage';
 import StandardDetailsPage from './pages/StandardDetailsPage';
@@ -27,6 +28,7 @@ export default function App() {
           <Route path="/analysis/:id/review" element={<RequirementReviewPage />} />
           <Route path="/analysis/:id/recommendations" element={<RecommendationsResultsPage />} />
           <Route path="/analysis/:id/recommendations/:standardId/gap-analysis" element={<RequirementGapAnalysisPage />} />
+          <Route path="/analysis/:id/compare" element={<StandardsComparisonPage />} />
           <Route path="/history" element={<AnalysisHistoryPage />} />
           <Route path="/standards" element={<StandardsSearchPage />} />
           <Route path="/standards/:id" element={<StandardDetailsPage />} />

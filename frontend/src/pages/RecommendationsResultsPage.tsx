@@ -46,6 +46,23 @@ export default function RecommendationsResultsPage() {
   // Expandable factor breakdown map: standardId -> boolean
   const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({});
 
+  // Phase 7: Selection state for standards comparison (max 3)
+  const [selectedForCompare, setSelectedForCompare] = useState<string[]>([]);
+
+  const toggleSelectForCompare = (standardId: string) => {
+    setSelectedForCompare((prev) => {
+      if (prev.includes(standardId)) {
+        return prev.filter((sId) => sId !== standardId);
+      }
+      if (prev.length >= 3) return prev;
+      return [...prev, standardId];
+    });
+  };
+
+  const clearComparisonSelection = () => {
+    setSelectedForCompare([]);
+  };
+
   useEffect(() => {
     let isMounted = true;
     setLoading(true);
@@ -501,6 +518,18 @@ export default function RecommendationsResultsPage() {
                           <span className="text-[11px] text-[#627D98] bg-slate-50 px-2 py-0.5 rounded border border-slate-200">
                             {rec.standard.subcategory || rec.standard.category}
                           </span>
+
+                          {/* Phase 7: Compare Selection Checkbox */}
+                          <label className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-slate-50 border border-slate-200/80 hover:bg-teal-50 hover:border-teal-200 transition-colors cursor-pointer select-none text-[11px] font-semibold text-[#486581] hover:text-[#0F766E]">
+                            <input
+                              type="checkbox"
+                              checked={selectedForCompare.includes(rec.standard.id)}
+                              onChange={() => toggleSelectForCompare(rec.standard.id)}
+                              disabled={!selectedForCompare.includes(rec.standard.id) && selectedForCompare.length >= 3}
+                              className="rounded text-[#0F766E] focus:ring-teal-500 w-3.5 h-3.5 cursor-pointer disabled:opacity-40"
+                            />
+                            <span>{selectedForCompare.includes(rec.standard.id) ? 'Selected' : 'Compare'}</span>
+                          </label>
                         </div>
 
                         <p className="text-sm text-[#243B53] font-medium leading-snug">
@@ -807,6 +836,61 @@ export default function RecommendationsResultsPage() {
             </p>
           </div>
         </>
+      )}
+
+      {/* ============================================================
+          7. FLOATING COMPARISON DOCK (Phase 7)
+         ============================================================ */}
+      {selectedForCompare.length > 0 && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 max-w-3xl w-[calc(100%-2rem)] bg-[#102A43] text-white p-3 sm:p-4 rounded-2xl shadow-2xl border border-slate-700/80 flex flex-col sm:flex-row items-center justify-between gap-3 animate-fade-in">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-teal-300">
+              Compare Standards ({selectedForCompare.length}/3):
+            </span>
+            {selectedForCompare.map((sId) => {
+              const stdObj = processedRecommendations.find((r) => r.standard.id === sId)?.standard;
+              return (
+                <span
+                  key={sId}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-800 border border-slate-700 text-xs font-mono text-slate-200"
+                >
+                  <span>{stdObj?.standard_number || sId}</span>
+                  <button
+                    onClick={() => toggleSelectForCompare(sId)}
+                    className="hover:text-rose-400 font-bold ml-1 text-sm leading-none"
+                    title="Remove from comparison"
+                  >
+                    ×
+                  </button>
+                </span>
+              );
+            })}
+          </div>
+
+          <div className="flex items-center gap-2.5 shrink-0">
+            <button
+              onClick={clearComparisonSelection}
+              className="text-xs text-slate-400 hover:text-white transition-colors px-2 py-1"
+            >
+              Clear
+            </button>
+
+            {selectedForCompare.length >= 2 ? (
+              <Link
+                to={`/analysis/${id || ''}/compare?standards=${selectedForCompare.join(',')}`}
+                state={{ fromAnalysisId: id, selectedStandardIds: selectedForCompare }}
+                className="px-4 py-2 rounded-xl bg-[#0F766E] hover:bg-[#0C5D57] text-white text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm"
+              >
+                <Scale className="w-3.5 h-3.5" />
+                <span>Compare Side-by-Side ({selectedForCompare.length}) →</span>
+              </Link>
+            ) : (
+              <span className="px-3.5 py-1.5 rounded-xl bg-slate-800/80 text-slate-400 text-xs font-semibold border border-slate-700/60">
+                Select 1 more to compare
+              </span>
+            )}
+          </div>
+        </div>
       )}
     </div>
   );

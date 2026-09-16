@@ -20,4 +20,7 @@ router.get('/analysis/:id', recommendationsController.getAnalysisRecommendations
 // POST /api/recommendations/gap-analysis — Phase 6: Requirement Gap Analysis for a selected standard
 router.post('/gap-analysis', recommendationsController.getRequirementGapAnalysis);
 
+// POST /api/recommendations/compare — Phase 7: Side-by-Side Standards Comparison
+router.post('/compare', recommendationsController.compareStandardsHandler);
+
 export default router;

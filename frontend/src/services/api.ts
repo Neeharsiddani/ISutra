@@ -15,6 +15,7 @@ import type {
   StandardsSearchResponse,
   RecommendationsResponse,
   GapAnalysisResponse,
+  ComparisonResponse,
 } from '../types';
 import {
   DEMO_STANDARDS,
@@ -285,6 +286,41 @@ export async function analyzeRequirementGapsDirect(
   if (!response.ok) {
     const errBody = await response.json().catch(() => null);
     throw new Error(errBody?.error?.message || `Gap analysis error: ${response.status}`);
+  }
+
+  return await response.json();
+}
+
+// --- Phase 7: Standards Comparison Workspace Endpoints ---
+
+export async function getStandardsComparison(
+  analysisId: string,
+  standardIds: string[]
+): Promise<ComparisonResponse> {
+  const query = `standards=${encodeURIComponent(standardIds.join(','))}`;
+  const response = await fetch(`${API_BASE_URL}/analysis/${analysisId}/compare?${query}`);
+
+  if (!response.ok) {
+    const errBody = await response.json().catch(() => null);
+    throw new Error(errBody?.error?.message || `Comparison error: ${response.status}`);
+  }
+
+  return await response.json();
+}
+
+export async function compareStandardsDirect(
+  requirements: StructuredRequirements,
+  standardIds: string[]
+): Promise<ComparisonResponse> {
+  const response = await fetch(`${API_BASE_URL}/recommendations/compare`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ requirements, standardIds }),
+  });
+
+  if (!response.ok) {
+    const errBody = await response.json().catch(() => null);
+    throw new Error(errBody?.error?.message || `Comparison error: ${response.status}`);
   }
 
   return await response.json();
