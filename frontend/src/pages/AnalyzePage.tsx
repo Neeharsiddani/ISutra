@@ -4,7 +4,7 @@
 // Strictly fits within viewport with zero horizontal overflow
 // ============================================================
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Send,
@@ -18,6 +18,8 @@ import {
   Compass,
   FileArchive,
   ClipboardList,
+  Upload,
+  FileUp,
 } from 'lucide-react';
 import { useAnalysis } from '../hooks/useAnalysis';
 import type { InputType } from '../types';
@@ -87,6 +89,7 @@ export default function AnalyzePage() {
 
   const [validationError, setValidationError] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleStartAnalysis = async () => {
     if (!inputText || inputText.trim().length === 0) {
@@ -104,32 +107,56 @@ export default function AnalyzePage() {
     }
   };
 
+  const processSelectedFile = (file: File) => {
+    const ext = '.' + file.name.split('.').pop()?.toLowerCase();
+    const validExts = ['.pdf', '.docx', '.doc'];
+    if (!validExts.includes(ext)) {
+      setValidationError(`Unsupported file format '${ext}'. Please upload a PDF (.pdf) or Word document (.docx).`);
+      return;
+    }
+
+    if (file.size > 15 * 1024 * 1024) {
+      setValidationError(`File size exceeds 15 MB limit (${(file.size / (1024 * 1024)).toFixed(2)} MB).`);
+      return;
+    }
+
+    setValidationError(null);
+    setUploadedFile({
+      file,
+      name: file.name,
+      type: file.type || (ext === '.pdf' ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'),
+      size: file.size,
+      status: 'uploaded',
+    });
+  };
+
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      processSelectedFile(e.target.files[0]);
+    }
+  };
+
   const loadDemoDocument = () => {
+    const sampleText = `%PDF-1.4\n% Sample Procurement Document\nProcurement of 100W outdoor LED street lighting luminaire, weather-resistant die-cast aluminum housing, pole mounted, IP65 with surge protection 10kV, luminous efficacy >= 120 lm/W.`;
     const demoFile = new window.File(
-      ['Sample Municipal LED Streetlight Tender Extract (Demo Document)'],
+      [sampleText],
       'Sample_Municipal_LED_Streetlight_Tender_Extract.pdf',
       { type: 'application/pdf' }
     );
-    setUploadedFile({
-      file: demoFile,
-      name: 'Sample_Municipal_LED_Streetlight_Tender_Extract.pdf',
-      type: 'application/pdf',
-      size: 45200,
-      status: 'uploaded',
-    });
-    setValidationError(null);
+    processSelectedFile(demoFile);
   };
 
   const handleFileDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setDragActive(false);
-    // Arbitrary file parsing is disabled in this prototype; safely load the demo sample document
-    loadDemoDocument();
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      processSelectedFile(e.dataTransfer.files[0]);
+    }
   };
 
   const handleAnalyzeDocument = async () => {
     if (!uploadedFile) {
-      setValidationError('Please select or upload a tender document first.');
+      setValidationError('Please select or upload a procurement document first.');
       return;
     }
     setValidationError(null);
@@ -288,17 +315,29 @@ export default function AnalyzePage() {
           ) : (
             /* Mode 3: Tender Document Upload */
             <div className="space-y-3">
-              {/* Prominent Prototype Limitation Notice */}
-              <div className="p-3.5 bg-amber-50/90 border border-amber-200 rounded-xl text-xs text-amber-900 flex items-start gap-2.5 shadow-2xs">
-                <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-                <p className="leading-relaxed">
-                  <strong className="font-semibold text-amber-950">Prototype limitation: </strong>
-                  <span>
-                    arbitrary uploaded documents are not parsed in this version. Use the procurement text input or the provided demo sample.
+              {/* Hidden file input */}
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileInputChange}
+                accept=".pdf,.docx,.doc,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                className="hidden"
+              />
+
+              {/* Offline Document Parsing Badge */}
+              <div className="p-3 bg-[#0F766E]/5 border border-[#0F766E]/20 rounded-xl text-xs text-[#0F766E] flex items-center justify-between gap-2 shadow-2xs">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-[#0F766E] shrink-0" />
+                  <span className="font-medium text-[#102A43]">
+                    <strong>Local Document Processing:</strong> Upload tender PDFs or DOCX specifications. Files are parsed securely and offline.
                   </span>
-                </p>
+                </div>
+                <span className="text-[10px] font-bold uppercase tracking-wider bg-white px-2 py-0.5 rounded border border-[#0F766E]/20 text-[#0F766E]">
+                  PDF & DOCX
+                </span>
               </div>
 
+              {/* Upload Dropzone */}
               <div
                 onDragOver={(e) => {
                   e.preventDefault();
@@ -306,48 +345,60 @@ export default function AnalyzePage() {
                 }}
                 onDragLeave={() => setDragActive(false)}
                 onDrop={handleFileDrop}
-                className={`border-2 border-dashed rounded-xl p-5 sm:p-6 text-center transition-all ${
+                onClick={() => fileInputRef.current?.click()}
+                className={`border-2 border-dashed rounded-xl p-5 sm:p-6 text-center transition-all cursor-pointer ${
                   dragActive
-                    ? 'border-[#0F766E] bg-[#0F766E]/5'
-                    : 'border-slate-200 bg-slate-50/50'
+                    ? 'border-[#0F766E] bg-[#0F766E]/10'
+                    : 'border-slate-200 hover:border-[#0F766E]/50 bg-slate-50/50 hover:bg-slate-50'
                 }`}
               >
-                <div className="w-10 h-10 rounded-xl bg-white shadow-2xs border border-slate-200 flex items-center justify-center mx-auto mb-2 text-[#0F766E]">
-                  <FileArchive className="w-5 h-5" />
+                <div className="w-12 h-12 rounded-xl bg-white shadow-2xs border border-slate-200 flex items-center justify-center mx-auto mb-2 text-[#0F766E]">
+                  <Upload className="w-6 h-6" />
                 </div>
                 <h3 className="text-xs sm:text-sm font-semibold text-[#102A43] mb-0.5 font-display">
-                  Demonstration Tender Document
+                  Drop procurement document here or click to browse
                 </h3>
                 <p className="text-[11px] text-slate-500 mb-3.5 max-w-md mx-auto leading-relaxed">
-                  Arbitrary PDF/DOCX document text extraction is disabled in this prototype version. Load the standardized municipal lighting tender extract to evaluate requirement parsing, clarification flows, and BIS matching.
+                  Upload tender specifications, schedule of requirements, or technical clauses in PDF (.pdf) or Word (.docx) format (max 15 MB).
                 </p>
-                <div className="flex flex-wrap items-center justify-center gap-2">
+                <div className="flex flex-wrap items-center justify-center gap-2" onClick={(e) => e.stopPropagation()}>
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#0F766E] hover:bg-[#0D655E] text-white text-xs sm:text-sm font-semibold cursor-pointer shadow-xs transition-all active:scale-[0.99]"
+                  >
+                    <FileUp className="w-4 h-4" />
+                    <span>Select Document</span>
+                  </button>
                   <button
                     type="button"
                     onClick={loadDemoDocument}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#0F766E] hover:bg-[#0D655E] text-white text-xs sm:text-sm font-semibold cursor-pointer shadow-xs transition-all active:scale-[0.99]"
+                    className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs sm:text-sm font-medium cursor-pointer shadow-2xs transition-all active:scale-[0.99]"
                   >
-                    <FileText className="w-4 h-4" />
-                    <span>Load Demo Tender Document</span>
+                    <FileText className="w-4 h-4 text-slate-500" />
+                    <span>Load Sample Tender</span>
                   </button>
                 </div>
               </div>
 
+              {/* Selected File Card */}
               {uploadedFile && (
                 <div className="flex items-center justify-between p-3.5 bg-slate-50 border border-slate-200 rounded-xl animate-fade-in">
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <FileText className="w-4 h-4 text-[#0F766E] shrink-0" />
+                    <div className="w-8 h-8 rounded-lg bg-[#0F766E]/10 flex items-center justify-center shrink-0 text-[#0F766E]">
+                      <FileArchive className="w-4 h-4" />
+                    </div>
                     <div className="min-w-0 truncate">
                       <div className="flex items-center gap-2 flex-wrap">
                         <p className="text-xs font-semibold text-[#102A43] truncate font-mono">
                           {uploadedFile.name}
                         </p>
-                        <span className="px-1.5 py-0.2 text-[10px] font-bold uppercase rounded bg-amber-100 text-amber-800 border border-amber-200">
-                          Demo Sample
+                        <span className="px-1.5 py-0.2 text-[10px] font-bold uppercase rounded bg-[#0F766E]/10 text-[#0F766E] border border-[#0F766E]/20">
+                          {uploadedFile.name.endsWith('.docx') ? 'DOCX' : 'PDF'}
                         </span>
                       </div>
                       <p className="text-[11px] text-slate-500 mt-0.5">
-                        45.2 KB • Pre-configured demonstration tender extract (Sample analysis mode)
+                        {(uploadedFile.size / 1024).toFixed(1)} KB • Ready for text and requirement extraction
                       </p>
                     </div>
                   </div>
@@ -356,7 +407,7 @@ export default function AnalyzePage() {
                     onClick={() => setUploadedFile(null)}
                     className="text-xs text-red-600 hover:underline font-medium shrink-0 ml-3 cursor-pointer"
                   >
-                    Clear
+                    Remove
                   </button>
                 </div>
               )}
@@ -447,7 +498,7 @@ export default function AnalyzePage() {
                   }`}
                 >
                   <Send className="w-3.5 h-3.5" />
-                  <span>Analyze Demo Tender Document</span>
+                  <span>Analyze Procurement Document</span>
                 </button>
               )}
             </div>

@@ -172,14 +172,45 @@ export async function uploadDocument(
       return;
     }
 
-    const result = await analysisService.analyzeDocument();
+    const result = await analysisService.analyzeDocument({
+      buffer: file.buffer,
+      originalname: file.originalname,
+      mimetype: file.mimetype,
+      size: file.size,
+    });
 
     res.json({
       data: result,
-      demo: true,
-      warning: 'Arbitrary document parsing is not implemented in this prototype.',
+      demo: result.demo,
+      warning: result.warning,
+      provenance: result.document_provenance,
     });
   } catch (error) {
+    const err = error as any;
+    if (err.isScannedOrEmpty) {
+      res.status(422).json({
+        error: {
+          message: err.message,
+          statusCode: 422,
+          isScannedOrEmpty: true,
+        },
+      });
+      return;
+    }
+    if (
+      err.message?.includes('Unsupported file format') ||
+      err.message?.includes('File size exceeds') ||
+      err.message?.includes('File content does not match') ||
+      err.message?.includes('Malformed')
+    ) {
+      res.status(400).json({
+        error: {
+          message: err.message,
+          statusCode: 400,
+        },
+      });
+      return;
+    }
     next(error);
   }
 }

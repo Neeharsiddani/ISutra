@@ -524,7 +524,9 @@ export function analyzeRequirementGaps(
       standardEvidence: 'Not available in current standard record',
       status: 'needs_verification',
       statusLabel: getStatusLabel('needs_verification'),
-      explanation: `${st.kind} requirements for "${st.name}" exist in the standard's general testing framework, but specific test criteria must be reviewed in the official publication.`,
+      explanation: st.name.toLowerCase().includes('surge')
+        ? 'The current verified reference record does not contain the detailed surge-protection criteria needed to determine whether this requirement is satisfied. Verify the applicable test criteria directly in the official BIS publication.'
+        : `The current verified reference record does not contain the detailed ${st.name.toLowerCase()} criteria needed to determine whether this requirement is satisfied. Verify the applicable test criteria directly in the official BIS publication.`,
       evidence: [
         {
           sourceType: 'user_requirement',

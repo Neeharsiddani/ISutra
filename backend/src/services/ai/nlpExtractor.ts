@@ -14,22 +14,127 @@ export function extractWithPatternMatching(inputText: string, inputType: string)
   let category = 'General Procurement';
   let productSource: string | undefined = undefined;
 
-  if (/led\s+street\s+lighting\s+system/i.test(text)) {
+  // Specific domain product patterns
+  if (/emergency\s+(?:lighting\s+)?(?:luminaires?|fittings?|systems?|lights?)|self-contained\s+emergency/i.test(text)) {
+    productName = 'Emergency lighting luminaires';
+    category = 'Lighting & Luminaires';
+    productSource = text.match(/emergency\s+(?:lighting\s+)?(?:luminaires?|fittings?|systems?|lights?)|self-contained\s+emergency/i)?.[0];
+  } else if (/floodlights?|flood\s+lighting/i.test(text)) {
+    productName = 'Floodlight luminaires';
+    category = 'Lighting & Luminaires';
+    productSource = text.match(/floodlights?|flood\s+lighting/i)?.[0];
+  } else if (/self-?ballasted\s+(?:led\s+)?lamps?|led\s+bulbs?/i.test(text)) {
+    productName = 'Self-ballasted LED lamps';
+    category = 'Lighting & Luminaires';
+    productSource = text.match(/self-?ballasted\s+(?:led\s+)?lamps?|led\s+bulbs?/i)?.[0];
+  } else if (/led\s+modules?/i.test(text)) {
+    productName = 'LED modules';
+    category = 'Lighting & Luminaires';
+    productSource = text.match(/led\s+modules?/i)?.[0];
+  } else if (/handlamps?|portable\s+handlamps?/i.test(text)) {
+    productName = 'Portable handlamps';
+    category = 'Lighting & Luminaires';
+    productSource = text.match(/handlamps?|portable\s+handlamps?/i)?.[0];
+  } else if (/fixed\s+(?:general\s+purpose\s+)?(?:indoor\s+)?luminaires?|general\s+purpose\s+indoor\s+luminaires?/i.test(text)) {
+    productName = 'Fixed general purpose luminaires';
+    category = 'Lighting & Luminaires';
+    productSource = text.match(/fixed\s+(?:general\s+purpose\s+)?(?:indoor\s+)?luminaires?|general\s+purpose\s+indoor\s+luminaires?/i)?.[0];
+  } else if (/led\s+street\s+lighting\s+system/i.test(text)) {
     productName = 'LED street lighting system';
     category = 'Lighting & Luminaires';
     productSource = text.match(/led\s+street\s+lighting\s+system/i)?.[0];
-  } else if (/led\s+street\s+lights?/i.test(text)) {
-    productName = 'LED street light';
+  } else if (/led\s+street\s+lighting\s+luminaires?|street\s+lighting\s+luminaires?/i.test(text)) {
+    productName = 'LED street lighting luminaire';
     category = 'Lighting & Luminaires';
-    productSource = text.match(/led\s+street\s+lights?/i)?.[0];
-  } else if (/water\s+storage\s+tanks?/i.test(text)) {
-    productName = 'Water storage tank';
-    category = 'Storage Tanks & Vessels';
-    productSource = text.match(/water\s+storage\s+tanks?/i)?.[0];
+    productSource = text.match(/led\s+street\s+lighting\s+luminaires?|street\s+lighting\s+luminaires?/i)?.[0];
+  } else if (/led\s+street\s+lights?\b|street\s+lights?\b/i.test(text)) {
+    productName = 'LED street lighting luminaire';
+    category = 'Lighting & Luminaires';
+    productSource = text.match(/led\s+street\s+lights?\b|street\s+lights?\b/i)?.[0];
+  } else if (/aerial\s+bunched\s+cables?|abc\s+cables?/i.test(text)) {
+    productName = 'Aerial bunched cables';
+    category = 'Cables & Conductors';
+    productSource = text.match(/aerial\s+bunched\s+cables?|abc\s+cables?/i)?.[0];
+  } else if (/xlpe(?:\s+[\w\-]+){0,4}\s+cables?/i.test(text)) {
+    productName = 'XLPE insulated power cables';
+    category = 'Cables & Conductors';
+    productSource = text.match(/xlpe(?:\s+[\w\-]+){0,4}\s+cables?/i)?.[0];
+  } else if (/hffr\s+cables?|halogen\s+free\s+flame\s+retardant\s+cables?/i.test(text)) {
+    productName = 'Halogen free flame retardant cables';
+    category = 'Cables & Conductors';
+    productSource = text.match(/hffr\s+cables?|halogen\s+free\s+flame\s+retardant\s+cables?/i)?.[0];
+  } else if (/elastomer\s+(?:insulated\s+)?cables?/i.test(text)) {
+    productName = 'Elastomer insulated cables';
+    category = 'Cables & Conductors';
+    productSource = text.match(/elastomer\s+(?:insulated\s+)?cables?/i)?.[0];
+  } else if (/flexible\s+cords?|unsheathed\s+and\s+sheathed\s+cables?/i.test(text)) {
+    productName = 'PVC insulated flexible cords';
+    category = 'Cables & Conductors';
+    productSource = text.match(/flexible\s+cords?|unsheathed\s+and\s+sheathed\s+cables?/i)?.[0];
+  } else if (/(?:pvc\s+insulated\s+)?heavy\s+duty\s+electric\s+cables?|pvc\s+cables?/i.test(text)) {
+    productName = 'PVC insulated electric cables';
+    category = 'Cables & Conductors';
+    productSource = text.match(/(?:pvc\s+insulated\s+)?heavy\s+duty\s+electric\s+cables?|pvc\s+cables?/i)?.[0];
   } else if (/electrical\s+cables?/i.test(text)) {
     productName = 'Industrial electrical cables';
     category = 'Cables & Conductors';
     productSource = text.match(/industrial\s+electrical\s+cables?|electrical\s+cables?/i)?.[0];
+  } else if (/water\s+(?:retaining\s+)?(?:storage\s+)?tanks?|liquid\s+retaining\s+structures?/i.test(text)) {
+    productName = 'Liquid retaining concrete structures';
+    category = 'Storage Tanks & Vessels';
+    productSource = text.match(/water\s+(?:retaining\s+)?(?:storage\s+)?tanks?|liquid\s+retaining\s+structures?/i)?.[0];
+  } else if (/concrete\s+mix\s+proportioning|mix\s+design/i.test(text)) {
+    productName = 'Concrete mix proportioning';
+    category = 'Construction Materials';
+    productSource = text.match(/concrete\s+mix\s+proportioning|mix\s+design/i)?.[0];
+  } else if (/(?:precast\s+)?(?:reinforced\s+)?concrete\s+pipes?|precast\s+pipes?/i.test(text)) {
+    productName = 'Precast concrete pipes';
+    category = 'Pipes & Drainage';
+    productSource = text.match(/(?:precast\s+)?(?:reinforced\s+)?concrete\s+pipes?|precast\s+pipes?/i)?.[0];
+  } else if (/masonry\s+blocks?|concrete\s+blocks?/i.test(text)) {
+    productName = 'Concrete masonry blocks';
+    category = 'Masonry & Bricks';
+    productSource = text.match(/masonry\s+blocks?|concrete\s+blocks?/i)?.[0];
+  } else if (/clay\s+(?:building\s+)?bricks?|burnt\s+clay\s+bricks?/i.test(text)) {
+    productName = 'Burnt clay building bricks';
+    category = 'Masonry & Bricks';
+    productSource = text.match(/clay\s+(?:building\s+)?bricks?|burnt\s+clay\s+bricks?/i)?.[0];
+  } else if (/structural\s+steel(?:\s+plates|\s+sections)?/i.test(text)) {
+    productName = 'Structural steel sections';
+    category = 'Structural Steel';
+    productSource = text.match(/structural\s+steel(?:\s+plates|\s+sections)?/i)?.[0];
+  } else if (/(?:coarse\s+and\s+fine\s+)?aggregates?/i.test(text)) {
+    productName = 'Coarse and fine aggregates';
+    category = 'Construction Materials';
+    productSource = text.match(/(?:coarse\s+and\s+fine\s+)?aggregates?/i)?.[0];
+  } else if (/tmt\s+(?:steel\s+)?bars?|deformed\s+(?:steel\s+)?bars?|steel\s+reinforcement/i.test(text)) {
+    productName = 'High strength deformed steel bars';
+    category = 'Reinforcement Steel';
+    productSource = text.match(/tmt\s+(?:steel\s+)?bars?|deformed\s+(?:steel\s+)?bars?|steel\s+reinforcement/i)?.[0];
+  } else if (/plain\s+and\s+reinforced\s+concrete|reinforced\s+concrete|structural\s+concrete/i.test(text)) {
+    productName = 'Plain and reinforced concrete';
+    category = 'Civil & Concrete';
+    productSource = text.match(/plain\s+and\s+reinforced\s+concrete|reinforced\s+concrete|structural\s+concrete/i)?.[0];
+  } else if (/safety\s+footwear|safety\s+shoes?/i.test(text)) {
+    productName = 'Safety footwear';
+    category = 'Personal Protective Equipment';
+    productSource = text.match(/safety\s+footwear|safety\s+shoes?/i)?.[0];
+  } else if (/protective\s+gloves/i.test(text)) {
+    productName = 'Mechanical protective gloves';
+    category = 'Personal Protective Equipment';
+    productSource = text.match(/protective\s+gloves/i)?.[0];
+  } else if (/firefighter\s+(?:protective\s+)?clothing/i.test(text)) {
+    productName = 'Firefighter protective clothing';
+    category = 'Firefighter Equipment';
+    productSource = text.match(/firefighter\s+(?:protective\s+)?clothing/i)?.[0];
+  } else if (/heat\s+and\s+(?:thermal\s+)?flame|protective\s+clothing\s+against\s+heat/i.test(text)) {
+    productName = 'Heat and flame protective clothing';
+    category = 'Protective Clothing';
+    productSource = text.match(/heat\s+and\s+(?:thermal\s+)?flame|protective\s+clothing\s+against\s+heat/i)?.[0];
+  } else if (/respiratory\s+protective|powered\s+filtering/i.test(text)) {
+    productName = 'Powered filtering respiratory devices';
+    category = 'Respiratory Protection';
+    productSource = text.match(/respiratory\s+protective|powered\s+filtering/i)?.[0];
   } else if (/solar\s+panels?|photovoltaic/i.test(text)) {
     productName = 'Solar photovoltaic modules';
     category = 'Renewable Energy';
@@ -40,9 +145,9 @@ export function extractWithPatternMatching(inputText: string, inputType: string)
     productSource = text.match(/diesel\s+generator/i)?.[0];
   } else {
     const firstClause = text.split(/[,.;]/)[0].trim();
-    if (firstClause.length > 2 && firstClause.length < 80) {
+    if (firstClause.length > 2) {
       productName = firstClause.replace(/^(procure|supply|need|purchase|requirement for)\s+/i, '');
-      category = 'Specialized Equipment';
+      category = 'General Procurement';
       productSource = firstClause;
     }
   }
@@ -56,10 +161,16 @@ export function extractWithPatternMatching(inputText: string, inputType: string)
     application = 'Government facility';
     application_source = text.match(/government\s+facility/i)?.[0];
     industry = 'Public Sector / Government';
-  } else if (/municipal\s+road|highway/i.test(text)) {
-    application = 'Highway & Municipal road lighting';
-    application_source = text.match(/municipal\s+road\s+lighting|highway|road\s+lighting/i)?.[0];
-    industry = 'Urban Infrastructure / Municipal';
+  } else if (/municipal\s+(?:road|street|expressway)s?|highway|expressways?|street\s+lighting/i.test(text)) {
+    if (/light|luminaire|lamp|illumination/i.test(text)) {
+      application = 'Highway & Municipal road lighting';
+      application_source = text.match(/municipal\s+(?:road|street|expressway)s?(?:\s+lighting)?|highway|road\s+lighting|street\s+lighting(?:\s+illumination)?/i)?.[0];
+      industry = 'Urban Infrastructure / Municipal';
+    } else {
+      application = 'Highway & Municipal infrastructure';
+      application_source = text.match(/municipal\s+(?:road|street|expressway)s?|highway|expressways?/i)?.[0];
+      industry = 'Urban Infrastructure / Transportation';
+    }
   } else if (/industrial/i.test(text)) {
     application = 'Industrial installation';
     application_source = text.match(/industrial/i)?.[0];
@@ -147,20 +258,54 @@ export function extractWithPatternMatching(inputText: string, inputType: string)
 
   // 4. Materials
   const materials: TaggedRequirementItem[] = [];
-  const materialKeywords = [
-    { name: 'Stainless steel', pattern: /stainless\s+steel(?:\s*(?:grade\s*)?(?:304|316))?/i },
-    { name: 'Die-cast aluminum', pattern: /(?:die-?cast\s+)?aluminum|aluminium/i },
-    { name: 'Copper', pattern: /\bcopper\b/i },
-    { name: 'PVC / Polymer', pattern: /\b(?:pvc|xlpe|polyethylene|polymer)\b/i },
+  const matDefList = [
+    {
+      name: 'Die-cast aluminium',
+      pattern: /\b(?:(?:weather[\s-]+resistant|robust|durable|heavy[\s-]+duty)\s+)?(?:die-?cast\s+)alumin(?:i)?um(?:\s+(?:housing|body|casing|enclosure))?\b/i,
+      test: /die-?cast\s+alumin(?:i)?um/i,
+    },
+    {
+      name: 'Aluminium',
+      pattern: /\b(?:made\s+of\s+)?alumin(?:i)?um(?:\s+(?:housing|body|casing|enclosure))?\b/i,
+      test: /alumin(?:i)?um/i,
+    },
+    {
+      name: 'Stainless steel',
+      pattern: /\b(?:(?:grade\s*)?(?:304|316)\s+)?stainless\s+steel(?:\s*(?:grade\s*)?(?:304|316))?(?:\s+(?:body|housing|enclosure|tank))?\b/i,
+      test: /stainless\s+steel/i,
+    },
+    {
+      name: 'Galvanized steel',
+      pattern: /\b(?:hot[\s-]+dip\s+)?(?:galvanized|galvanised|gi)\s+steel(?:\s+(?:sheet|structure|pole|body))?\b/i,
+      test: /(?:galvanized|galvanised|gi)\s+steel/i,
+    },
+    {
+      name: 'Reinforced concrete',
+      pattern: /\b(?:reinforced|plain\s+and\s+reinforced)\s+concrete|rcc\b/i,
+      test: /reinforced\s+concrete|rcc/i,
+    },
+    {
+      name: 'Copper',
+      pattern: /\b(?:annealed\s+)?copper(?:\s+conductors?)?\b/i,
+      test: /\bcopper\b/i,
+    },
+    {
+      name: 'PVC / Polymer',
+      pattern: /\b(?:pvc|xlpe|polyethylene|polymer)\b/i,
+      test: /\b(?:pvc|xlpe|polyethylene|polymer)\b/i,
+    },
   ];
 
-  for (const m of materialKeywords) {
+  let hasDieCastAlum = false;
+  for (const m of matDefList) {
+    if (m.name === 'Aluminium' && hasDieCastAlum) continue;
     const match = text.match(m.pattern);
-    if (match) {
+    if (match && m.test.test(match[0])) {
+      if (m.name === 'Die-cast aluminium') hasDieCastAlum = true;
       materials.push({
         name: m.name,
         confidence: 'high',
-        source_text: match[0],
+        source_text: match[0].trim(),
       });
     }
   }
@@ -168,7 +313,7 @@ export function extractWithPatternMatching(inputText: string, inputType: string)
   // 5. Environment
   const environment: TaggedRequirementItem[] = [];
 
-  const outdoorMatch = text.match(/\b(?:outdoor\s+installation|outdoor\s+use|external\s+use|exterior\s+use|outdoor)\b/i);
+  const outdoorMatch = text.match(/\b(?:outdoor\s+installation|outdoor\s+use|external\s+use|exterior\s+use|continuous\s+outdoor\s+operation|outdoor)\b/i);
   if (outdoorMatch) {
     environment.push({
       name: 'Outdoor',
@@ -177,12 +322,39 @@ export function extractWithPatternMatching(inputText: string, inputType: string)
     });
   }
 
-  const weatherMatch = text.match(/\b(?:weather\s+resistant|weather-?proof)\b/i);
+  const weatherMatch = text.match(/\b(?:weather[\s-]+resistant|weather[\s-]*proof)\b/i);
   if (weatherMatch) {
     environment.push({
       name: 'Weather resistant',
       confidence: 'high',
       source_text: weatherMatch[0],
+    });
+  }
+
+  const dustMatch = text.match(/\b(?:dust[\s-]+resistant|dust[\s-]*proof)\b/i);
+  if (dustMatch) {
+    environment.push({
+      name: 'Dust resistant',
+      confidence: 'high',
+      source_text: dustMatch[0],
+    });
+  }
+
+  const moistureMatch = text.match(/\b(?:moisture[\s-]+resistant|moisture[\s-]*proof)\b/i);
+  if (moistureMatch) {
+    environment.push({
+      name: 'Moisture resistant',
+      confidence: 'high',
+      source_text: moistureMatch[0],
+    });
+  }
+
+  const corrosiveMatch = text.match(/\b(?:corrosion[\s-]+resistant|corrosive|saline|marine)\b/i);
+  if (corrosiveMatch) {
+    environment.push({
+      name: 'Corrosive / Marine',
+      confidence: 'medium',
+      source_text: corrosiveMatch[0],
     });
   }
 
@@ -195,48 +367,181 @@ export function extractWithPatternMatching(inputText: string, inputType: string)
     });
   }
 
-  const corrosiveMatch = text.match(/\b(?:corrosive|saline|marine)\b/i);
-  if (corrosiveMatch) {
-    environment.push({
-      name: 'Corrosive / Marine',
-      confidence: 'medium',
-      source_text: corrosiveMatch[0],
-    });
-  }
-
   // 6. Installation
   const installation_requirements: TaggedRequirementItem[] = [];
-  if (/pole\s+mounted/i.test(text)) {
-    installation_requirements.push({ name: 'Pole mounted', confidence: 'high', source_text: 'pole mounted' });
-  }
-  if (/wall\s+mounted/i.test(text)) {
-    installation_requirements.push({ name: 'Wall mounted', confidence: 'high', source_text: 'wall mounted' });
-  }
-  if (/underground/i.test(text)) {
-    installation_requirements.push({ name: 'Underground / Trenching', confidence: 'medium', source_text: 'underground' });
+  const instDefList = [
+    {
+      name: 'Pole mounted',
+      pattern: /\b(?:suitable\s+for\s+)?(pole[\s-]+mounted(?:\s+(?:outdoor\s+applications?|outdoor|applications?|fittings?|use))?|pole\s+mounting|installed\s+on\s+poles?)\b/i,
+    },
+    {
+      name: 'Wall mounted',
+      pattern: /\b(?:suitable\s+for\s+)?(wall[\s-]+mounted(?:\s+(?:outdoor\s+applications?|outdoor|applications?|fittings?|use))?|wall\s+mounting|installed\s+on\s+walls?)\b/i,
+    },
+    {
+      name: 'Ceiling mounted',
+      pattern: /\b(?:suitable\s+for\s+)?(ceiling[\s-]+mounted(?:\s+(?:applications?|fittings?|use))?|ceiling\s+mounting|installed\s+on\s+ceilings?)\b/i,
+    },
+    {
+      name: 'Surface mounted',
+      pattern: /\b(?:suitable\s+for\s+)?(surface[\s-]+mounted(?:\s+(?:applications?|fittings?|use))?|surface\s+mounting)\b/i,
+    },
+    {
+      name: 'Panel mounted',
+      pattern: /\b(?:suitable\s+for\s+)?(panel[\s-]+mounted(?:\s+(?:applications?|fittings?|use))?|panel\s+mounting)\b/i,
+    },
+    {
+      name: 'Pedestal mounted',
+      pattern: /\b(?:suitable\s+for\s+)?(pedestal[\s-]+mounted(?:\s+(?:applications?|fittings?|use))?|pedestal\s+mounting)\b/i,
+    },
+    {
+      name: 'Underground / Trenching',
+      pattern: /\b(underground(?:\s+cabling|\s+installation|\s+trenching)?|trenching|buried(?:\s+directly)?)\b/i,
+    },
+  ];
+
+  for (const item of instDefList) {
+    const match = text.match(item.pattern);
+    if (match) {
+      installation_requirements.push({
+        name: item.name,
+        confidence: 'high',
+        source_text: match[1] || match[0],
+      });
+    }
   }
 
   // 7. Quantity
   let quantity: string | null = null;
   let quantity_source: string | undefined = undefined;
-  const qtyMatch = text.match(/(?:procure|supply|quantity|qty|order)?\s*(\d+)\s*(?:units?|nos?|pieces?|pcs?|sets?|tanks?|meters?|cables?)?\b/i);
-  if (qtyMatch && parseInt(qtyMatch[1], 10) > 1 && !powerMatch?.[0].includes(qtyMatch[1])) {
-    quantity = qtyMatch[1];
-    quantity_source = qtyMatch[0].trim();
+  let quantity_unit: string | undefined = undefined;
+
+  const qtyPrefixMatch = text.match(/\b(?:quantity|qty)\s*[:\-]?\s*(\d+)\s*(units?|luminaires?|lamps?|nos?|numbers?|pieces?|pcs?|sets?|tanks?|meters?|cables?)?\b/i);
+  if (qtyPrefixMatch && parseInt(qtyPrefixMatch[1], 10) > 0) {
+    quantity = qtyPrefixMatch[1];
+    quantity_unit = qtyPrefixMatch[2]?.toLowerCase() || 'units';
+    quantity_source = qtyPrefixMatch[0].trim();
+  }
+
+  if (!quantity) {
+    const qtyPhraseMatch = text.match(
+      /\b(?:(?:supply\s+(?:and\s+installation\s+)?of|procure(?:ment\s+of)?|order\s+of)\s+)?(\d+)\s+(units?|luminaires?|lamps?|nos?|numbers?|pieces?|pcs?|sets?|tanks?|meters?|cables?)\b/i
+    );
+    if (qtyPhraseMatch && parseInt(qtyPhraseMatch[1], 10) > 0 && !powerMatch?.[0].includes(qtyPhraseMatch[1])) {
+      quantity = qtyPhraseMatch[1];
+      quantity_unit = qtyPhraseMatch[2].toLowerCase();
+      quantity_source = `${qtyPhraseMatch[1]} ${qtyPhraseMatch[2]}`;
+    }
+  }
+
+  if (!quantity) {
+    const genericQtyMatch = text.match(/(?:procure|supply|order)?\s*(\d+)\s*(?:units?|nos?|pieces?|pcs?|sets?|tanks?|meters?|cables?)?\b/i);
+    if (genericQtyMatch && parseInt(genericQtyMatch[1], 10) > 1 && !powerMatch?.[0].includes(genericQtyMatch[1])) {
+      quantity = genericQtyMatch[1];
+      quantity_source = genericQtyMatch[0].trim();
+    }
   }
 
   // 8. Safety & Certifications
   const safety_requirements: TaggedRequirementItem[] = [];
   const certification_mentions: TaggedRequirementItem[] = [];
 
-  if (/surge\s+protect/i.test(text)) {
-    safety_requirements.push({ name: 'Surge protection', confidence: 'high', source_text: text.match(/surge\s+protect\w*/i)?.[0] });
+  const safetyDefList = [
+    {
+      name: 'Surge protection',
+      pattern: /\b(?:include\s+appropriate\s+|with\s+)?(surge\s+protect(?:ion|or)?(?:\s*[:\-]?\s*\d+(?:\.\d+)?\s*(?:kV|V))?)\b/i,
+      test: /surge\s+protect/i,
+    },
+    {
+      name: 'Overload protection',
+      pattern: /\b(?:with\s+)?(overload\s+protection)\b/i,
+      test: /overload\s+protection/i,
+    },
+    {
+      name: 'Short-circuit protection',
+      pattern: /\b(?:with\s+)?(short[\s-]+circuit\s+protection)\b/i,
+      test: /short[\s-]+circuit\s+protection/i,
+    },
+    {
+      name: 'Earth protection',
+      pattern: /\b(?:with\s+)?((?:earth(?:ing)?|ground(?:ing)?)\s+protection)\b/i,
+      test: /(?:earth|ground)(?:ing)?\s+protection/i,
+    },
+    {
+      name: 'Safety requirements',
+      pattern: /\b((?:relevant\s+|general\s+|applicable\s+)?safety\s+requirements)\b/i,
+      test: /safety\s+requirements/i,
+    },
+    {
+      name: 'Fire retardant insulation',
+      pattern: /\b(?:with\s+)?(fire\s+retardant(?:\s+insulation)?)\b/i,
+      test: /fire\s+retardant/i,
+    },
+  ];
+
+  for (const s of safetyDefList) {
+    const match = text.match(s.pattern);
+    if (match && s.test.test(match[0])) {
+      safety_requirements.push({
+        name: s.name,
+        confidence: 'high',
+        source_text: match[0].trim(),
+      });
+    }
   }
-  if (/fire\s+retardant/i.test(text)) {
-    safety_requirements.push({ name: 'Fire retardant insulation', confidence: 'high', source_text: text.match(/fire\s+retardant/i)?.[0] });
-  }
+
   if (/bis|isi|crs/i.test(text)) {
-    certification_mentions.push({ name: 'BIS / CRS certification', confidence: 'high', source_text: text.match(/bis|isi|crs/i)?.[0] });
+    certification_mentions.push({
+      name: 'BIS / CRS certification',
+      confidence: 'high',
+      source_text: text.match(/bis|isi|crs/i)?.[0],
+    });
+  } else if (/indian\s+standards?/i.test(text)) {
+    certification_mentions.push({
+      name: 'Indian Standards (BIS)',
+      confidence: 'high',
+      source_text: text.match(/applicable\s+Indian\s+Standards?|Indian\s+Standards?/i)?.[0] || 'Indian Standards',
+    });
+  }
+
+  // --- Append Material, Installation, Safety, Quantity to technical_parameters ---
+  for (const m of materials) {
+    technical_parameters.push({
+      parameter: 'Material',
+      value: m.name,
+      confidence: m.confidence,
+      source_text: m.source_text,
+    });
+  }
+
+  for (const inst of installation_requirements) {
+    technical_parameters.push({
+      parameter: 'Installation / Mounting',
+      value: inst.name,
+      confidence: inst.confidence,
+      source_text: inst.source_text,
+    });
+  }
+
+  for (const safe of safety_requirements) {
+    if (safe.name === 'Surge protection' && surgeMatch) continue;
+    technical_parameters.push({
+      parameter: 'Safety',
+      value: safe.name,
+      confidence: safe.confidence,
+      source_text: safe.source_text,
+    });
+  }
+
+  if (quantity) {
+    const displayQty = quantity_unit ? `${quantity} ${quantity_unit}` : `${quantity} units`;
+    technical_parameters.push({
+      parameter: 'Quantity',
+      value: displayQty,
+      unit: quantity_unit || 'units',
+      confidence: 'high',
+      source_text: quantity_source || displayQty,
+    });
   }
 
   // 9. Genuinely Useful Missing Information Detection (Not random!)

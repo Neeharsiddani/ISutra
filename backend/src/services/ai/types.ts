@@ -52,6 +52,7 @@ export interface StructuredRequirements {
   quantity_source?: string;
   additional_requirements: TaggedRequirementItem[];
   missing_information: string[];
+  blocking_missing_information?: string[];
   clarification_questions: ClarificationQuestion[];
   overall_confidence: ConfidenceLevel;
   ready_for_matching: boolean;
@@ -65,8 +66,12 @@ export interface AIAnalysisResult {
   input_text: string;
   requirements: StructuredRequirements;
   missing_information: string[];
+  blocking_missing_information?: string[];
   clarification_questions: ClarificationQuestion[];
   ready_for_matching: boolean;
   created_at: string;
   provider_used: string;
+  demo?: boolean;
+  warning?: string;
+  message?: string;
 }

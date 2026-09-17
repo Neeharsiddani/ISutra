@@ -43,8 +43,9 @@ router.get('/:id', analysisController.getById);
 // PUT /api/analysis/:id/requirements — Update and confirm edited requirements
 router.put('/:id/requirements', analysisController.updateRequirements);
 
-// POST /api/analysis/upload — Upload and analyze tender document
+// POST /api/analysis/upload & /api/analysis/document — Upload and analyze tender document
 router.post('/upload', upload.single('document'), analysisController.uploadDocument);
+router.post('/document', upload.single('document'), analysisController.uploadDocument);
 
 // POST /api/analysis/:id/recommendations — Match requirements of an analysis to BIS standards
 router.post('/:id/recommendations', recommendationsController.getAnalysisRecommendations);
@@ -58,4 +59,11 @@ router.post('/:id/recommendations/:standardId/gap-analysis', recommendationsCont
 router.get('/:id/compare', recommendationsController.compareStandardsHandler);
 router.post('/:id/compare', recommendationsController.compareStandardsHandler);
 
+// GET /api/analysis/:id/report — Phase F: Procurement Evaluation Report (JSON)
+router.get('/:id/report', recommendationsController.getProcurementReport);
+
+// GET /api/analysis/:id/report/html — Phase F: Printable Procurement Evaluation Report (HTML)
+router.get('/:id/report/html', recommendationsController.getProcurementReportHtml);
+
 export default router;
+

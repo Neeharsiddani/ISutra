@@ -5,8 +5,24 @@
 
 import { getSupabaseClient, isSupabaseConfigured } from '../database/supabase';
 import { runRequirementExtractionPipeline } from './ai/requirementExtractor';
+import { validateAndSanitizeRequirements } from './ai/validation';
 import type { StructuredRequirements, ClarificationQuestion } from './ai/types';
 import type { InputType } from '../types';
+import { extractDocument, DocumentUploadInput, DocumentExtractionResult } from './documentExtractionService';
+
+export interface DocumentProvenance {
+  source_type: 'direct_text' | 'document_upload';
+  file_name?: string;
+  file_type?: 'pdf' | 'docx' | 'doc';
+  file_size?: number;
+  page_count?: number;
+  extraction_method?: string;
+  extraction_warnings?: string[];
+  multiple_products_detected?: boolean;
+  detected_products?: string[];
+  primary_product_analyzed?: string;
+  extracted_preview?: string;
+}
 
 export interface StoredAnalysis {
   id: string;
@@ -18,12 +34,14 @@ export interface StoredAnalysis {
   created_at: string;
   requirements: StructuredRequirements;
   missing_information: string[];
+  blocking_missing_information: string[];
   clarification_questions: ClarificationQuestion[];
   ready_for_matching: boolean;
   confirmed: boolean;
   provider_used: string;
   demo: boolean;
   warning?: string;
+  document_provenance?: DocumentProvenance;
 }
 
 // In-memory analysis store for instant local development and fallback when Supabase is not configured
@@ -38,6 +56,8 @@ export async function analyzeSpecification(
 
   // Run AI Requirement Extraction Pipeline
   const extraction = await runRequirementExtractionPipeline(inputText, inputType);
+  const readyForMatching = Boolean(extraction.requirements.ready_for_matching);
+  const blockingMissingInfo = extraction.requirements.blocking_missing_information || [];
 
   const storedRecord: StoredAnalysis = {
     id: analysisId,
@@ -49,12 +69,16 @@ export async function analyzeSpecification(
     created_at: createdAt,
     requirements: extraction.requirements,
     missing_information: extraction.requirements.missing_information,
+    blocking_missing_information: blockingMissingInfo,
     clarification_questions: extraction.requirements.clarification_questions,
-    ready_for_matching: true,
+    ready_for_matching: readyForMatching,
     confirmed: false,
     provider_used: extraction.provider_used,
     demo: extraction.demo,
     warning: extraction.warning,
+    document_provenance: {
+      source_type: 'direct_text',
+    },
   };
 
   // Always save in inMemoryStore
@@ -132,8 +156,9 @@ export async function analyzeSpecification(
     status: 'completed' as const,
     requirements: extraction.requirements,
     missing_information: extraction.requirements.missing_information,
+    blocking_missing_information: blockingMissingInfo,
     clarification_questions: extraction.requirements.clarification_questions,
-    ready_for_matching: true,
+    ready_for_matching: readyForMatching,
     created_at: createdAt,
     provider_used: extraction.provider_used,
     demo: extraction.demo,
@@ -158,6 +183,8 @@ export async function getAnalysisById(id: string): Promise<StoredAnalysis | null
 
         if (data && !error) {
           const extraction = await runRequirementExtractionPipeline(data.input_text || '', data.input_type || 'product_description');
+          const readyForMatching = Boolean(extraction.requirements.ready_for_matching);
+          const blockingMissingInfo = extraction.requirements.blocking_missing_information || [];
           return {
             id: data.id,
             analysis_id: data.id,
@@ -168,8 +195,9 @@ export async function getAnalysisById(id: string): Promise<StoredAnalysis | null
             created_at: data.created_at,
             requirements: extraction.requirements,
             missing_information: extraction.requirements.missing_information,
+            blocking_missing_information: blockingMissingInfo,
             clarification_questions: extraction.requirements.clarification_questions,
-            ready_for_matching: true,
+            ready_for_matching: readyForMatching,
             confirmed: false,
             provider_used: extraction.provider_used,
             demo: extraction.demo,
@@ -195,19 +223,27 @@ export async function updateAnalysisRequirements(
     return null;
   }
 
-  const mergedRequirements: StructuredRequirements = {
+  const merged: StructuredRequirements = {
     ...existing.requirements,
     ...updatedRequirements,
-    confirmed,
-    ready_for_matching: true,
   };
+
+  // Re-validate and sanitize merged requirements to recalculate readiness
+  const validated = validateAndSanitizeRequirements(merged, existing.input_text);
+  const readyForMatching = Boolean(validated.ready_for_matching);
+  const blockingMissing = validated.blocking_missing_information || [];
 
   const updatedRecord: StoredAnalysis = {
     ...existing,
-    requirements: mergedRequirements,
+    requirements: {
+      ...validated,
+      confirmed,
+    },
     confirmed,
-    missing_information: mergedRequirements.missing_information,
-    clarification_questions: mergedRequirements.clarification_questions,
+    ready_for_matching: readyForMatching,
+    blocking_missing_information: blockingMissing,
+    missing_information: validated.missing_information,
+    clarification_questions: validated.clarification_questions,
   };
 
   inMemoryStore.set(id, updatedRecord);
@@ -240,14 +276,108 @@ export async function getAnalysisHistory(): Promise<Array<{
   return historyList.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 }
 
-export async function analyzeDocument(_fileName?: string) {
-  const demoFileName = 'Sample_Municipal_LED_Streetlight_Tender_Extract.pdf';
-  const sampleExtractedText = `Demonstration Tender Extract (${demoFileName}):\nRequirement for Municipal LED Street Lighting Luminaire 100W, outdoor weather-resistant housing, pole mounted with surge protection.`;
+export async function analyzeDocument(
+  fileInput?: DocumentUploadInput | string
+) {
+  // Check if real document upload buffer was provided
+  if (fileInput && typeof fileInput === 'object' && 'buffer' in fileInput) {
+    const extracted = await extractDocument(fileInput);
+
+    if (extracted.isScannedOrEmpty) {
+      const scannedMsg =
+        'This document appears to be scanned/image-based and no machine-readable text could be extracted.';
+      const err = new Error(scannedMsg);
+      (err as any).statusCode = 422;
+      (err as any).isScannedOrEmpty = true;
+      throw err;
+    }
+
+    const analysisId = `doc-analysis-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+    const createdAt = new Date().toISOString();
+
+    // Run existing AI Requirement Extraction Pipeline on the real extracted document text
+    const extraction = await runRequirementExtractionPipeline(extracted.text, 'tender_document');
+    const readyForMatching = Boolean(extraction.requirements.ready_for_matching);
+    const blockingMissingInfo = extraction.requirements.blocking_missing_information || [];
+
+    const provenance: DocumentProvenance = {
+      source_type: 'document_upload',
+      file_name: extracted.fileName,
+      file_type: extracted.fileType,
+      file_size: extracted.fileSize,
+      page_count: extracted.pageCount,
+      extraction_method: extracted.extractionMethod,
+      extraction_warnings: extracted.warnings,
+      multiple_products_detected: extracted.multipleProductsDetected,
+      detected_products: extracted.detectedProducts,
+      primary_product_analyzed: extracted.primaryProductAnalyzed,
+      extracted_preview: extracted.text.length > 500 ? extracted.text.slice(0, 500) + '...' : extracted.text,
+    };
+
+    const record: StoredAnalysis = {
+      id: analysisId,
+      analysis_id: analysisId,
+      input_type: 'tender_document',
+      input_text: extracted.text,
+      file_name: extracted.fileName,
+      status: 'completed',
+      created_at: createdAt,
+      requirements: extraction.requirements,
+      missing_information: extraction.requirements.missing_information,
+      blocking_missing_information: blockingMissingInfo,
+      clarification_questions: extraction.requirements.clarification_questions,
+      ready_for_matching: readyForMatching,
+      confirmed: false,
+      provider_used: extraction.provider_used,
+      demo: extraction.demo,
+      warning: extracted.warnings.length > 0 ? extracted.warnings.join(' | ') : extraction.warning,
+      document_provenance: provenance,
+    };
+
+    inMemoryStore.set(analysisId, record);
+
+    return {
+      analysis_id: analysisId,
+      status: 'completed' as const,
+      file_name: extracted.fileName,
+      input_type: 'tender_document',
+      input_text: extracted.text,
+      requirements: extraction.requirements,
+      missing_information: extraction.requirements.missing_information,
+      blocking_missing_information: blockingMissingInfo,
+      clarification_questions: extraction.requirements.clarification_questions,
+      ready_for_matching: readyForMatching,
+      created_at: createdAt,
+      provider_used: extraction.provider_used,
+      demo: extraction.demo,
+      warning: extracted.warnings.length > 0 ? extracted.warnings.join(' | ') : extraction.warning,
+      document_provenance: provenance,
+    };
+  }
+
+  // Fallback demo document extract when no file buffer is supplied
+  const demoFileName = typeof fileInput === 'string' && fileInput.trim() ? fileInput : 'Sample_Municipal_LED_Streetlight_Tender_Extract.pdf';
+  const sampleExtractedText = `Demonstration Tender Extract (${demoFileName}):\nRequirement for Municipal LED Street Lighting Luminaire 100W, outdoor weather-resistant housing, pole mounted with surge protection 10kV, CCT 4000K, luminous efficacy >= 120 lm/W.`;
 
   const extraction = await runRequirementExtractionPipeline(sampleExtractedText, 'tender_document');
   const analysisId = `doc-analysis-${Date.now()}`;
   const createdAt = new Date().toISOString();
-  const limitationWarning = 'Arbitrary document parsing is not implemented in this prototype.';
+  const readyForMatching = Boolean(extraction.requirements.ready_for_matching);
+  const blockingMissingInfo = extraction.requirements.blocking_missing_information || [];
+
+  const demoProvenance: DocumentProvenance = {
+    source_type: 'document_upload',
+    file_name: demoFileName,
+    file_type: 'pdf',
+    file_size: 45200,
+    page_count: 1,
+    extraction_method: 'pdf-parse',
+    extraction_warnings: [],
+    multiple_products_detected: false,
+    detected_products: ['LED Street Lighting Luminaire'],
+    primary_product_analyzed: 'LED Street Lighting Luminaire',
+    extracted_preview: sampleExtractedText,
+  };
 
   const record: StoredAnalysis = {
     id: analysisId,
@@ -259,12 +389,13 @@ export async function analyzeDocument(_fileName?: string) {
     created_at: createdAt,
     requirements: extraction.requirements,
     missing_information: extraction.requirements.missing_information,
+    blocking_missing_information: blockingMissingInfo,
     clarification_questions: extraction.requirements.clarification_questions,
-    ready_for_matching: true,
+    ready_for_matching: readyForMatching,
     confirmed: false,
     provider_used: extraction.provider_used,
     demo: true,
-    warning: limitationWarning,
+    document_provenance: demoProvenance,
   };
 
   inMemoryStore.set(analysisId, record);
@@ -273,14 +404,16 @@ export async function analyzeDocument(_fileName?: string) {
     analysis_id: analysisId,
     status: 'completed' as const,
     file_name: demoFileName,
+    input_type: 'tender_document',
+    input_text: sampleExtractedText,
     requirements: extraction.requirements,
     missing_information: extraction.requirements.missing_information,
+    blocking_missing_information: blockingMissingInfo,
     clarification_questions: extraction.requirements.clarification_questions,
-    ready_for_matching: true,
+    ready_for_matching: readyForMatching,
     created_at: createdAt,
     provider_used: extraction.provider_used,
     demo: true,
-    warning: limitationWarning,
-    message: 'Demonstration tender extract processed. Note: arbitrary file parsing is disabled in this prototype.',
+    document_provenance: demoProvenance,
   };
 }

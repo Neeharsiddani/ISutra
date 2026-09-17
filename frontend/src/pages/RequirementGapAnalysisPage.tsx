@@ -139,10 +139,10 @@ export default function RequirementGapAnalysisPage() {
       '-------------------------------------------------------------------------',
       `Reference Coverage      : ${analysis.referenceCoverage !== null ? `${analysis.referenceCoverage}%` : 'Unavailable'}`,
       `Total Requirements      : ${analysis.totalRequirements}`,
-      `Supported by Reference  : ${analysis.supportedCount}`,
-      `Needs Verification      : ${analysis.needsVerificationCount}`,
-      `Not Available in Record : ${analysis.notAvailableCount}`,
-      `Not Supported           : ${analysis.notSupportedCount}`,
+      `Supported by Reference         : ${analysis.supportedCount}`,
+      `Requires Official Verification : ${analysis.needsVerificationCount}`,
+      `Not Available in Record        : ${analysis.notAvailableCount}`,
+      `Not Supported                  : ${analysis.notSupportedCount}`,
       '',
       'Explanation:',
       analysis.referenceCoverageExplanation,
@@ -153,14 +153,14 @@ export default function RequirementGapAnalysisPage() {
 
     analysis.items.forEach((item, index) => {
       lines.push(`[${index + 1}] ${item.requirementLabel}`);
-      lines.push(`    User Requirement : "${item.requirementValue}"`);
-      lines.push(`    Status           : ${item.statusLabel}`);
-      lines.push(`    Standard Evidence: "${item.standardEvidence || 'Not available'}"`);
-      lines.push(`    Analysis Notes   : ${item.explanation}`);
+      lines.push(`  Status      : ${item.statusLabel}`);
+      lines.push(`  User Value  : ${item.requirementValue}`);
+      lines.push(`  BIS Context : ${item.standardEvidence}`);
+      lines.push(`  Explanation : ${item.explanation}`);
       lines.push('');
     });
 
-    lines.push('4. VERIFICATION ACTIONS CHECKLIST');
+    lines.push('4. VERIFICATION & REVIEW ACTIONS CHECKLIST');
     lines.push('-------------------------------------------------------------------------');
     if (analysis.verificationActions.length === 0) {
       lines.push('No immediate missing parameter actions identified.');
@@ -341,7 +341,7 @@ export default function RequirementGapAnalysisPage() {
             <div className="bg-white border border-amber-200/80 rounded-2xl p-4 shadow-xs space-y-1 bg-amber-50/20">
               <span className="text-[10px] font-bold uppercase tracking-wider text-amber-800 block flex items-center gap-1">
                 <HelpCircle className="w-3.5 h-3.5 text-amber-600" />
-                <span>Needs Verification</span>
+                <span>Requires Official Verification</span>
               </span>
               <span className="text-2xl font-bold font-display text-amber-900 block">
                 {analysis.needsVerificationCount}
@@ -381,11 +381,11 @@ export default function RequirementGapAnalysisPage() {
               <div className="flex items-center gap-2 border-b border-amber-200/60 pb-2.5">
                 <AlertTriangle className="w-4 h-4 text-amber-600" />
                 <h3 className="text-xs font-bold text-amber-950 uppercase tracking-wider">
-                  Verification Actions Required Before Procurement
+                  Verification & Review Actions
                 </h3>
               </div>
-              <p className="text-xs text-[#627D98]">
-                The following technical parameters or environmental conditions require verification directly against the official text of {analysis.standardNumber}:
+              <p className="text-xs text-[#627D98] leading-relaxed">
+                The following pre-procurement verification &amp; review actions highlight areas requiring inspection before procurement decisions. These actions include requirements classified as <strong>Requires Official Verification</strong> as well as requirements whose detailed criteria are <strong>Not in Record</strong> and therefore require review directly against the official BIS publication of {analysis.standardNumber}:
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 pt-1">
                 {analysis.verificationActions.map((action, idx) => (

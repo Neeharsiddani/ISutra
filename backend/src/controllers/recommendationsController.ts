@@ -27,6 +27,20 @@ export async function getRecommendations(
       return;
     }
 
+    // Phase A: Enforce trustworthy matching readiness
+    if (requirements.ready_for_matching === false) {
+      res.status(400).json({
+        success: false,
+        error: {
+          message: 'Clarification required before finding applicable Indian Standards.',
+          statusCode: 400,
+          blocking_missing_information: requirements.blocking_missing_information || [],
+          clarification_questions: requirements.clarification_questions || [],
+        },
+      });
+      return;
+    }
+
     const result = matchRequirementsToStandards(requirements, VERIFIED_BIS_STANDARDS, options);
 
     res.json({
@@ -56,6 +70,26 @@ export async function getAnalysisRecommendations(
         error: {
           message: `Analysis record '${id}' not found.`,
           statusCode: 404,
+        },
+      });
+      return;
+    }
+
+    // Phase A: Enforce trustworthy matching readiness
+    if (analysis.ready_for_matching === false || analysis.requirements?.ready_for_matching === false) {
+      res.status(400).json({
+        success: false,
+        error: {
+          message: 'Clarification required before finding applicable Indian Standards.',
+          statusCode: 400,
+          blocking_missing_information:
+            analysis.requirements?.blocking_missing_information ||
+            analysis.blocking_missing_information ||
+            [],
+          clarification_questions:
+            analysis.requirements?.clarification_questions ||
+            analysis.clarification_questions ||
+            [],
         },
       });
       return;
@@ -289,3 +323,39 @@ export async function compareStandardsHandler(
     next(error);
   }
 }
+
+export async function getProcurementReport(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const analysisId = req.params.id;
+    const { generateProcurementReportData } = await import('../services/procurementReportService');
+    const reportData = await generateProcurementReportData(analysisId);
+    res.json({
+      success: true,
+      report: reportData,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getProcurementReportHtml(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const analysisId = req.params.id;
+    const { generateProcurementReportData, generatePrintableHtmlReport } = await import('../services/procurementReportService');
+    const reportData = await generateProcurementReportData(analysisId);
+    const html = generatePrintableHtmlReport(reportData);
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.send(html);
+  } catch (error) {
+    next(error);
+  }
+}
+

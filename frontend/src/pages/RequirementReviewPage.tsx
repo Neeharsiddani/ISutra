@@ -18,6 +18,9 @@ import {
   MapPin,
   Cpu,
   Sparkles,
+  HelpCircle,
+  Info,
+  FileArchive,
 } from 'lucide-react';
 import { getAnalysisById, updateAnalysisRequirements } from '../services/api';
 import type {
@@ -36,6 +39,7 @@ export default function RequirementReviewPage() {
   const [requirements, setRequirements] = useState<StructuredRequirements | null>(null);
   const [isConfirmed, setIsConfirmed] = useState(false);
   const [confirming, setConfirming] = useState(false);
+  const [showTextPreview, setShowTextPreview] = useState(false);
 
   // Inline editing state for individual cards
   const [editingCard, setEditingCard] = useState<string | null>(null);
@@ -132,6 +136,21 @@ export default function RequirementReviewPage() {
     setEditingCard(null);
   };
 
+  const saveUpdatedRequirements = async (updated: StructuredRequirements) => {
+    setRequirements(updated);
+    setEditingCard(null);
+    if (analysis?.analysis_id) {
+      try {
+        const res = await updateAnalysisRequirements(analysis.analysis_id, updated, isConfirmed);
+        setAnalysis(res);
+        setRequirements(res.requirements);
+        setIsConfirmed(res.confirmed || false);
+      } catch {
+        // Keep local requirements updated
+      }
+    }
+  };
+
   const handleSaveProduct = () => {
     const updated: StructuredRequirements = {
       ...requirements,
@@ -141,8 +160,7 @@ export default function RequirementReviewPage() {
         category: draftCategory.trim() || requirements.product.category,
       },
     };
-    setRequirements(updated);
-    setEditingCard(null);
+    saveUpdatedRequirements(updated);
   };
 
   const handleSaveApplication = () => {
@@ -150,8 +168,7 @@ export default function RequirementReviewPage() {
       ...requirements,
       application: draftApplication.trim() || null,
     };
-    setRequirements(updated);
-    setEditingCard(null);
+    saveUpdatedRequirements(updated);
   };
 
   const handleSaveParams = () => {
@@ -159,8 +176,7 @@ export default function RequirementReviewPage() {
       ...requirements,
       technical_parameters: draftParams,
     };
-    setRequirements(updated);
-    setEditingCard(null);
+    saveUpdatedRequirements(updated);
   };
 
   const handleSaveEnvInst = () => {
@@ -169,8 +185,7 @@ export default function RequirementReviewPage() {
       environment: draftEnv.map((name) => ({ id: `env-${Date.now()}-${name}`, name, confidence: 'high' })),
       installation_requirements: draftInst.map((name) => ({ id: `inst-${Date.now()}-${name}`, name, confidence: 'high' })),
     };
-    setRequirements(updated);
-    setEditingCard(null);
+    saveUpdatedRequirements(updated);
   };
 
   // Add draft parameter
@@ -237,6 +252,12 @@ export default function RequirementReviewPage() {
     }
   };
 
+  const isReady = requirements.ready_for_matching ?? analysis.ready_for_matching ?? true;
+  const blockingInfo = requirements.blocking_missing_information || analysis.blocking_missing_information || [];
+  const clarificationQuestions = requirements.clarification_questions || analysis.clarification_questions || [];
+  const allMissing = requirements.missing_information || analysis.missing_information || [];
+  const nonBlockingMissing = allMissing.filter((item) => !blockingInfo.includes(item));
+
   return (
     <div className="space-y-6 w-full pb-16 animate-fade-in text-[#243B53]">
       {/* ============================================================
@@ -252,7 +273,12 @@ export default function RequirementReviewPage() {
 
             {/* Status Badge */}
             <div>
-              {isConfirmed ? (
+              {!isReady ? (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-rose-50 text-[#C53030] rounded-full text-xs font-semibold border border-rose-300">
+                  <AlertTriangle className="w-3.5 h-3.5 text-[#C53030]" />
+                  Clarification Required
+                </span>
+              ) : isConfirmed ? (
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-[#16803C] rounded-full text-xs font-semibold border border-emerald-300">
                   <CheckCircle2 className="w-3.5 h-3.5 text-[#16803C]" />
                   Requirements Confirmed
@@ -267,10 +293,79 @@ export default function RequirementReviewPage() {
           </div>
 
           <p className="text-xs sm:text-sm text-[#627D98] mt-1.5 leading-relaxed">
-            Review the extracted specifications below before confirming for future standards matching.
+            {!isReady
+              ? 'Additional procurement clarification is required before matching applicable Indian Standards.'
+              : 'Review the extracted specifications below before confirming for future standards matching.'}
           </p>
         </div>
       </div>
+
+      {/* ============================================================
+          DOCUMENT PROVENANCE CARD (Only shown when source is document upload)
+         ============================================================ */}
+      {(analysis.document_provenance || analysis.file_name) && (
+        <div className="bg-slate-50 border border-slate-200/90 rounded-2xl p-4 sm:p-5 shadow-2xs animate-fade-in space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-[#0F766E]/10 flex items-center justify-center text-[#0F766E] shrink-0">
+                <FileArchive className="w-4 h-4" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-xs font-bold text-[#102A43] font-mono">
+                    {analysis.document_provenance?.file_name || analysis.file_name || 'Procurement Document'}
+                  </span>
+                  <span className="px-1.5 py-0.2 text-[10px] font-bold uppercase rounded bg-[#0F766E]/10 text-[#0F766E] border border-[#0F766E]/20">
+                    {analysis.document_provenance?.file_type?.toUpperCase() || (analysis.file_name?.endsWith('.docx') ? 'DOCX' : 'PDF')}
+                  </span>
+                  {analysis.document_provenance?.page_count && (
+                    <span className="text-[11px] text-slate-500">
+                      • {analysis.document_provenance.page_count} {analysis.document_provenance.page_count === 1 ? 'page' : 'pages'}
+                    </span>
+                  )}
+                  {analysis.document_provenance?.file_size && (
+                    <span className="text-[11px] text-slate-500">
+                      • {(analysis.document_provenance.file_size / 1024).toFixed(1)} KB
+                    </span>
+                  )}
+                </div>
+                <p className="text-[11px] text-slate-500 mt-0.5">
+                  Extracted via {analysis.document_provenance?.extraction_method || 'local offline parser'}
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setShowTextPreview(!showTextPreview)}
+              className="text-xs text-[#0F766E] hover:underline font-semibold flex items-center gap-1 shrink-0 self-start sm:self-center cursor-pointer"
+            >
+              {showTextPreview ? 'Hide Extracted Text' : 'View Extracted Text'}
+            </button>
+          </div>
+
+          {/* Multiple Products Warning if applicable */}
+          {analysis.document_provenance?.multiple_products_detected && (
+            <div className="p-3 bg-amber-50/90 border border-amber-200 rounded-xl text-xs text-amber-900 flex items-start gap-2">
+              <Info className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+              <div>
+                <strong>Multiple Products Detected in Document:</strong> Analyzing primary item:{' '}
+                <span className="font-semibold text-amber-950">
+                  {analysis.document_provenance.primary_product_analyzed || analysis.requirements.product.name}
+                </span>.
+                Specifications for additional items will remain available in future multi-lot workflows.
+              </div>
+            </div>
+          )}
+
+          {/* Expandable Text Preview */}
+          {showTextPreview && (
+            <div className="p-3 bg-white rounded-xl border border-slate-200 text-xs font-mono text-slate-700 max-h-48 overflow-y-auto whitespace-pre-wrap leading-relaxed">
+              {analysis.document_provenance?.extracted_preview || analysis.input_text}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ============================================================
           2. DEMO / AI STATUS (Only shown when actual state is demo)
@@ -290,9 +385,42 @@ export default function RequirementReviewPage() {
       )}
 
       {/* ============================================================
-          3. CONFIRMED STATUS BANNER (When confirmation is completed)
+          3A. READINESS STATUS BANNER (When clarification is required)
          ============================================================ */}
-      {isConfirmed && (
+      {!isReady && (
+        <div className="p-5 sm:p-6 bg-rose-50/90 border-2 border-rose-300 rounded-2xl shadow-xs animate-fade-in text-[#243B53]">
+          <div className="flex items-start gap-3.5">
+            <div className="w-10 h-10 rounded-xl bg-rose-100 flex items-center justify-center shrink-0 mt-0.5 text-[#C53030]">
+              <AlertTriangle className="w-6 h-6 stroke-[2.5]" />
+            </div>
+            <div>
+              <h3 className="text-base sm:text-lg font-bold font-display text-rose-950">
+                Clarification required before finding applicable Indian Standards.
+              </h3>
+              <p className="text-xs sm:text-sm font-semibold text-[#C53030] mt-0.5">
+                Standards Matching Suspended — Critical Procurement Information Missing
+              </p>
+              <p className="text-xs text-[#243B53]/80 mt-1.5 leading-relaxed max-w-2xl">
+                The extracted requirement does not contain sufficient reliable procurement details to accurately match verified BIS standards. Please review the blocking missing information and clarification questions below, and edit the requirements before proceeding.
+              </p>
+              <div className="mt-4 flex flex-wrap items-center gap-3">
+                <button
+                  onClick={() => handleStartEdit('product')}
+                  className="px-4 py-2 bg-[#0F766E] hover:bg-[#0C5D57] text-white rounded-xl text-xs font-semibold transition-colors shadow-2xs flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Edit2 className="w-3.5 h-3.5" />
+                  <span>Edit Requirements to Clarify</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================
+          3B. CONFIRMED STATUS BANNER (When confirmation is completed and ready)
+         ============================================================ */}
+      {isReady && isConfirmed && (
         <div className="p-5 sm:p-6 bg-emerald-50/80 border-2 border-emerald-400 rounded-2xl shadow-xs animate-fade-in">
           <div className="flex items-start gap-3.5">
             <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center shrink-0 mt-0.5 text-[#16803C]">
@@ -787,30 +915,105 @@ export default function RequirementReviewPage() {
       </div>
 
       {/* ============================================================
-          5. MISSING INFORMATION WARNING CARD
-          Tinted Amber Background (#D97706)
+          5. MISSING INFORMATION & CLARIFICATIONS SECTION
          ============================================================ */}
-      {requirements.missing_information && requirements.missing_information.length > 0 && (
-        <div className="bg-amber-50/70 border border-[#D97706]/30 rounded-2xl p-5 sm:p-6 shadow-2xs">
-          <div className="flex items-center gap-2 mb-1.5">
-            <AlertTriangle className="w-4 h-4 text-[#D97706]" />
-            <h3 className="text-xs font-bold font-display text-[#D97706] uppercase tracking-[0.08em]">
-              MISSING INFORMATION
-            </h3>
+      <div className="space-y-4">
+        {/* 5A. BLOCKING MISSING INFORMATION (Critical / Prevents Matching) */}
+        {blockingInfo.length > 0 && (
+          <div className="bg-rose-50/80 border border-rose-300 rounded-2xl p-5 sm:p-6 shadow-2xs">
+            <div className="flex items-center gap-2 mb-1.5">
+              <AlertTriangle className="w-4 h-4 text-[#C53030]" />
+              <h3 className="text-xs font-bold font-display text-[#C53030] uppercase tracking-[0.08em]">
+                BLOCKING MISSING INFORMATION
+              </h3>
+            </div>
+            <p className="text-xs text-[#627D98] mb-3">
+              The following critical details must be clarified before Indian Standards matching can proceed:
+            </p>
+            <ul className="space-y-1.5">
+              {blockingInfo.map((item, idx) => (
+                <li key={idx} className="flex items-start gap-2 text-xs font-semibold text-[#822020]">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#C53030] mt-1.5 shrink-0" />
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
           </div>
-          <p className="text-xs text-[#627D98] mb-3">
-            These details were not specified but may improve standards matching:
-          </p>
-          <ul className="space-y-1.5">
-            {requirements.missing_information.map((item, idx) => (
-              <li key={idx} className="flex items-center gap-2 text-xs font-medium text-[#243B53]">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#D97706]" />
-                <span>{item}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+        )}
+
+        {/* 5B. CLARIFICATION QUESTIONS */}
+        {clarificationQuestions.length > 0 && (
+          <div className="bg-amber-50/70 border border-[#D97706]/30 rounded-2xl p-5 sm:p-6 shadow-2xs">
+            <div className="flex items-center gap-2 mb-1.5">
+              <HelpCircle className="w-4 h-4 text-[#D97706]" />
+              <h3 className="text-xs font-bold font-display text-[#D97706] uppercase tracking-[0.08em]">
+                CLARIFICATION QUESTIONS
+              </h3>
+            </div>
+            <p className="text-xs text-[#627D98] mb-3">
+              Clarifying these questions will provide sufficient context to identify applicable BIS standards:
+            </p>
+            <div className="space-y-2.5">
+              {clarificationQuestions.map((q, idx) => (
+                <div key={q.id || idx} className="p-3 bg-white/90 rounded-xl border border-amber-200/70 shadow-2xs">
+                  <div className="text-xs font-semibold text-[#102A43] flex items-start gap-2">
+                    <span className="text-[#D97706] font-bold">{idx + 1}.</span>
+                    <span>{q.question}</span>
+                  </div>
+                  {q.options && q.options.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-1.5 pl-4">
+                      {q.options.map((opt, optIdx) => (
+                        <button
+                          key={optIdx}
+                          type="button"
+                          onClick={() => {
+                            if (q.field === 'product.name' || q.field === 'product') {
+                              setDraftProduct(opt);
+                              handleStartEdit('product');
+                            } else if (q.field === 'product.category' || q.field === 'category') {
+                              setDraftCategory(opt);
+                              handleStartEdit('product');
+                            } else {
+                              handleStartEdit('product');
+                            }
+                          }}
+                          className="px-2.5 py-1 text-[11px] font-medium bg-amber-50 hover:bg-amber-100 text-[#8F4A00] border border-amber-200/80 rounded-lg transition-colors cursor-pointer text-left"
+                          title={`Click to set as ${q.field || 'value'}`}
+                        >
+                          {opt}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* 5C. NON-BLOCKING INFORMATIONAL GAPS */}
+        {nonBlockingMissing.length > 0 && (
+          <div className="bg-slate-50 border border-[#243B53]/10 rounded-2xl p-5 sm:p-6 shadow-2xs">
+            <div className="flex items-center gap-2 mb-1.5">
+              <Info className="w-4 h-4 text-[#627D98]" />
+              <h3 className="text-xs font-bold font-display text-[#627D98] uppercase tracking-[0.08em]">
+                ADDITIONAL INFORMATIONAL DETAILS (NON-BLOCKING)
+              </h3>
+            </div>
+            <p className="text-xs text-[#627D98] mb-3">
+              These details were not specified but may improve matching precision once critical fields are provided:
+            </p>
+            <ul className="space-y-1.5">
+              {nonBlockingMissing.map((item, idx) => (
+                <li key={idx} className="flex items-center gap-2 text-xs font-medium text-[#243B53]">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#627D98]" />
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
 
       {/* ============================================================
           6. ACTION BAR
@@ -819,7 +1022,12 @@ export default function RequirementReviewPage() {
          ============================================================ */}
       <div className="bg-white border border-[#243B53]/10 rounded-2xl p-4 sm:p-5 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 sticky bottom-4 z-20">
         <div className="text-xs text-[#627D98]">
-          {isConfirmed ? (
+          {!isReady ? (
+            <span className="text-[#C53030] font-semibold flex items-center gap-1.5">
+              <AlertTriangle className="w-4 h-4 shrink-0 text-[#C53030]" />
+              Clarification required before finding applicable Indian Standards.
+            </span>
+          ) : isConfirmed ? (
             <span className="text-[#16803C] font-semibold flex items-center gap-1.5">
               <CheckCircle2 className="w-4 h-4" />
               Requirements confirmed. Ready for Standards Matching.
@@ -833,27 +1041,34 @@ export default function RequirementReviewPage() {
 
         {/* Buttons (Desktop: Right aligned, Mobile: Stack vertically, min-h-[44px]) */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full sm:w-auto">
-          {!isConfirmed && (
-            <button
-              onClick={() => {
-                if (editingCard) {
-                  setEditingCard(null);
-                } else {
-                  handleStartEdit('product');
-                }
-              }}
-              className="min-h-[44px] px-5 py-2.5 rounded-xl border border-[#0F766E] text-[#0F766E] hover:bg-[#0F766E]/5 text-xs font-semibold transition-all text-center flex items-center justify-center gap-2 active:scale-[0.99]"
-            >
-              <Edit2 className="w-4 h-4" />
-              <span>Edit Requirements</span>
-            </button>
-          )}
+          <button
+            onClick={() => {
+              if (editingCard) {
+                setEditingCard(null);
+              } else {
+                handleStartEdit('product');
+              }
+            }}
+            className="min-h-[44px] px-5 py-2.5 rounded-xl border border-[#0F766E] text-[#0F766E] hover:bg-[#0F766E]/5 text-xs font-semibold transition-all text-center flex items-center justify-center gap-2 active:scale-[0.99] cursor-pointer"
+          >
+            <Edit2 className="w-4 h-4" />
+            <span>{!isReady ? 'Edit to Provide Clarification' : 'Edit Requirements'}</span>
+          </button>
 
-          {!isConfirmed ? (
+          {!isReady ? (
+            <button
+              disabled
+              className="min-h-[44px] px-6 py-2.5 rounded-xl bg-slate-100 text-slate-400 border border-slate-200 text-xs font-semibold cursor-not-allowed flex items-center justify-center gap-2"
+              title="Clarification required before finding applicable Indian Standards."
+            >
+              <Sparkles className="w-4 h-4 text-slate-400" />
+              <span>Find Relevant BIS Standards</span>
+            </button>
+          ) : !isConfirmed ? (
             <button
               onClick={handleConfirmRequirements}
               disabled={confirming}
-              className="min-h-[44px] px-6 py-2.5 rounded-xl bg-[#0F766E] hover:bg-[#0C5D57] text-white text-xs font-semibold transition-all text-center flex items-center justify-center gap-2 shadow-xs disabled:opacity-60 active:scale-[0.99]"
+              className="min-h-[44px] px-6 py-2.5 rounded-xl bg-[#0F766E] hover:bg-[#0C5D57] text-white text-xs font-semibold transition-all text-center flex items-center justify-center gap-2 shadow-xs disabled:opacity-60 active:scale-[0.99] cursor-pointer"
             >
               {confirming ? (
                 <>

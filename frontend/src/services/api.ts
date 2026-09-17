@@ -325,3 +325,15 @@ export async function compareStandardsDirect(
 
   return await response.json();
 }
+
+// --- Phase F: Procurement Report Endpoints ---
+
+export async function getProcurementReport(analysisId: string): Promise<any> {
+  const res = await fetchApi<any>(`/analysis/${analysisId}/report`);
+  return res.data || res;
+}
+
+export function getProcurementReportHtmlUrl(analysisId: string): string {
+  return `${API_BASE_URL}/analysis/${analysisId}/report/html`;
+}
+

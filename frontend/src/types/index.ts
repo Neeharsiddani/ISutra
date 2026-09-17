@@ -86,6 +86,7 @@ export interface StructuredRequirements {
   quantity_source?: string;
   additional_requirements: TaggedRequirementItem[];
   missing_information: string[];
+  blocking_missing_information?: string[];
   clarification_questions: ClarificationQuestion[];
   overall_confidence: ConfidenceLevel;
   ready_for_matching: boolean;
@@ -100,6 +101,7 @@ export interface AIAnalysisResult {
   file_name?: string | null;
   requirements: StructuredRequirements;
   missing_information: string[];
+  blocking_missing_information?: string[];
   clarification_questions: ClarificationQuestion[];
   ready_for_matching: boolean;
   confirmed?: boolean;
@@ -108,6 +110,21 @@ export interface AIAnalysisResult {
   demo?: boolean;
   warning?: string;
   message?: string;
+  document_provenance?: DocumentProvenance;
+}
+
+export interface DocumentProvenance {
+  source_type: 'direct_text' | 'document_upload';
+  file_name?: string;
+  file_type?: 'pdf' | 'docx' | 'doc';
+  file_size?: number;
+  page_count?: number;
+  extraction_method?: string;
+  extraction_warnings?: string[];
+  multiple_products_detected?: boolean;
+  detected_products?: string[];
+  primary_product_analyzed?: string;
+  extracted_preview?: string;
 }
 
 export interface AnalysisHistoryItem {
@@ -267,7 +284,7 @@ export interface InputTypeOption {
 
 // --- Phase 4: Matching Engine & Recommendation Models ---
 
-export type FactorStatus = 'matched' | 'not_matched' | 'not_available';
+export type FactorStatus = 'matched' | 'not_matched' | 'not_available' | 'contradiction';
 
 export interface FactorDetail {
   status: FactorStatus;
@@ -338,6 +355,9 @@ export interface StandardRecommendation {
   category: 'high' | 'related' | 'low';
   categoryLabel: 'HIGH RELEVANCE' | 'RELATED' | 'LOW RELEVANCE';
   matchedFactors: MatchedFactorsSummary;
+  specificityTier?: number;
+  specificityTierLabel?: string;
+  specificationSpecificity?: any;
   factorStatuses: {
     productCategory: FactorDetail;
     keywordsTitleScope: FactorDetail;
@@ -345,6 +365,7 @@ export interface StandardRecommendation {
     environment: FactorDetail;
     technicalParameters: FactorDetail;
     safetyTesting: FactorDetail;
+    specificationSpecificity?: any;
   };
   reason: string;
   evidence: MatchEvidenceItem[];
