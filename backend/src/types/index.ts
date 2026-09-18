@@ -16,7 +16,8 @@ export type RelationshipType =
   | 'installation_standard'
   | 'terminology'
   | 'related_product'
-  | 'allied_standard';
+  | 'allied_standard'
+  | 'unspecified';
 
 export type CertificationType =
   | 'BIS Product Certification'
@@ -66,10 +67,12 @@ export interface StandardRelationship {
   id: string;
   source_standard_id: string;
   target_standard_id: string;
-  relationship_type: RelationshipType;
+  relationship_type: RelationshipType | 'unspecified' | null;
   description: string;
   created_at: string;
   target_standard?: Standard;
+  verification_status?: string;
+  source_provenance?: string;
 }
 
 export interface Amendment {

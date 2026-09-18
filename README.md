@@ -125,11 +125,14 @@ ISutra enforces a strict separation between natural-language understanding and p
 1. **Curated Reference Dataset (40 Standards)**:
    ISutra currently demonstrates its workflow against a curated verified reference dataset of 40 BIS standards covering municipal lighting, electrical cables, civil construction, and industrial safety. The prototype is not an exhaustive BIS catalogue. Uncataloged products return clean insufficient-information states.
 
-2. **Document Upload Pathway**:
-   Arbitrary uploaded documents are not parsed in this version. Document OCR parsing is scheduled for future releases. The tender document upload tab currently demonstrates the workflow using a pre-scanned tender extract. The primary live flow operates via direct text specification input.
+2. **Document Ingestion & Scanned Documents**:
+   ISutra safely ingests digital PDF and DOCX procurement specifications with offline text extraction. Scanned or image-only documents requiring OCR are not processed in this version; users are notified to upload text-accessible specifications.
 
 3. **Decision-Support, Not Statutory Certification**:
    ISutra is an educational and hackathon research prototype. It is not affiliated with or endorsed by the Bureau of Indian Standards (BIS). Recommendations indicate reference data alignment and do not constitute legal compliance determinations. Users must independently verify specifications against official BIS publications.
+
+4. **Standards Relationships, Amendments & Mandatory Certification**:
+   Cross-referenced standards in the directory are presented as Associated References; specific clause-level relationship types (normative, test method, etc.) are unclassified in the current reference dataset. Live amendment tracking and statutory certification determinations are not supported; users should consult official BIS Gazette notifications and applicable Ministry Quality Control Orders (QCOs).
 
 ---
 

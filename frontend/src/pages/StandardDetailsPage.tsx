@@ -337,9 +337,9 @@ export default function StandardDetailsPage() {
 
             {/* Key-Value Table Rows */}
             <div className="divide-y divide-[#243B53]/10 text-[14px] sm:text-[15px]">
-              {/* Edition Year */}
+              {/* Edition / Reference Year */}
               <div className="flex items-center justify-between gap-3 py-3">
-                <span className="text-[#627D98]">Edition Year</span>
+                <span className="text-[#627D98]">Edition / Reference Year</span>
                 <span className="font-semibold text-[#102A43] text-right">
                   {standard.edition_year || standard.edition || '—'}
                 </span>
@@ -350,6 +350,22 @@ export default function StandardDetailsPage() {
                 <span className="text-[#627D98]">Status</span>
                 <span className="font-semibold text-[#102A43] text-right">
                   {standard.status}
+                </span>
+              </div>
+
+              {/* Amendment Status */}
+              <div className="flex items-center justify-between gap-3 py-3">
+                <span className="text-[#627D98]">Amendment Status</span>
+                <span className="text-xs text-[#627D98] text-right italic">
+                  Not verified in current dataset
+                </span>
+              </div>
+
+              {/* Mandatory Certification Applicability */}
+              <div className="flex items-center justify-between gap-3 py-3">
+                <span className="text-[#627D98]">Certification Applicability</span>
+                <span className="text-xs text-[#627D98] text-right italic">
+                  Check applicable Ministry QCOs
                 </span>
               </div>
 
@@ -366,7 +382,13 @@ export default function StandardDetailsPage() {
                 <span className="text-[#627D98]">Last Verified</span>
                 <span className="font-semibold text-[#0F766E] text-right flex items-center gap-1.5">
                   <Calendar className="w-3.5 h-3.5" />
-                  {standard.last_verified || '2026-09-13'}
+                  {standard.last_verified ? (
+                    standard.last_verified
+                  ) : (
+                    <span className="text-[#9FB3C8] font-normal italic text-[13px]">
+                      Not available in current dataset
+                    </span>
+                  )}
                 </span>
               </div>
             </div>
@@ -405,7 +427,7 @@ export default function StandardDetailsPage() {
       </div>
 
       {/* ============================================================
-          5. RELATED & ALLIED STANDARDS
+          5. ASSOCIATED REFERENCES
           Full-width section below the main 2-column layout
          ============================================================ */}
       <div className="bg-white rounded-2xl border border-[#243B53]/10 p-6 sm:p-7 shadow-xs space-y-4 w-full">
@@ -413,10 +435,10 @@ export default function StandardDetailsPage() {
           <div>
             <h3 className="text-[15px] sm:text-[16px] font-bold text-[#102A43] font-display flex items-center gap-2 uppercase tracking-wide">
               <Layers className="w-4 h-4 text-[#0F766E]" />
-              Related & Allied Standards
+              Associated References
             </h3>
             <p className="text-[13px] text-[#627D98] mt-0.5">
-              Referenced normative, performance, and allied standards in the verified BIS catalogue.
+              Cross-referenced standards recorded in the current BIS reference dataset.
             </p>
           </div>
           <span className="text-[12px] font-semibold text-[#0F766E] px-3 py-1 bg-[#0F766E]/5 rounded-full border border-[#0F766E]/15 self-start sm:self-auto">
@@ -424,8 +446,15 @@ export default function StandardDetailsPage() {
           </span>
         </div>
 
+        {/* Provenance note */}
+        <div className="text-xs text-[#627D98] bg-[#F7F9FC] p-3 rounded-xl border border-[#243B53]/10">
+          <span>
+            <strong>Provenance Note:</strong> Relationship type is not classified in the current reference dataset. Cross-references reflect recorded citations in the standard specification or scope.
+          </span>
+        </div>
+
         {standard.related_standards && standard.related_standards.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 pt-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 pt-1">
             {standard.related_standards.map((rel, i) => (
               <Link
                 key={i}
@@ -437,7 +466,7 @@ export default function StandardDetailsPage() {
                     {rel}
                   </span>
                   <span className="text-[12px] text-[#627D98] mt-0.5 block">
-                    Normative Reference
+                    Associated Reference
                   </span>
                 </div>
                 <ArrowRight className="w-4 h-4 text-[#627D98] group-hover:text-[#0F766E] group-hover:translate-x-0.5 transition-all shrink-0" />

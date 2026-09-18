@@ -222,26 +222,59 @@ export async function getRelatedStandards(id: string) {
       id: `rel-${i}`,
       source_standard_id: id,
       target_standard_id: relName,
-      relationship_type: 'normative_reference',
-      description: `Referenced in ${standardRes.data.standard_number || standardRes.data.is_number}`,
+      relationship_type: 'unspecified' as const,
+      description: `Associated reference cited in ${standardRes.data.standard_number || standardRes.data.is_number}; relationship type not classified in current reference dataset`,
       created_at: new Date().toISOString(),
       target_standard: VERIFIED_BIS_STANDARDS.find((v) =>
         v.standard_number.toLowerCase().includes(relName.toLowerCase())
       ),
+      verification_status: 'unclassified_reference',
+      source_provenance: 'ISutra Verified BIS Reference Dataset',
     }));
     return { data: relatedList, demo: false };
   }
 
+  const isDemo = id.toLowerCase().startsWith('demo-');
   const related = DEMO_RELATIONSHIPS.filter((r) => r.source_standard_id === id);
-  return { data: related, demo: true };
+  return { data: related, demo: isDemo };
 }
 
 export async function getAmendments(id: string) {
-  const amendments = DEMO_AMENDMENTS.filter((a) => a.standard_id === id);
-  return { data: amendments, demo: false };
+  const isDemo = id.toLowerCase().startsWith('demo-');
+  if (isDemo) {
+    const amendments = DEMO_AMENDMENTS.filter((a) => a.standard_id === id);
+    return {
+      data: amendments,
+      demo: true,
+      verified: false,
+      notice: 'Demo data — not official BIS amendment information.',
+    };
+  }
+
+  return {
+    data: [],
+    demo: false,
+    verified: false,
+    notice: 'Amendment intelligence is not currently verified for the curated BIS reference dataset.',
+  };
 }
 
 export async function getCertifications(id: string) {
-  const certs = DEMO_CERTIFICATIONS.filter((c) => c.standard_id === id);
-  return { data: certs, demo: false };
+  const isDemo = id.toLowerCase().startsWith('demo-');
+  if (isDemo) {
+    const certs = DEMO_CERTIFICATIONS.filter((c) => c.standard_id === id);
+    return {
+      data: certs,
+      demo: true,
+      verified: false,
+      notice: 'Demo data — not official BIS certification information.',
+    };
+  }
+
+  return {
+    data: [],
+    demo: false,
+    verified: false,
+    notice: 'Mandatory certification applicability is not verified in the current dataset. Check applicable Ministry Quality Control Orders (QCOs) and official BIS certification information.',
+  };
 }

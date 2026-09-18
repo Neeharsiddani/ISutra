@@ -86,7 +86,12 @@ export async function getAmendments(
 ): Promise<void> {
   try {
     const result = await standardsService.getAmendments(req.params.id);
-    res.json({ data: result.data, demo: result.demo });
+    res.json({
+      data: result.data,
+      demo: result.demo,
+      verified: result.verified,
+      notice: result.notice,
+    });
   } catch (error) {
     next(error);
   }
@@ -99,7 +104,12 @@ export async function getCertifications(
 ): Promise<void> {
   try {
     const result = await standardsService.getCertifications(req.params.id);
-    res.json({ data: result.data, demo: result.demo });
+    res.json({
+      data: result.data,
+      demo: result.demo,
+      verified: result.verified,
+      notice: result.notice,
+    });
   } catch (error) {
     next(error);
   }
