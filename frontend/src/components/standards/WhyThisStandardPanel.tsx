@@ -211,7 +211,7 @@ export const WhyThisStandardPanel: React.FC<WhyThisStandardPanelProps> = ({
   return (
     <div className="mt-4 pt-4 border-t border-[#243B53]/15 space-y-6 text-xs text-[#243B53]">
       {/* ============================================================
-          SECTION 1: PANEL HEADER & OVERALL ALIGNMENT
+          SECTION 1: PANEL HEADER & REFERENCE ALIGNMENT
          ============================================================ */}
       <div className="bg-[#102A43] text-white rounded-xl p-4 sm:p-5 shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -234,9 +234,9 @@ export const WhyThisStandardPanel: React.FC<WhyThisStandardPanelProps> = ({
             </p>
           </div>
 
-          <div className="shrink-0 bg-slate-800/80 border border-slate-700 rounded-xl p-3 text-right min-w-[150px]">
+          <div className="shrink-0 bg-slate-800/80 border border-slate-700 rounded-xl p-3 text-right min-w-[170px]">
             <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 block">
-              Overall Alignment
+              Reference Alignment
             </span>
             <div className="flex items-baseline justify-end gap-1.5 my-0.5">
               <span className="text-2xl font-bold font-mono text-teal-400">
@@ -257,6 +257,14 @@ export const WhyThisStandardPanel: React.FC<WhyThisStandardPanelProps> = ({
             <span>{rec.reason}</span>
           </div>
         </div>
+
+        {/* Score Explanation Notice */}
+        <div className="mt-2.5 pt-2 border-t border-slate-700/60 text-[10px] text-slate-300/90 flex items-center gap-1.5">
+          <Info className="w-3.5 h-3.5 text-teal-400 shrink-0" />
+          <span>
+            Reference Alignment is calculated from six deterministic matching signals. It is not a compliance score or certification assessment.
+          </span>
+        </div>
       </div>
 
       {/* ============================================================
@@ -274,8 +282,7 @@ export const WhyThisStandardPanel: React.FC<WhyThisStandardPanelProps> = ({
         </div>
 
         <p className="text-[11px] text-[#486581] leading-relaxed">
-          The relevance score is computed by applying verified weights across six distinct procurement signals.
-          Points are awarded only where verifiable criteria exist.
+          Reference Alignment is calculated from six deterministic matching signals. Points are awarded only where verifiable criteria exist in the recorded scope. It is not a compliance score or certification assessment.
         </p>
 
         {/* Visual Mathematics Table */}
@@ -473,7 +480,7 @@ export const WhyThisStandardPanel: React.FC<WhyThisStandardPanelProps> = ({
                 <span className="text-[10px] text-[#627D98]">Factual Dimensional Comparison</span>
               </div>
               <p className="text-xs text-[#486581] mt-1 font-medium">
-                ISutra considered this reference, but it was not treated as the primary reference for this requirement.
+                How the documented evidence differs from the primary reference: ISutra considered this reference, but it was not treated as the primary reference for this requirement.
               </p>
             </div>
 
@@ -612,7 +619,7 @@ export const WhyThisStandardPanel: React.FC<WhyThisStandardPanelProps> = ({
 
                   {/* Row 5: Matching Contribution */}
                   <tr className="hover:bg-slate-50/50">
-                    <td className="py-2.5 px-3 font-semibold text-[#102A43]">Overall Alignment</td>
+                    <td className="py-2.5 px-3 font-semibold text-[#102A43]">Reference Alignment</td>
                     <td className="py-2.5 px-3 bg-teal-50/20 font-bold font-mono text-[#0F766E]">
                       {isPrimary
                         ? `${rec.relevancePercentage}% (+${Math.round(rec.score * 100)} pts)`
@@ -642,7 +649,9 @@ export const WhyThisStandardPanel: React.FC<WhyThisStandardPanelProps> = ({
             {/* Factual distinction notes */}
             {alternativeDistinction && alternativeDistinction.length > 0 && (
               <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-3 space-y-1.5 text-xs text-[#243B53]">
-                <strong className="text-[#102A43] block">Evaluator Distinction Summary:</strong>
+                <strong className="text-[#102A43] block">
+                  Evaluator Distinction Summary (How the documented evidence differs from the primary reference):
+                </strong>
                 <ul className="space-y-1 list-disc pl-4 text-[#486581]">
                   {alternativeDistinction.map((note, nIdx) => (
                     <li key={nIdx}>{note}</li>

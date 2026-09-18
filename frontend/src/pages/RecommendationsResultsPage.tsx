@@ -334,9 +334,22 @@ export default function RecommendationsResultsPage() {
               Analysis Audit Summary
             </h2>
           </div>
-          <span className="text-[11px] font-medium text-[#627D98] bg-slate-50 border border-slate-200 px-2.5 py-0.5 rounded-full">
-            {metadata.datasetName || 'ISutra Verified BIS Reference Dataset'} (40 Reference Standards)
+          <span className="text-[11px] font-semibold text-[#0F766E] bg-teal-50 border border-teal-200/80 px-2.5 py-0.5 rounded-full">
+            Reference scope: 40 verified BIS standards
           </span>
+        </div>
+
+        {/* Dataset boundary clarification notice */}
+        <div className="text-xs text-[#486581] bg-slate-50/90 rounded-xl p-3 border border-slate-200/70 flex items-start gap-2.5">
+          <Info className="w-4 h-4 text-[#0F766E] shrink-0 mt-0.5" />
+          <div className="space-y-0.5">
+            <span className="font-semibold text-[#102A43]">
+              Reference scope: 40 verified BIS standards.
+            </span>
+            <span className="text-[#627D98] block">
+              Results are limited to the current curated reference dataset. Absence from results does not mean that no other BIS standard exists.
+            </span>
+          </div>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 text-xs">
@@ -369,7 +382,7 @@ export default function RecommendationsResultsPage() {
 
           <div className="bg-slate-50/80 rounded-xl p-2.5 border border-slate-200/60">
             <span className="text-[#627D98] block text-[10px] uppercase tracking-wider font-semibold">
-              Top Relevance
+              Reference Alignment
             </span>
             <span className="font-bold text-emerald-700">
               {processedRecommendations.length > 0 ? `${processedRecommendations[0].relevancePercentage}%` : 'N/A'}
@@ -579,13 +592,13 @@ export default function RecommendationsResultsPage() {
                     </div>
 
                     {/* Visual Score Gauge & Factor Contributions */}
-                    <div className="sm:text-right shrink-0 bg-slate-50 border border-slate-200/80 rounded-xl p-3 min-w-[170px]">
+                    <div className="sm:text-right shrink-0 bg-slate-50 border border-slate-200/80 rounded-xl p-3 min-w-[190px]">
                       <div className="flex items-baseline sm:justify-end gap-1.5">
                         <span className="text-2xl font-bold font-display text-[#102A43]">
                           {rec.relevancePercentage}%
                         </span>
-                        <span className="text-[11px] font-semibold text-[#627D98] uppercase">
-                          Relevance
+                        <span className="text-[10px] font-semibold text-[#627D98] uppercase">
+                          Reference Alignment
                         </span>
                       </div>
                       {/* Progress Bar */}
@@ -601,6 +614,9 @@ export default function RecommendationsResultsPage() {
                         <div>Product: +{Math.round(rec.factorStatuses.productCategory.contribution * 100)}%</div>
                         <div>Keywords: +{Math.round(rec.factorStatuses.keywordsTitleScope.contribution * 100)}%</div>
                         <div>App & Env: +{Math.round((rec.factorStatuses.application.contribution + rec.factorStatuses.environment.contribution) * 100)}%</div>
+                      </div>
+                      <div className="text-[9px] text-[#829AB1] pt-1.5 mt-1.5 border-t border-slate-200/60 sm:text-right leading-tight">
+                        Reference Alignment is calculated from six deterministic matching signals. It is not a compliance score or certification assessment.
                       </div>
                     </div>
                   </div>
@@ -724,9 +740,14 @@ export default function RecommendationsResultsPage() {
              ============================================================ */}
           <div className="bg-slate-50 border border-[#243B53]/10 rounded-xl p-3.5 text-xs text-[#627D98] flex items-start gap-2.5">
             <Info className="w-4 h-4 text-[#0F766E] shrink-0 mt-0.5" />
-            <p>
-              <strong>SIH Prototype Disclaimer:</strong> {metadata.disclaimer || 'ISutra is an SIH prototype. Recommendations are based on the current reference dataset and should be independently verified against official BIS publications before procurement or compliance decisions.'}
-            </p>
+            <div className="space-y-1">
+              <p>
+                <strong>Reference scope: 40 verified BIS standards.</strong> Results are limited to the current curated reference dataset. Absence from results does not mean that no other BIS standard exists.
+              </p>
+              <p>
+                <strong>Reference Alignment:</strong> Reference Alignment is calculated from six deterministic matching signals. It is not a compliance score or certification assessment. Recommendations should be independently verified against official BIS publications before procurement or compliance decisions.
+              </p>
+            </div>
           </div>
         </>
       )}
