@@ -11,6 +11,7 @@ import type {
   Amendment,
   Certification,
   StandardRelationship,
+  RelationshipCoverage,
   StandardsSearchParams,
   StandardsSearchResponse,
   RecommendationsResponse,
@@ -187,16 +188,37 @@ export async function getStandardById(
 
 export async function getRelatedStandards(
   id: string
-): Promise<{ data: StandardRelationship[]; demo: boolean }> {
+): Promise<{
+  data: StandardRelationship[];
+  coverage?: RelationshipCoverage;
+  procurement_guidance?: string;
+  demo: boolean;
+}> {
   try {
     const res = await fetchApi<StandardRelationship[]>(`/standards/${id}/related`);
-    return { data: res.data, demo: !!res.demo };
+    return {
+      data: res.data,
+      coverage: (res as any).coverage,
+      procurement_guidance: (res as any).procurement_guidance,
+      demo: !!res.demo,
+    };
   } catch {
     const isDemo = id.toLowerCase().startsWith('demo-');
     const related = DEMO_RELATIONSHIPS.filter(
       (r) => r.source_standard_id === id
     );
-    return { data: related, demo: isDemo };
+    return {
+      data: related,
+      coverage: {
+        total: related.length,
+        verified_count: 0,
+        unclassified_count: related.length,
+        coverage_notice: 'Demo data — relationship intelligence not verified.',
+      },
+      procurement_guidance:
+        'Demo standards relationship data. Not official BIS relationship information.',
+      demo: isDemo,
+    };
   }
 }
 

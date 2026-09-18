@@ -100,6 +100,12 @@ Official BIS Portal Records (bis.gov.in)
    - Factual dimensional comparison answering *"Why not this alternative?"* for competing standards without subjective assertions.
    - Transparent *"What is still unknown?"* checklist tracking unrecorded criteria with direct links to requirement gap analysis and the official BIS portal.
 
+9. **Phase 8B — Verified Standards Relationship Explorer & Procurement Evidence Trail**:
+   - Evidence-aware relationship explorer distinguishing between **Class A (Associated References)** where specific relationship types are unclassified in the reference dataset, and **Class B (Verified Relationships)** backed by authoritative clause citations in official BIS standards.
+   - Descriptive relationship coverage transparency (Verified, Associated, Unclassified) without speculative confidence scores.
+   - Seamless procurement navigation: Recommendation → Why This Standard? → Explore Associated Standards → Clause Evidence → Official BIS Verification.
+   - Integration into the Printable Procurement Evaluation Report with parent-standard cross-reference traceability and regulatory disclaimers.
+
 ---
 
 ## 🏛 Architecture: AI Perception vs. Deterministic Decision Logic
@@ -110,6 +116,7 @@ ISutra enforces a strict separation between natural-language understanding and p
 |:---|:---|:---|:---|
 | **Perception Layer** | Extract structured procurement parameters from unstructured specification text | Google Gemini / OpenAI (structured JSON prompt); built-in offline NLP pattern extractor fallback | Generative AI / NLP |
 | **Decision Layer** | Match requirements against BIS standards | 6-factor weighted multi-signal engine (`standardsMatcher.ts`) | 100% Deterministic |
+| **Relationship Layer** | Evidence-backed relationship resolution & coverage tracking | Relational resolver (`standardsRelationshipService.ts`) | Curated & Verified Data |
 | **Audit Layer** | Traceability chain & factor contribution breakdown | Provenance generator (`standardsMatcher.ts`) | 100% Deterministic |
 | **Gap Analysis Layer** | Requirement coverage evaluation & physical verification checklist | 4-state ontology analyzer (`requirementGapAnalyzer.ts`) | 100% Deterministic |
 | **Comparison Layer** | Side-by-side matrix & set-difference distinctions | Multi-standard relational comparator (`standardsComparator.ts`) | 100% Deterministic |
@@ -132,7 +139,9 @@ ISutra enforces a strict separation between natural-language understanding and p
    ISutra is an educational and hackathon research prototype. It is not affiliated with or endorsed by the Bureau of Indian Standards (BIS). Recommendations indicate reference data alignment and do not constitute legal compliance determinations. Users must independently verify specifications against official BIS publications.
 
 4. **Standards Relationships, Amendments & Mandatory Certification**:
-   Cross-referenced standards in the directory are presented as Associated References; specific clause-level relationship types (normative, test method, etc.) are unclassified in the current reference dataset. Live amendment tracking and statutory certification determinations are not supported; users should consult official BIS Gazette notifications and applicable Ministry Quality Control Orders (QCOs).
+   - **Relationships**: Evidence-backed relationship intelligence (normative references, test methods, installation guides) is provided strictly where authoritative clause citations have been verified. Unclassified associated references are recorded citations from standard scopes and must not be assumed to be normative without independent verification.
+   - **Amendments**: Live amendment tracking is not verified in the current reference dataset; users must verify the latest published amendments via official BIS gazette notifications.
+   - **Mandatory Certification**: Statutory certification requirements (e.g. ISI mark under Quality Control Orders) are not determined automatically by the prototype; procurement officers must consult applicable Ministry QCOs and official BIS portals.
 
 ---
 

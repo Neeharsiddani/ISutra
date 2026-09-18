@@ -67,12 +67,30 @@ export interface StandardRelationship {
   id: string;
   source_standard_id: string;
   target_standard_id: string;
+  target_standard_number?: string;
   relationship_type: RelationshipType | 'unspecified' | null;
   description: string;
   created_at: string;
   target_standard?: Standard;
-  verification_status?: string;
+  verification_status?: 'verified' | 'unclassified_reference' | string;
   source_provenance?: string;
+  evidence_clause?: string;
+  verified_source_url?: string;
+  verified_at?: string;
+}
+
+export interface RelationshipCoverage {
+  total: number;
+  verified_count: number;
+  unclassified_count: number;
+  coverage_notice: string;
+}
+
+export interface RelationshipResolutionResponse {
+  data: StandardRelationship[];
+  coverage: RelationshipCoverage;
+  procurement_guidance: string;
+  demo: boolean;
 }
 
 export interface Amendment {

@@ -21,6 +21,7 @@ import {
   Scale,
   AlertTriangle,
   Printer,
+  Layers,
 } from 'lucide-react';
 import { getAnalysisRecommendations, getRecommendations } from '../services/api';
 import { WhyThisStandardPanel } from '../components/standards/WhyThisStandardPanel';
@@ -705,6 +706,15 @@ export default function RecommendationsResultsPage() {
                       >
                         <Scale className="w-3.5 h-3.5 text-[#0F766E]" />
                         <span>Check Requirement Gaps</span>
+                      </Link>
+
+                      <Link
+                        to={`/standards/${rec.standard.id}?fromAnalysis=${id || ''}#relationships`}
+                        state={{ fromAnalysisId: id }}
+                        className="min-h-[36px] px-3.5 py-1.5 rounded-lg border border-[#243B53]/20 hover:bg-slate-50 text-xs font-semibold text-[#243B53] flex items-center gap-1.5 transition-colors shadow-2xs"
+                      >
+                        <Layers className="w-3.5 h-3.5 text-[#0F766E]" />
+                        <span>Explore Associated Standards</span>
                       </Link>
 
                       <Link

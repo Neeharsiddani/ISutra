@@ -22,9 +22,12 @@ import {
   Sparkles,
   ArrowRight,
   Building2,
+  Info,
+  BookOpen,
+  FileText,
 } from 'lucide-react';
-import type { Standard } from '../types';
-import { getStandardById } from '../services/api';
+import type { Standard, StandardRelationship, RelationshipCoverage } from '../types';
+import { getStandardById, getRelatedStandards } from '../services/api';
 import LoadingState from '../components/ui/LoadingState';
 import ErrorState from '../components/ui/ErrorState';
 
@@ -35,6 +38,9 @@ export default function StandardDetailsPage() {
   const fromAnalysis = searchParams.get('fromAnalysis') || location.state?.fromAnalysisId;
 
   const [standard, setStandard] = useState<Standard | null>(null);
+  const [relationships, setRelationships] = useState<StandardRelationship[]>([]);
+  const [coverage, setCoverage] = useState<RelationshipCoverage | null>(null);
+  const [procurementGuidance, setProcurementGuidance] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -45,8 +51,19 @@ export default function StandardDetailsPage() {
       setLoading(true);
       setError(null);
       try {
-        const stdRes = await getStandardById(id!);
+        const [stdRes, relRes] = await Promise.all([
+          getStandardById(id!),
+          getRelatedStandards(id!).catch(() => ({
+            data: [],
+            coverage: undefined,
+            procurement_guidance: undefined,
+            demo: false,
+          })),
+        ]);
         setStandard(stdRes.data);
+        setRelationships(relRes.data || []);
+        if (relRes.coverage) setCoverage(relRes.coverage);
+        if (relRes.procurement_guidance) setProcurementGuidance(relRes.procurement_guidance);
       } catch (err) {
         setError(
           err instanceof Error ? err.message : 'Failed to load standard details.'
@@ -427,55 +444,175 @@ export default function StandardDetailsPage() {
       </div>
 
       {/* ============================================================
-          5. ASSOCIATED REFERENCES
+          5. ASSOCIATED & ALLIED REFERENCES EXPLORER
           Full-width section below the main 2-column layout
          ============================================================ */}
-      <div className="bg-white rounded-2xl border border-[#243B53]/10 p-6 sm:p-7 shadow-xs space-y-4 w-full">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#243B53]/10 pb-4">
+      <div
+        id="relationships"
+        className="bg-white rounded-2xl border border-[#243B53]/10 p-6 sm:p-7 shadow-xs space-y-5 w-full scroll-mt-6"
+      >
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#243B53]/10 pb-4">
           <div>
             <h3 className="text-[15px] sm:text-[16px] font-bold text-[#102A43] font-display flex items-center gap-2 uppercase tracking-wide">
               <Layers className="w-4 h-4 text-[#0F766E]" />
-              Associated References
+              Associated & Allied References Explorer
             </h3>
             <p className="text-[13px] text-[#627D98] mt-0.5">
-              Cross-referenced standards recorded in the current BIS reference dataset.
+              Cross-referenced standards and authoritative relationships recorded for {stdNumber}.
             </p>
           </div>
           <span className="text-[12px] font-semibold text-[#0F766E] px-3 py-1 bg-[#0F766E]/5 rounded-full border border-[#0F766E]/15 self-start sm:self-auto">
-            {(standard.related_standards || []).length} Associated
+            {relationships.length} References
           </span>
         </div>
 
-        {/* Provenance note */}
-        <div className="text-xs text-[#627D98] bg-[#F7F9FC] p-3 rounded-xl border border-[#243B53]/10">
-          <span>
-            <strong>Provenance Note:</strong> Relationship type is not classified in the current reference dataset. Cross-references reflect recorded citations in the standard specification or scope.
-          </span>
+        {/* Relationship Coverage Indicator (Descriptive & Truthful) */}
+        <div className="bg-[#F8FAFC] border border-[#243B53]/15 rounded-xl p-4 space-y-2.5">
+          <div className="text-[12px] font-bold text-[#102A43] uppercase tracking-wider flex items-center justify-between flex-wrap gap-2">
+            <span className="flex items-center gap-1.5">
+              <BookOpen className="w-3.5 h-3.5 text-[#0F766E]" />
+              Relationship Coverage
+            </span>
+            <span className="text-[11px] font-normal text-[#627D98] lowercase">
+              (current curated reference dataset)
+            </span>
+          </div>
+          <div className="flex flex-wrap items-center gap-2.5 text-xs">
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 font-semibold">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+              <span>Verified relationships: {coverage?.verified_count ?? relationships.filter(r => r.verification_status === 'verified').length}</span>
+            </div>
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 border border-slate-200 text-slate-700 font-medium">
+              <Layers className="w-3.5 h-3.5 text-slate-500" />
+              <span>Associated references: {coverage?.total ?? relationships.length}</span>
+            </div>
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 font-medium">
+              <Info className="w-3.5 h-3.5 text-amber-600" />
+              <span>Unclassified: {coverage?.unclassified_count ?? relationships.filter(r => r.verification_status !== 'verified').length}</span>
+            </div>
+          </div>
+          <p className="text-[11px] text-[#627D98] italic">
+            {coverage?.coverage_notice || 'Relationship coverage is limited to verified references available in the current dataset.'}
+          </p>
         </div>
 
-        {standard.related_standards && standard.related_standards.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 pt-1">
-            {standard.related_standards.map((rel, i) => (
-              <Link
-                key={i}
-                to={`/standards?search=${encodeURIComponent(rel)}`}
-                className="p-4 rounded-xl bg-[#F7F9FC] hover:bg-[#0F766E]/5 border border-[#243B53]/10 hover:border-[#0F766E]/30 flex items-center justify-between gap-3 group transition-all shadow-2xs"
-              >
-                <div className="min-w-0">
-                  <span className="text-[14px] font-bold text-[#102A43] group-hover:text-[#0F766E] font-display block truncate transition-colors">
-                    {rel}
-                  </span>
-                  <span className="text-[12px] text-[#627D98] mt-0.5 block">
-                    Associated Reference
-                  </span>
+        {/* Why this matters to procurement note */}
+        <div className="text-xs text-[#243B53] bg-teal-50/70 border border-teal-200/80 p-3.5 rounded-xl space-y-1">
+          <div className="font-bold text-[#0F766E] flex items-center gap-1.5">
+            <Info className="w-3.5 h-3.5 shrink-0" />
+            <span>Why This Matters for Procurement:</span>
+          </div>
+          <p className="text-[#334E68] leading-relaxed">
+            {procurementGuidance ||
+              'Associated standards may affect testing, safety, installation, performance, or other tender requirements. Verify relationship type and applicability against the official BIS publication before finalizing procurement specifications.'}
+          </p>
+        </div>
+
+        {/* Relationship Items Grid */}
+        {relationships.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+            {relationships.map((rel, i) => {
+              const isVerified = rel.verification_status === 'verified';
+              const targetNum =
+                rel.target_standard?.standard_number ||
+                rel.target_standard_number ||
+                rel.target_standard_id;
+              const targetTitle =
+                rel.target_standard?.title || rel.description;
+
+              return (
+                <div
+                  key={rel.id || i}
+                  className={`p-4 rounded-xl border transition-all shadow-2xs flex flex-col justify-between gap-3 ${
+                    isVerified
+                      ? 'bg-emerald-50/20 border-emerald-300/70 hover:border-emerald-500/80'
+                      : 'bg-[#F7F9FC] border-[#243B53]/10 hover:border-[#0F766E]/30'
+                  }`}
+                >
+                  <div className="space-y-2">
+                    {/* Badge Row */}
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      {isVerified ? (
+                        <>
+                          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-800 bg-emerald-100/70 border border-emerald-300 px-2 py-0.5 rounded-md">
+                            <ShieldCheck className="w-3 h-3 text-emerald-600" />
+                            Verified Relationship
+                          </span>
+                          <span className="inline-flex items-center text-[11px] font-semibold text-[#0F766E] bg-teal-50 border border-teal-200 px-2 py-0.5 rounded-md capitalize">
+                            {rel.relationship_type?.replace(/_/g, ' ') || 'Normative Reference'}
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-700 bg-slate-100 border border-slate-300 px-2 py-0.5 rounded-md">
+                            <Layers className="w-3 h-3 text-slate-500" />
+                            Associated Reference
+                          </span>
+                          <span className="text-[11px] text-[#627D98] italic">
+                            Relationship type unclassified
+                          </span>
+                        </>
+                      )}
+                    </div>
+
+                    {/* Standard Number & Title */}
+                    <div>
+                      <h4 className="text-[14px] font-bold text-[#102A43] font-display">
+                        {targetNum}
+                      </h4>
+                      <p className="text-[12px] text-[#486581] mt-0.5 leading-snug line-clamp-2">
+                        {targetTitle}
+                      </p>
+                    </div>
+
+                    {/* Evidence or Unclassified Note */}
+                    {isVerified && rel.evidence_clause ? (
+                      <div className="text-xs bg-white border border-emerald-200/80 rounded-lg p-2.5 space-y-1">
+                        <div className="font-semibold text-[#102A43] flex items-center gap-1">
+                          <FileText className="w-3 h-3 text-[#0F766E]" />
+                          <span>Clause Citation Evidence:</span>
+                        </div>
+                        <p className="text-[#334E68] italic font-mono text-[11px] leading-relaxed">
+                          {rel.evidence_clause}
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="text-xs bg-white/70 border border-[#243B53]/10 rounded-lg p-2.5">
+                        <p className="text-[11px] text-[#627D98] leading-relaxed">
+                          Cited in standard specification or scope. Specific clause relationship (normative, test method, or allied guide) is not classified in current reference dataset.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Footer Source & Action */}
+                  <div className="pt-2.5 border-t border-[#243B53]/10 flex items-center justify-between gap-2 text-[11px]">
+                    <span className="text-[#627D98] truncate max-w-[200px]" title={rel.source_provenance}>
+                      Source: {isVerified ? 'Official BIS publication' : 'Current reference dataset'}
+                    </span>
+                    {rel.target_standard ? (
+                      <Link
+                        to={`/standards/${rel.target_standard.id}`}
+                        className="text-[#0F766E] hover:text-[#0C5D57] font-semibold inline-flex items-center gap-1 shrink-0"
+                      >
+                        View Standard <ArrowRight className="w-3 h-3" />
+                      </Link>
+                    ) : (
+                      <Link
+                        to={`/standards?search=${encodeURIComponent(targetNum)}`}
+                        className="text-[#0F766E] hover:text-[#0C5D57] font-semibold inline-flex items-center gap-1 shrink-0"
+                      >
+                        Search Catalogue <ArrowRight className="w-3 h-3" />
+                      </Link>
+                    )}
+                  </div>
                 </div>
-                <ArrowRight className="w-4 h-4 text-[#627D98] group-hover:text-[#0F766E] group-hover:translate-x-0.5 transition-all shrink-0" />
-              </Link>
-            ))}
+              );
+            })}
           </div>
         ) : (
-          <div className="py-4 text-center">
-            {renderSpecValue(null)}
+          <div className="py-6 text-center text-xs text-[#627D98] bg-[#F7F9FC] rounded-xl border border-[#243B53]/10">
+            No associated references recorded in current dataset.
           </div>
         )}
       </div>

@@ -73,7 +73,12 @@ export async function getRelated(
 ): Promise<void> {
   try {
     const result = await standardsService.getRelatedStandards(req.params.id);
-    res.json({ data: result.data, demo: result.demo });
+    res.json({
+      data: result.data,
+      coverage: (result as any).coverage,
+      procurement_guidance: (result as any).procurement_guidance,
+      demo: result.demo,
+    });
   } catch (error) {
     next(error);
   }

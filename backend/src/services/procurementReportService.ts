@@ -8,6 +8,15 @@ import { getAnalysisById, StoredAnalysis } from './analysisService';
 import { StandardsMatcher, StandardRecommendation, FactorDetail } from './standardsMatcher';
 import { analyzeRequirementGaps, RequirementGapAnalysis } from './requirementGapAnalyzer';
 import { VERIFIED_BIS_STANDARDS } from '../database/verifiedStandards';
+import { getResolvedRelationships } from './standardsRelationshipService';
+
+export interface ReportAssociatedReference {
+  standardNumber: string;
+  relationshipType: string;
+  isVerified: boolean;
+  evidence?: string;
+  source: string;
+}
 
 export interface ReportStandardItem {
   standardNumber: string;
@@ -19,6 +28,7 @@ export interface ReportStandardItem {
   evidence: string[];
   hasContradiction: boolean;
   contradictionDetails?: string[];
+  associatedReferences?: ReportAssociatedReference[];
 }
 
 export interface ReportCoverageItem {
@@ -95,6 +105,24 @@ export async function generateProcurementReportData(
       }
     }
 
+    const resolvedRels = getResolvedRelationships(rec.standard.id);
+    const associatedReferences: ReportAssociatedReference[] = (resolvedRels.data || []).map((rel) => ({
+      standardNumber: rel.target_standard_number || rel.target_standard_id,
+      relationshipType:
+        rel.verification_status === 'verified'
+          ? (rel.relationship_type === 'normative_reference'
+              ? 'Normative Reference'
+              : rel.relationship_type === 'test_method'
+              ? 'Test Method'
+              : rel.relationship_type === 'installation_standard'
+              ? 'Installation Standard'
+              : 'Allied Standard')
+          : 'Associated reference — relationship type not classified',
+      isVerified: rel.verification_status === 'verified',
+      evidence: rel.evidence_clause,
+      source: rel.source_provenance || 'Current verified reference dataset',
+    }));
+
     return {
       standardNumber: rec.standard.standard_number || rec.standard.id,
       title: rec.standard.title,
@@ -105,6 +133,7 @@ export async function generateProcurementReportData(
       evidence: evidence.slice(0, 6),
       hasContradiction,
       contradictionDetails: contradictionDetails.length > 0 ? contradictionDetails : undefined,
+      associatedReferences: associatedReferences.length > 0 ? associatedReferences : undefined,
     };
   });
 
@@ -160,6 +189,7 @@ export async function generateProcurementReportData(
     'Recommendations are generated strictly from ISutra verified Indian Standards dataset.',
     "'not_available' indicates that the specific parameter is not recorded in the reference record, not necessarily non-compliance.",
     'Procurement officers must verify all mandatory specifications and amendments with the official Bureau of Indian Standards publication before tender issuance.',
+    'Associated standards may affect testing, safety, or installation requirements; verify relationship classification and normative applicability directly against official BIS publications.',
     'Automated matching does not constitute formal engineering sign-off or statutory product certification.',
   ];
 
@@ -224,6 +254,74 @@ export function generatePrintableHtmlReport(report: ProcurementReportData): stri
           )
           .join('')
       : `<tr><td colspan="6" style="text-align: center; color: #627d98; padding: 20px;">No applicable standards evaluated. Clarification required.</td></tr>`;
+
+  const allAssociated: {
+    parentStandard: string;
+    targetStandard: string;
+    relationshipType: string;
+    isVerified: boolean;
+    evidence?: string;
+    source: string;
+  }[] = [];
+
+  for (const s of report.applicableStandards) {
+    if (s.associatedReferences && s.associatedReferences.length > 0) {
+      for (const ref of s.associatedReferences) {
+        allAssociated.push({
+          parentStandard: s.standardNumber,
+          targetStandard: ref.standardNumber,
+          relationshipType: ref.relationshipType,
+          isVerified: ref.isVerified,
+          evidence: ref.evidence,
+          source: ref.source,
+        });
+      }
+    }
+  }
+
+  const associatedSectionHtml =
+    allAssociated.length > 0
+      ? `
+    <div class="section-title">3. Associated References & Allied Standards Trail</div>
+    <div style="font-size: 12px; color: #627d98; margin-bottom: 10px;">
+      Relationship classifications are evidence-backed where verified citations exist in official publications. Unclassified references indicate cross-citations recorded in standard scopes/specifications.
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Parent Standard</th>
+          <th>Referenced Standard</th>
+          <th>Relationship Classification</th>
+          <th>Verification Evidence / Notes</th>
+          <th>Source Provenance</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${allAssociated
+          .map(
+            (a) => `
+          <tr>
+            <td style="font-weight: 700; color: #0f766e; white-space: nowrap;">${a.parentStandard}</td>
+            <td style="font-weight: 600; color: #102a43; white-space: nowrap;">${a.targetStandard}</td>
+            <td>
+              <span style="display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; ${
+                a.isVerified
+                  ? 'background: #e6f4ea; color: #137333; border: 1px solid #ceead6;'
+                  : 'background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1;'
+              }">
+                ${a.relationshipType}
+              </span>
+            </td>
+            <td style="font-size: 12px; color: #486581;">${a.evidence || 'Recorded cross-reference in standard specification / scope.'}</td>
+            <td style="font-size: 11px; color: #627d98;">${a.source}</td>
+          </tr>
+        `
+          )
+          .join('')}
+      </tbody>
+    </table>
+    `
+      : '';
 
   const coverageRows =
     report.requirementCoverage.length > 0
@@ -464,7 +562,9 @@ export function generatePrintableHtmlReport(report: ProcurementReportData): stri
       </tbody>
     </table>
 
-    <div class="section-title">3. Requirement Coverage Matrix</div>
+    ${associatedSectionHtml}
+
+    <div class="section-title">${associatedSectionHtml ? '4' : '3'}. Requirement Coverage Matrix</div>
     <table>
       <thead>
         <tr>
@@ -479,7 +579,7 @@ export function generatePrintableHtmlReport(report: ProcurementReportData): stri
       </tbody>
     </table>
 
-    <div class="section-title">4. Missing Information & Identified Gaps</div>
+    <div class="section-title">${associatedSectionHtml ? '5' : '4'}. Missing Information & Identified Gaps</div>
     <ul style="font-size: 13px; color: #334e68; margin-top: 6px; padding-left: 20px;">
       ${gapsList}
     </ul>

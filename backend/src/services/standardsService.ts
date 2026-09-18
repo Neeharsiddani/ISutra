@@ -11,6 +11,7 @@ import {
   DEMO_AMENDMENTS,
   DEMO_CERTIFICATIONS,
 } from '../database/demoData';
+import { getResolvedRelationships } from './standardsRelationshipService';
 import type { Standard, StandardsSearchParams } from '../types';
 
 // Helper to normalize standard objects for backward compatibility
@@ -216,27 +217,7 @@ export async function getCategories() {
 }
 
 export async function getRelatedStandards(id: string) {
-  const standardRes = await getStandardById(id);
-  if (standardRes && standardRes.data.related_standards) {
-    const relatedList = standardRes.data.related_standards.map((relName: string, i: number) => ({
-      id: `rel-${i}`,
-      source_standard_id: id,
-      target_standard_id: relName,
-      relationship_type: 'unspecified' as const,
-      description: `Associated reference cited in ${standardRes.data.standard_number || standardRes.data.is_number}; relationship type not classified in current reference dataset`,
-      created_at: new Date().toISOString(),
-      target_standard: VERIFIED_BIS_STANDARDS.find((v) =>
-        v.standard_number.toLowerCase().includes(relName.toLowerCase())
-      ),
-      verification_status: 'unclassified_reference',
-      source_provenance: 'ISutra Verified BIS Reference Dataset',
-    }));
-    return { data: relatedList, demo: false };
-  }
-
-  const isDemo = id.toLowerCase().startsWith('demo-');
-  const related = DEMO_RELATIONSHIPS.filter((r) => r.source_standard_id === id);
-  return { data: related, demo: isDemo };
+  return getResolvedRelationships(id);
 }
 
 export async function getAmendments(id: string) {
