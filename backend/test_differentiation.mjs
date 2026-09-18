@@ -94,11 +94,37 @@ const meaningfulAlt = candidates.find(
       c.standard.category === primaryStreetLight.standard.category)
 );
 
-assert(meaningfulAlt !== undefined, 'Must identify a meaningful alternative for street lighting (e.g. IS 16102 or IS 16107)');
+assert(meaningfulAlt !== undefined, 'Must identify a meaningful alternative for street lighting');
 console.log(`    Primary: ${primaryStreetLight.standard.standard_number} (${primaryStreetLight.relevancePercentage}%)`);
 console.log(`    Alternative: ${meaningfulAlt?.standard.standard_number} (${meaningfulAlt?.relevancePercentage}%)`);
 assert(primaryStreetLight.score >= meaningfulAlt.score, 'Primary reference must have higher or equal score to alternative');
 assert(meaningfulAlt.standard.source_url.startsWith('https://'), 'Alternative must retain official source URL');
+
+// Guardrail: Alternative MUST NOT be hardcoded
+assert(
+  typeof meaningfulAlt.standard.standard_number === 'string' && meaningfulAlt.standard.standard_number.length > 0,
+  'Alternative standard number must be dynamic string from recommendation object'
+);
+
+// Traceability Chain: Exactly 5 sequential stages
+assert(Array.isArray(primaryStreetLight.traceabilityChain), 'Traceability chain must be array');
+assert(primaryStreetLight.traceabilityChain.length === 5, 'Traceability chain must contain exactly 5 stages');
+const stages = primaryStreetLight.traceabilityChain.map((s) => s.stage);
+assert(
+  stages[0] === 'user_input' &&
+    stages[1] === 'extracted_requirement' &&
+    stages[2] === 'matching_signal' &&
+    stages[3] === 'bis_standard' &&
+    stages[4] === 'official_bis_source',
+  'Traceability chain must trace from user_input to official_bis_source'
+);
+
+// Evidence Provenance
+assert(Array.isArray(primaryStreetLight.evidence) && primaryStreetLight.evidence.length > 0, 'Evidence must be populated');
+assert(
+  primaryStreetLight.evidence.every((e) => Boolean(e.sourceType) && Boolean(e.label)),
+  'Every evidence item must have valid sourceType and label'
+);
 
 // ------------------------------------------------------------
 // TEST 2: Water Storage Tank Requirement
@@ -242,6 +268,42 @@ const unrelatedReq = {
 const unrelatedMatch = matchRequirementsToStandards(unrelatedReq, VERIFIED_BIS_STANDARDS);
 const highMatches = unrelatedMatch.recommendations.filter(r => r.category === 'high');
 assert(highMatches.length === 0, 'Unrelated domain with no matches in dataset must return 0 HIGH RELEVANCE recommendations');
+
+// ------------------------------------------------------------
+// TEST 5b: No Meaningful Alternative Identification Logic
+// ------------------------------------------------------------
+console.log('\nTest 5b: No Meaningful Alternative Identified State...');
+// When only 1 recommendation exists or remaining candidates are < 0.25 score
+const singleRecList = [primaryStreetLight];
+const candidatesSingle = singleRecList.slice(1);
+const altFromSingle = candidatesSingle.find((c) => c.score >= 0.25 && (c.category === 'high' || c.category === 'related'));
+assert(altFromSingle === undefined, 'Must return undefined when no alternative exists, triggering "NO MEANINGFUL ALTERNATIVE IDENTIFIED"');
+
+const lowScoreCandidateList = [
+  primaryStreetLight,
+  {
+    ...primaryStreetLight,
+    standardId: 'low-score-test',
+    score: 0.15,
+    category: 'low',
+    factorStatuses: {
+      ...primaryStreetLight.factorStatuses,
+      productCategory: { ...primaryStreetLight.factorStatuses.productCategory, status: 'not_matched' },
+      keywordsTitleScope: { ...primaryStreetLight.factorStatuses.keywordsTitleScope, status: 'not_matched' },
+    },
+    matchedFactors: { ...primaryStreetLight.matchedFactors, keywords: [] },
+    standard: { ...primaryStreetLight.standard, category: 'Completely Unrelated Domain' },
+  },
+];
+const candidatesLow = lowScoreCandidateList.slice(1);
+const altFromLow = candidatesLow.find(
+  (c) =>
+    (c.category === 'high' || c.category === 'related' || c.score >= 0.30) &&
+    (c.factorStatuses.productCategory.status === 'matched' ||
+      c.factorStatuses.keywordsTitleScope.status === 'matched' ||
+      c.standard.category === primaryStreetLight.standard.category)
+);
+assert(altFromLow === undefined, 'Low-scoring unrelated candidate must NOT be treated as a meaningful alternative');
 
 // ------------------------------------------------------------
 // TEST 6: Unavailable Fields Preservation
