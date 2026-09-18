@@ -37,10 +37,28 @@ async function runPhase8BTests() {
   console.log('  ✓ Dataset contains exactly 40 authentic BIS standards');
 
   assert(
-    VERIFIED_RELATIONSHIPS.length >= 5,
-    `Must have at least 5 verified relationship records, found: ${VERIFIED_RELATIONSHIPS.length}`
+    VERIFIED_RELATIONSHIPS.length === 6,
+    `Must have exactly 6 verified relationship records after evidence audit, found: ${VERIFIED_RELATIONSHIPS.length}`
   );
-  console.log(`  ✓ Verified relationship dataset initialized with ${VERIFIED_RELATIONSHIPS.length} authentic records`);
+  console.log(`  ✓ Verified relationship dataset contains exactly ${VERIFIED_RELATIONSHIPS.length} audited records`);
+
+  // Verify all 6 records meet strict Section 2 audit criteria
+  for (const rel of VERIFIED_RELATIONSHIPS) {
+    const sourceExists = VERIFIED_BIS_STANDARDS.some((s) => s.id === rel.source_standard_id);
+    assert(sourceExists, `Source standard ${rel.source_standard_id} must exist in verifiedStandards.ts`);
+
+    const targetExists = VERIFIED_BIS_STANDARDS.some((s) => s.id === rel.target_standard_id);
+    assert(targetExists, `Target standard ${rel.target_standard_id} must exist in verifiedStandards.ts`);
+
+    assert(rel.evidence_clause && rel.evidence_clause.trim().length > 10, `Evidence clause must be non-empty for ${rel.id}`);
+    assert(rel.verified_source_url.startsWith('https://www.bis.gov.in'), `Source URL must be official BIS for ${rel.id}`);
+    assert(rel.verification_status === 'verified', `Verification status must be verified for ${rel.id}`);
+    assert(
+      ['normative_reference', 'test_method', 'allied_standard'].includes(rel.relationship_type),
+      `Relationship type must be valid enum for ${rel.id}`
+    );
+  }
+  console.log('  ✓ All 6 verified relationships satisfy source, target, clause evidence, and authoritative BIS provenance');
 
   // ------------------------------------------------------------
   // TEST 1: Class A — Existing Associated References Remain Neutral
@@ -135,11 +153,32 @@ async function runPhase8BTests() {
   );
   console.log('  ✓ IS 6994 (Part 6) -> Part 7 correctly verified as test_method');
 
-  // Installation / Guide relationship: IS 15748 -> IS 8519
+  // Directionality & Evidence Audit: IS 15748 -> IS 8519 must NOT silently return as verified installation relationship
   const ppeRelRes = await getRelatedStandards('bis-is-15748-2022');
-  const installRel = ppeRelRes.data.find((r) => r.relationship_type === 'installation_standard');
-  assert(installRel, 'IS 15748 must have installation_standard relationship to IS 8519');
-  console.log('  ✓ IS 15748 -> IS 8519 correctly verified as installation_standard');
+  const hasIncorrectInstall = ppeRelRes.data.some(
+    (r) => r.relationship_type === 'installation_standard'
+  );
+  assert(
+    !hasIncorrectInstall,
+    'IS 15748 must NOT return incorrect installation_standard relationship without authoritative direction evidence'
+  );
+
+  const is8519Ref = ppeRelRes.data.find(
+    (r) =>
+      r.target_standard_id === 'bis-is-8519-2024' ||
+      (r.target_standard_number && r.target_standard_number.includes('8519')) ||
+      (r.target_standard && r.target_standard.standard_number.includes('8519'))
+  );
+  assert(is8519Ref, 'IS 15748 must retain reference to IS 8519');
+  assert(
+    is8519Ref.relationship_type === 'unspecified',
+    'IS 8519 reference must be unclassified/unspecified in absence of authoritative clause evidence'
+  );
+  assert(
+    is8519Ref.verification_status === 'unclassified_reference',
+    'IS 8519 reference must have unclassified_reference status'
+  );
+  console.log('  ✓ Directionality audit: IS 15748 -> IS 8519 safely kept as unclassified reference (not verified installation_standard)');
 
   // ------------------------------------------------------------
   // TEST 3: Demo Data Quarantine Guard

@@ -99,26 +99,7 @@ export const VERIFIED_RELATIONSHIPS: VerifiedStandardRelationship[] = [
   },
 
   // ------------------------------------------------------------
-  // 5. IS 15748:2022 -> IS 8519:2024 (Installation & Maintenance Guide)
-  // ------------------------------------------------------------
-  {
-    id: 'vrel-15748-8519',
-    source_standard_id: 'bis-is-15748-2022',
-    source_standard_number: 'IS 15748:2022',
-    target_standard_id: 'bis-is-8519-2024',
-    target_standard_number: 'IS 8519:2024',
-    relationship_type: 'installation_standard',
-    description:
-      'Standardized practice guide: Selection, care, use, cleaning, and maintenance guidelines for heat and flame protective clothing.',
-    evidence_clause:
-      'IS 15748:2022 Reference Notes: Recommends IS 8519 for guidelines on occupational body protection selection, fitting, and storage.',
-    verified_source_url: 'https://www.bis.gov.in/know-your-standard/?lang=en',
-    verification_status: 'verified',
-    verified_at: '2026-09-18',
-  },
-
-  // ------------------------------------------------------------
-  // 6. IS 1786:2008 -> IS 456:2000 (Governing Code of Practice)
+  // 5. IS 1786:2008 -> IS 456:2000 (Governing Code of Practice)
   // ------------------------------------------------------------
   {
     id: 'vrel-1786-456',
@@ -137,7 +118,7 @@ export const VERIFIED_RELATIONSHIPS: VerifiedStandardRelationship[] = [
   },
 
   // ------------------------------------------------------------
-  // 7. IS 383:2016 -> IS 456:2000 (Governing Concrete Code)
+  // 6. IS 383:2016 -> IS 456:2000 (Governing Concrete Code)
   // ------------------------------------------------------------
   {
     id: 'vrel-383-456',
