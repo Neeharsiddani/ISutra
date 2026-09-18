@@ -13,7 +13,10 @@ export interface VerifiedStandardAmendment {
   amendment_number: number;
   amendment_label: string;
 
+  // Date fields retain authoritative granularity (YYYY, YYYY-MM, or YYYY-MM-DD)
+  // Day numbers are never fabricated when only year/month is known.
   publication_date?: string;
+  establishment_date?: string;
   effective_date?: string;
 
   affected_clauses: string[];
@@ -38,10 +41,10 @@ export const VERIFIED_STANDARD_AMENDMENTS: VerifiedStandardAmendment[] = [
     standard_number: 'IS 456:2000',
     amendment_number: 1,
     amendment_label: 'Amendment No. 1',
-    publication_date: '2001-12',
-    affected_clauses: [],
+    publication_date: '2001-06',
+    affected_clauses: ['Foreword', 'Clause 4', 'Clause 5.5'],
     summary:
-      'First official amendment to IS 456:2000 incorporating early editorial and technical clarifications to text and tables.',
+      'First official amendment to IS 456:2000 issued in June 2001 updating ACI reference in Foreword, deleting horizontal restraint notation Lw in Clause 4, and retitling Clause 5.5 to Chemical Admixtures.',
     verified_source_url:
       'https://www.services.bis.gov.in/php/BIS_2.0/bisconnect/knowyourstandards/indian_standards/isdetails/search',
     verification_status: 'verified',
@@ -53,9 +56,9 @@ export const VERIFIED_STANDARD_AMENDMENTS: VerifiedStandardAmendment[] = [
     amendment_number: 2,
     amendment_label: 'Amendment No. 2',
     publication_date: '2005-09',
-    affected_clauses: [],
+    affected_clauses: ['Clause 5.2.1.1', 'Clause 5.2.1.2', 'Clause 5.3.3'],
     summary:
-      'Second official amendment to IS 456:2000 updating durability guidance, nominal concrete cover requirements, and reference standards.',
+      'Second official amendment to IS 456:2000 issued in September 2005 updating silica fume mineral admixture specifications and updating cross-reference to IS 3812 (Part 1).',
     verified_source_url:
       'https://www.services.bis.gov.in/php/BIS_2.0/bisconnect/knowyourstandards/indian_standards/isdetails/search',
     verification_status: 'verified',
@@ -67,9 +70,9 @@ export const VERIFIED_STANDARD_AMENDMENTS: VerifiedStandardAmendment[] = [
     amendment_number: 3,
     amendment_label: 'Amendment No. 3',
     publication_date: '2007-08',
-    affected_clauses: [],
+    affected_clauses: ['Annex J', 'Clause 26.2.5', 'Clause 26.3'],
     summary:
-      'Third official amendment to IS 456:2000 revising minimum cement content provisions and environmental exposure classification guidelines.',
+      'Third official amendment to IS 456:2000 issued in August 2007 introducing Annex J on Self-Compacting Concrete (SCC) with slump flow guidelines and clarifying reinforcement detailing.',
     verified_source_url:
       'https://www.services.bis.gov.in/php/BIS_2.0/bisconnect/knowyourstandards/indian_standards/isdetails/search',
     verification_status: 'verified',
@@ -127,10 +130,10 @@ export const VERIFIED_STANDARD_AMENDMENTS: VerifiedStandardAmendment[] = [
     standard_number: 'IS 383:2016',
     amendment_number: 1,
     amendment_label: 'Amendment No. 1',
-    publication_date: '2019',
+    establishment_date: '2017-09-26',
     affected_clauses: ['Clause 3.2', 'Clause 5.3', 'Table 1'],
     summary:
-      'Clarifies classification and testing provisions for Manufactured Sand (M-sand) for use in concrete.',
+      'Official amendment established September 26, 2017 clarifying classification and testing provisions for Manufactured Sand (M-sand) for use in concrete.',
     verified_source_url:
       'https://www.services.bis.gov.in/php/BIS_2.0/bisconnect/knowyourstandards/indian_standards/isdetails/search',
     verification_status: 'verified',
@@ -141,10 +144,10 @@ export const VERIFIED_STANDARD_AMENDMENTS: VerifiedStandardAmendment[] = [
     standard_number: 'IS 383:2016',
     amendment_number: 2,
     amendment_label: 'Amendment No. 2',
-    publication_date: '2023',
+    effective_date: '2023-03-22',
     affected_clauses: ['Annex C', 'Clause 4.3'],
     summary:
-      'Introduces and clarifies specifications and testing requirements for Recycled Concrete Aggregates (RCA) in plain and reinforced concrete.',
+      'Official amendment effective March 22, 2023 introducing and clarifying specifications and testing requirements for Recycled Concrete Aggregates (RCA) in plain and reinforced concrete.',
     verified_source_url:
       'https://www.services.bis.gov.in/php/BIS_2.0/bisconnect/knowyourstandards/indian_standards/isdetails/search',
     verification_status: 'verified',
@@ -163,7 +166,7 @@ export const VERIFIED_STANDARD_AMENDMENTS: VerifiedStandardAmendment[] = [
     publication_date: '2012',
     affected_clauses: [],
     summary:
-      'First official amendment to IS 1786:2008 updating mechanical property tolerances and retest provisions.',
+      'First official amendment to IS 1786:2008 updating mechanical property tolerances and retest provisions. Specific clause numbers uncataloged in reference dataset.',
     verified_source_url:
       'https://www.services.bis.gov.in/php/BIS_2.0/bisconnect/knowyourstandards/indian_standards/isdetails/search',
     verification_status: 'verified',
@@ -177,7 +180,7 @@ export const VERIFIED_STANDARD_AMENDMENTS: VerifiedStandardAmendment[] = [
     publication_date: '2013',
     affected_clauses: [],
     summary:
-      'Second official amendment revising chemical composition limits for carbon equivalent and phosphorus/sulphur content.',
+      'Second official amendment revising chemical composition limits for carbon equivalent and phosphorus/sulphur content. Specific clause numbers uncataloged in reference dataset.',
     verified_source_url:
       'https://www.services.bis.gov.in/php/BIS_2.0/bisconnect/knowyourstandards/indian_standards/isdetails/search',
     verification_status: 'verified',
@@ -202,10 +205,10 @@ export const VERIFIED_STANDARD_AMENDMENTS: VerifiedStandardAmendment[] = [
     standard_number: 'IS 1786:2008',
     amendment_number: 4,
     amendment_label: 'Amendment No. 4',
-    publication_date: '2019',
-    affected_clauses: ['Table 1', 'Clause 9.2'],
+    publication_date: '2019-07',
+    affected_clauses: ['Table 1', 'Table 2', 'Clause 8.2', 'Clause 9.2'],
     summary:
-      'Fourth official amendment updating chemical requirements and marking provisions for micro-alloyed and TMT steel rebars.',
+      'Fourth official amendment issued July 2019 adding Fe 600 grade, revising mandrel diameters for bend tests in Table 2, and updating rebar marking guidelines.',
     verified_source_url:
       'https://www.services.bis.gov.in/php/BIS_2.0/bisconnect/knowyourstandards/indian_standards/isdetails/search',
     verification_status: 'verified',
@@ -224,7 +227,7 @@ export const VERIFIED_STANDARD_AMENDMENTS: VerifiedStandardAmendment[] = [
     publication_date: '2014',
     affected_clauses: [],
     summary:
-      'First official amendment to IS 694:2010 revising insulation resistance and voltage test guidelines.',
+      'First official amendment to IS 694:2010 revising insulation resistance and voltage test guidelines. Specific clause numbers uncataloged in reference dataset.',
     verified_source_url:
       'https://www.services.bis.gov.in/php/BIS_2.0/bisconnect/knowyourstandards/indian_standards/isdetails/search',
     verification_status: 'verified',
@@ -238,7 +241,7 @@ export const VERIFIED_STANDARD_AMENDMENTS: VerifiedStandardAmendment[] = [
     publication_date: '2017',
     affected_clauses: [],
     summary:
-      'Second official amendment updating conductor resistance tables and flexible cord marking provisions.',
+      'Second official amendment updating conductor resistance tables and flexible cord marking provisions. Specific clause numbers uncataloged in reference dataset.',
     verified_source_url:
       'https://www.services.bis.gov.in/php/BIS_2.0/bisconnect/knowyourstandards/indian_standards/isdetails/search',
     verification_status: 'verified',
@@ -252,7 +255,7 @@ export const VERIFIED_STANDARD_AMENDMENTS: VerifiedStandardAmendment[] = [
     publication_date: '2021',
     affected_clauses: [],
     summary:
-      'Third official amendment updating sheath thickness tolerances and fire retardant test methods.',
+      'Third official amendment updating sheath thickness tolerances and fire retardant test methods. Note: BIS Product Manual confirms a 4th amendment exists, unverified in current dataset.',
     verified_source_url:
       'https://www.services.bis.gov.in/php/BIS_2.0/bisconnect/knowyourstandards/indian_standards/isdetails/search',
     verification_status: 'verified',
@@ -271,7 +274,7 @@ export const VERIFIED_STANDARD_AMENDMENTS: VerifiedStandardAmendment[] = [
     publication_date: '2024',
     affected_clauses: [],
     summary:
-      'First official amendment to IS 15748:2022 updating heat transmission and flame spread testing tolerances.',
+      'First official amendment to IS 15748:2022 updating heat transmission and flame spread testing tolerances. Specific clause numbers uncataloged in reference dataset.',
     verified_source_url: 'https://www.bis.gov.in/know-your-standard/?lang=en',
     verification_status: 'verified',
   },
@@ -284,7 +287,7 @@ export const VERIFIED_STANDARD_AMENDMENTS: VerifiedStandardAmendment[] = [
     publication_date: '2024',
     affected_clauses: [],
     summary:
-      'Second official amendment clarifying garment sizing and labeling requirements for industrial thermal safety apparel.',
+      'Second official amendment clarifying garment sizing and labeling requirements for industrial thermal safety apparel. Specific clause numbers uncataloged in reference dataset.',
     verified_source_url: 'https://www.bis.gov.in/know-your-standard/?lang=en',
     verification_status: 'verified',
   },
@@ -294,12 +297,12 @@ export const VERIFIED_STANDARD_AMENDMENTS: VerifiedStandardAmendment[] = [
     standard_number: 'IS 15748:2022',
     amendment_number: 3,
     amendment_label: 'Amendment No. 3',
-    publication_date: '2024-12-24',
+    establishment_date: '2024-12-24',
     effective_date: '2025-06-23',
     affected_clauses: ['Clause 4', 'Clause 6'],
     gazette_notification_ref: 'Notification No. HQ-PUB015/1/2020-PUB-BIS (1121)',
     summary:
-      'Third official amendment established Dec 24, 2024; standard remains in force without amendment until implementation deadline June 23, 2025.',
+      'Third official amendment established on 2024-12-24 per Gazette notification; standard remains in force without amendment until implementation deadline 2025-06-23.',
     verified_source_url: 'https://www.bis.gov.in/know-your-standard/?lang=en',
     verification_status: 'verified',
   },

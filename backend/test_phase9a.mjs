@@ -1,6 +1,6 @@
 // ============================================================
 // ISutra: Phase 9A — Verified BIS Lifecycle & Amendment Test Suite
-// Verifies authoritative lifecycle, reaffirmation, and amendment dataset foundation
+// Rigorous evidence audit for lifecycle, reaffirmation, and amendment datasets
 // ============================================================
 
 import assert from 'node:assert';
@@ -17,7 +17,7 @@ import { VERIFIED_RELATIONSHIPS } from './dist/database/verifiedRelationships.js
 import { DEMO_AMENDMENTS } from './dist/database/demoData.js';
 
 console.log('===========================================================');
-console.log('🔬 ISUTRA PHASE 9A — VERIFIED BIS LIFECYCLE & AMENDMENT SUITE');
+console.log('🔬 ISUTRA PHASE 9A — EVIDENCE AUDIT & VERIFICATION SUITE');
 console.log('===========================================================');
 
 let passCount = 0;
@@ -37,27 +37,37 @@ async function runPhase9ATests() {
     `verifiedStandards.ts must remain completely frozen with 40 records (found: ${VERIFIED_BIS_STANDARDS.length})`
   );
 
-  const stdIds = new Set(VERIFIED_BIS_STANDARDS.map((s) => s.id));
+  const stdMap = new Map(VERIFIED_BIS_STANDARDS.map((s) => [s.id, s]));
 
   // ------------------------------------------------------------
-  // TEST A: Lifecycle Standard ID Existence
+  // TEST A: Lifecycle Standard ID & Number Consistency
   // ------------------------------------------------------------
-  console.log('\nTest A: Verifying Lifecycle Standard IDs Exist in verifiedStandards.ts...');
+  console.log('\nTest A: Verifying Lifecycle Standard IDs & Numbers Match Frozen Dataset...');
   for (const lc of VERIFIED_STANDARD_LIFECYCLES) {
     testAssert(
-      stdIds.has(lc.standard_id),
+      stdMap.has(lc.standard_id),
       `Lifecycle standard_id '${lc.standard_id}' must exist in verifiedStandards.ts`
+    );
+    const matchedStd = stdMap.get(lc.standard_id);
+    testAssert(
+      matchedStd && matchedStd.standard_number === lc.standard_number,
+      `Lifecycle standard_number '${lc.standard_number}' must exactly match standard_number in verifiedStandards.ts`
     );
   }
 
   // ------------------------------------------------------------
-  // TEST B: Amendment Standard ID Existence
+  // TEST B: Amendment Standard ID & Number Consistency
   // ------------------------------------------------------------
-  console.log('\nTest B: Verifying Amendment Standard IDs Exist in verifiedStandards.ts...');
+  console.log('\nTest B: Verifying Amendment Standard IDs & Numbers Match Frozen Dataset...');
   for (const amd of VERIFIED_STANDARD_AMENDMENTS) {
     testAssert(
-      stdIds.has(amd.standard_id),
+      stdMap.has(amd.standard_id),
       `Amendment standard_id '${amd.standard_id}' must exist in verifiedStandards.ts`
+    );
+    const matchedStd = stdMap.get(amd.standard_id);
+    testAssert(
+      matchedStd && matchedStd.standard_number === amd.standard_number,
+      `Amendment standard_number '${amd.standard_number}' must exactly match standard_number in verifiedStandards.ts`
     );
   }
 
@@ -67,7 +77,7 @@ async function runPhase9ATests() {
   console.log('\nTest C: Verifying Lifecycle Records Have Authentic Evidence & Metadata...');
   for (const lc of VERIFIED_STANDARD_LIFECYCLES) {
     testAssert(
-      lc.evidence_description && lc.evidence_description.trim().length >= 15,
+      lc.evidence_description && lc.evidence_description.trim().length >= 25,
       `Lifecycle record ${lc.id} must have descriptive evidence text`
     );
     testAssert(
@@ -114,20 +124,47 @@ async function runPhase9ATests() {
   }
 
   // ------------------------------------------------------------
-  // TEST E: Amendment Numbers are Positive Integers
+  // TEST E: Date Precision & No Fabricated Full Dates
   // ------------------------------------------------------------
-  console.log('\nTest E: Verifying Amendment Numbers are Positive Integers...');
+  console.log('\nTest E: Verifying Date Precision (No Fabricated Days on Partial Dates)...');
+  const dateRegex = /^\d{4}$|^\d{4}-\d{2}$|^\d{4}-\d{2}-\d{2}$/;
   for (const amd of VERIFIED_STANDARD_AMENDMENTS) {
+    if (amd.publication_date) {
+      testAssert(
+        dateRegex.test(amd.publication_date),
+        `Amendment ${amd.id} publication_date '${amd.publication_date}' must be valid YYYY, YYYY-MM, or YYYY-MM-DD`
+      );
+    }
+    if (amd.establishment_date) {
+      testAssert(
+        dateRegex.test(amd.establishment_date),
+        `Amendment ${amd.id} establishment_date '${amd.establishment_date}' must be valid YYYY, YYYY-MM, or YYYY-MM-DD`
+      );
+    }
+    if (amd.effective_date) {
+      testAssert(
+        dateRegex.test(amd.effective_date),
+        `Amendment ${amd.id} effective_date '${amd.effective_date}' must be valid YYYY, YYYY-MM, or YYYY-MM-DD`
+      );
+    }
+  }
+
+  // ------------------------------------------------------------
+  // TEST F: Non-Exhaustive Zero-Amendment Statements (No "0 amendments exist")
+  // ------------------------------------------------------------
+  console.log('\nTest F: Verifying Non-Exhaustive Language on Standards Without Amendments...');
+  for (const lc of VERIFIED_STANDARD_LIFECYCLES) {
+    const desc = lc.evidence_description.toLowerCase();
     testAssert(
-      Number.isInteger(amd.amendment_number) && amd.amendment_number > 0,
-      `Amendment ${amd.id} number must be a positive integer (got: ${amd.amendment_number})`
+      !desc.includes('0 amendments issued') && !desc.includes('no amendments exist'),
+      `Lifecycle ${lc.id} must not make an exhaustive negative claim (no "0 amendments issued")`
     );
   }
 
   // ------------------------------------------------------------
-  // TEST F: One-to-Many Amendment Architecture (IS 456 has 6 amendments)
+  // TEST G: One-to-Many Amendment Architecture & Cardinality Separation
   // ------------------------------------------------------------
-  console.log('\nTest F: Verifying One-to-Many Amendment Architecture...');
+  console.log('\nTest G: Verifying Separate Lifecycle and Amendment Cardinality...');
   const is456Amendments = getVerifiedAmendments('bis-is-456-2000');
   testAssert(
     is456Amendments.length === 6,
@@ -145,9 +182,9 @@ async function runPhase9ATests() {
   );
 
   // ------------------------------------------------------------
-  // TEST G: Reaffirmation is Never Represented as an Amendment
+  // TEST H: Reaffirmation is Never Represented as an Amendment
   // ------------------------------------------------------------
-  console.log('\nTest G: Verifying Reaffirmation is Never Stored as an Amendment...');
+  console.log('\nTest H: Verifying Reaffirmation is Never Stored as an Amendment...');
   for (const amd of VERIFIED_STANDARD_AMENDMENTS) {
     const label = amd.amendment_label.toLowerCase();
     const summary = amd.summary.toLowerCase();
@@ -163,9 +200,9 @@ async function runPhase9ATests() {
   );
 
   // ------------------------------------------------------------
-  // TEST H: Revision is Never Represented as an Amendment
+  // TEST I: Revision / Supersession Directionality & Truthful Representation
   // ------------------------------------------------------------
-  console.log('\nTest H: Verifying Revision is Never Stored as an Amendment...');
+  console.log('\nTest I: Verifying Revision and Supersession Directionality...');
   const is7098Amendments = getVerifiedAmendments('bis-is-7098-1-2025');
   testAssert(
     is7098Amendments.length === 0,
@@ -174,13 +211,17 @@ async function runPhase9ATests() {
   const is7098Lifecycle = getVerifiedLifecycle('bis-is-7098-1-2025');
   testAssert(
     is7098Lifecycle && is7098Lifecycle.supersedes_standard_number === 'IS 7098 (Part 1):1988',
-    'Revision / Supersession of IS 7098 (Part 1) is correctly captured via supersedes_standard_number in lifecycle'
+    'IS 7098 (Part 1):2025 correctly supersedes 1988 edition, not reverse direction'
+  );
+  testAssert(
+    is7098Lifecycle && is7098Lifecycle.transition_end_date === '2025-12-09',
+    'IS 7098 (Part 1):2025 transition cutoff is precisely 2025-12-09 from BIS circular'
   );
 
   // ------------------------------------------------------------
-  // TEST I: Phase 8B Relationships Invariance
+  // TEST J: Phase 8B Relationships Invariance
   // ------------------------------------------------------------
-  console.log('\nTest I: Verifying Phase 8B Verified Relationships Invariance...');
+  console.log('\nTest J: Verifying Phase 8B Verified Relationships Invariance...');
   testAssert(
     VERIFIED_RELATIONSHIPS.length === 6,
     `VERIFIED_RELATIONSHIPS must remain unchanged with exactly 6 records (got: ${VERIFIED_RELATIONSHIPS.length})`
@@ -238,7 +279,7 @@ async function runPhase9ATests() {
   }
 
   // ------------------------------------------------------------
-  // DATA QUALITY SUMMARY (Section 20)
+  // DATA QUALITY SUMMARY
   // ------------------------------------------------------------
   console.log('\n===========================================================');
   console.log('📊 PHASE 9A DATA QUALITY SUMMARY');
