@@ -15,7 +15,6 @@ import {
   BookOpen,
   ArrowLeft,
   Info,
-  Layers,
   Check,
   Minus,
   ShieldCheck,
@@ -24,11 +23,11 @@ import {
   Printer,
 } from 'lucide-react';
 import { getAnalysisRecommendations, getRecommendations } from '../services/api';
+import { WhyThisStandardPanel } from '../components/standards/WhyThisStandardPanel';
 import type {
   RecommendationsResponse,
   StructuredRequirements,
   FactorStatus,
-  FactorDetail,
 } from '../types';
 
 export default function RecommendationsResultsPage() {
@@ -607,12 +606,20 @@ export default function RecommendationsResultsPage() {
                   </div>
 
                   {/* Dynamic Match Reason */}
-                  <div className="mt-3.5 bg-slate-50/70 border border-slate-200/60 rounded-xl p-3 text-xs text-[#243B53] flex items-start gap-2">
-                    <Sparkles className="w-4 h-4 text-[#0F766E] shrink-0 mt-0.5" />
-                    <div>
-                      <strong className="text-[#102A43]">Why This Matched: </strong>
-                      <span>{rec.reason}</span>
+                  <div className="mt-3.5 bg-slate-50/70 border border-slate-200/60 rounded-xl p-3 text-xs text-[#243B53] flex items-start justify-between gap-2">
+                    <div className="flex items-start gap-2 min-w-0">
+                      <Sparkles className="w-4 h-4 text-[#0F766E] shrink-0 mt-0.5" />
+                      <div>
+                        <strong className="text-[#102A43]">Why This Matched: </strong>
+                        <span>{rec.reason}</span>
+                      </div>
                     </div>
+                    <button
+                      onClick={() => toggleExpand(rec.standardId)}
+                      className="shrink-0 text-xs font-bold text-[#0F766E] hover:text-[#0C5D57] hover:underline flex items-center gap-1 ml-2 transition-colors cursor-pointer"
+                    >
+                      <span>{isExpanded ? 'Hide trail' : 'Why this standard? →'}</span>
+                    </button>
                   </div>
 
                   {/* Factor Status Badges (Quick Preview) */}
@@ -644,197 +651,29 @@ export default function RecommendationsResultsPage() {
                   </div>
 
                   {/* ============================================================
-                      EXPANDABLE "VIEW MATCH EVIDENCE" SECTION (Phase 5)
+                      EXPANDABLE "WHY THIS STANDARD?" EXPLANATION PANEL
                      ============================================================ */}
                   {isExpanded && (
-                    <div className="mt-4 pt-4 border-t border-[#243B53]/10 space-y-5 animate-fade-in text-xs">
-                      {/* 1. TRACEABILITY CHAIN */}
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <h4 className="text-[11px] font-bold text-[#102A43] uppercase tracking-wider flex items-center gap-1.5">
-                            <Layers className="w-3.5 h-3.5 text-[#0F766E]" />
-                            <span>1. Traceability Chain (User Input → Official Standard)</span>
-                          </h4>
-                          <span className="text-[10px] text-[#627D98]">5 Deterministic Verification Steps</span>
-                        </div>
-
-                        {/* Stepper Chain Component */}
-                        <div className="grid grid-cols-1 md:grid-cols-5 gap-2 bg-slate-50 border border-slate-200/80 rounded-xl p-3">
-                          {rec.traceabilityChain?.map((step) => (
-                            <div key={step.step} className="relative space-y-1">
-                              <div className="flex items-center gap-1.5">
-                                <span className="w-5 h-5 rounded-full bg-[#0F766E] text-white text-[10px] font-bold flex items-center justify-center shrink-0">
-                                  {step.step}
-                                </span>
-                                <span className="text-[10px] font-bold uppercase tracking-wider text-[#102A43]">
-                                  {step.title}
-                                </span>
-                              </div>
-                              <p className="text-[11px] text-[#486581] font-medium leading-tight pl-6">
-                                {step.description}
-                              </p>
-                              <div className="pl-6 pt-0.5">
-                                <span className="inline-block text-[9px] font-semibold uppercase px-1.5 py-0.2 rounded bg-white border border-slate-200 text-[#627D98]">
-                                  {step.badge}
-                                </span>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* 2. REQUIREMENT VS STANDARD COMPARISON TABLE */}
-                      <div className="space-y-2">
-                        <h4 className="text-[11px] font-bold text-[#102A43] uppercase tracking-wider flex items-center gap-1.5">
-                          <BookOpen className="w-3.5 h-3.5 text-[#0F766E]" />
-                          <span>2. Requirement vs. Verified Standard Data Comparison</span>
-                        </h4>
-
-                        <div className="overflow-x-auto rounded-xl border border-slate-200">
-                          <table className="w-full text-left text-xs border-collapse">
-                            <thead>
-                              <tr className="bg-slate-50 text-[11px] font-semibold text-[#627D98] border-b border-slate-200">
-                                <th className="py-2 px-3 font-semibold">Specification Dimension</th>
-                                <th className="py-2 px-3 font-semibold">User / Extracted Requirement</th>
-                                <th className="py-2 px-3 font-semibold">Verified Standard Data</th>
-                                <th className="py-2 px-3 font-semibold text-right">Alignment Status</th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-100">
-                              {rec.comparison?.map((cmp, idx) => (
-                                <tr key={idx} className="hover:bg-slate-50/50">
-                                  <td className="py-2 px-3 font-medium text-[#102A43]">
-                                    {cmp.field}
-                                  </td>
-                                  <td className="py-2 px-3 text-[#243B53]">
-                                    {cmp.requirementValue || <span className="text-slate-400 italic">Not specified by user</span>}
-                                  </td>
-                                  <td className="py-2 px-3 text-[#486581]">
-                                    {cmp.standardValue}
-                                  </td>
-                                  <td className="py-2 px-3 text-right">
-                                    <span
-                                      className={`inline-block text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${
-                                        cmp.status === 'matched'
-                                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                                          : cmp.status === 'contradiction'
-                                          ? 'bg-rose-100 text-rose-800 border border-rose-300'
-                                          : cmp.status === 'not_available'
-                                          ? 'bg-slate-100 text-[#627D98] border border-slate-200'
-                                          : 'bg-rose-50 text-rose-700 border border-rose-200'
-                                      }`}
-                                    >
-                                      {cmp.status === 'matched'
-                                        ? 'Matched'
-                                        : cmp.status === 'contradiction'
-                                        ? 'Contradiction'
-                                        : cmp.status === 'not_available'
-                                        ? 'Not in Record'
-                                        : 'Not Matched'}
-                                    </span>
-                                    {cmp.note && (
-                                      <div className="text-[10px] text-slate-500 mt-0.5 max-w-xs ml-auto">
-                                        {cmp.note}
-                                      </div>
-                                    )}
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-
-                      {/* 3. SCORE TRANSPARENCY & FACTOR CONTRIBUTION BREAKDOWN */}
-                      <div className="space-y-2">
-                        <h4 className="text-[11px] font-bold text-[#102A43] uppercase tracking-wider flex items-center gap-1.5">
-                          <Sparkles className="w-3.5 h-3.5 text-[#0F766E]" />
-                          <span>3. Score Transparency & Factor Contributions</span>
-                        </h4>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                          <FactorScoreCard
-                            title="Product & Category"
-                            detail={rec.factorStatuses.productCategory}
-                          />
-                          <FactorScoreCard
-                            title="Keywords & Scope"
-                            detail={rec.factorStatuses.keywordsTitleScope}
-                          />
-                          <FactorScoreCard
-                            title="Application Domain"
-                            detail={rec.factorStatuses.application}
-                          />
-                          <FactorScoreCard
-                            title="Environmental Conditions"
-                            detail={rec.factorStatuses.environment}
-                          />
-                          <FactorScoreCard
-                            title="Technical Parameters"
-                            detail={rec.factorStatuses.technicalParameters}
-                          />
-                          <FactorScoreCard
-                            title="Safety & Testing"
-                            detail={rec.factorStatuses.safetyTesting}
-                          />
-                        </div>
-                      </div>
-
-                      {/* 4. STRUCTURED EVIDENCE BY SOURCE PROVENANCE */}
-                      <div className="space-y-2">
-                        <h4 className="text-[11px] font-bold text-[#102A43] uppercase tracking-wider flex items-center gap-1.5">
-                          <ShieldCheck className="w-3.5 h-3.5 text-[#0F766E]" />
-                          <span>4. Provenance Labeled Evidence Items</span>
-                        </h4>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                          {rec.evidence?.map((item, idx) => (
-                            <div
-                              key={idx}
-                              className="bg-slate-50/70 border border-slate-200/80 rounded-xl p-2.5 flex items-start justify-between gap-2"
-                            >
-                              <div className="space-y-0.5 min-w-0">
-                                <div className="flex items-center gap-1.5">
-                                  <SourceTypeBadge sourceType={item.sourceType} />
-                                  <span className="text-[11px] font-semibold text-[#102A43] truncate">
-                                    {item.label}
-                                  </span>
-                                </div>
-                                <p className="text-[11px] text-[#486581] font-mono leading-tight pl-0.5">
-                                  {item.value}
-                                </p>
-                              </div>
-                              <span
-                                className={`shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase ${
-                                  item.matched
-                                    ? 'bg-emerald-100 text-emerald-800'
-                                    : 'bg-slate-200 text-[#627D98]'
-                                }`}
-                              >
-                                {item.matched ? 'Verified' : 'Unavailable'}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Standard Scope Excerpt */}
-                      {rec.standard.scope && (
-                        <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-3 text-xs text-[#243B53]">
-                          <strong className="text-[#102A43] block mb-1">Standard Scope Excerpt:</strong>
-                          <p className="text-[#486581] leading-relaxed">{rec.standard.scope}</p>
-                        </div>
-                      )}
-                    </div>
+                    <WhyThisStandardPanel
+                      recommendation={rec}
+                      allRecommendations={data.recommendations}
+                      analysisId={id}
+                      requirements={reqs}
+                    />
                   )}
 
                   {/* Card Footer: Action Links & Toggle */}
                   <div className="mt-4 pt-3.5 border-t border-[#243B53]/10 flex flex-wrap items-center justify-between gap-3">
                     <button
                       onClick={() => toggleExpand(rec.standardId)}
-                      className="text-xs font-semibold text-[#0F766E] hover:text-[#0C5D57] flex items-center gap-1 transition-colors min-h-[36px]"
+                      className={`min-h-[36px] px-3.5 py-1.5 rounded-lg border text-xs font-bold flex items-center gap-1.5 transition-all shadow-2xs ${
+                        isExpanded
+                          ? 'bg-[#102A43] text-white border-[#102A43]'
+                          : 'bg-teal-50 hover:bg-teal-100 text-[#0F766E] border-teal-300'
+                      }`}
                     >
-                      <span>{isExpanded ? 'Hide Match Evidence' : 'View Match Evidence'}</span>
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>{isExpanded ? 'Hide Decision Trail' : 'Why This Standard?'}</span>
                       {isExpanded ? (
                         <ChevronUp className="w-3.5 h-3.5" />
                       ) : (
@@ -990,85 +829,3 @@ function FactorBadge({ label, status }: { label: string; status: FactorStatus })
   );
 }
 
-function SourceTypeBadge({ sourceType }: { sourceType: string }) {
-  if (sourceType === 'user_requirement') {
-    return (
-      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded uppercase bg-blue-100 text-blue-800">
-        USER REQUIREMENT
-      </span>
-    );
-  }
-  if (sourceType === 'extracted_requirement') {
-    return (
-      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded uppercase bg-emerald-100 text-emerald-800">
-        EXTRACTED REQUIREMENT
-      </span>
-    );
-  }
-  if (sourceType === 'standard_data') {
-    return (
-      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded uppercase bg-purple-100 text-purple-800">
-        STANDARD DATA
-      </span>
-    );
-  }
-  return (
-    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded uppercase bg-teal-100 text-teal-800">
-      OFFICIAL BIS SOURCE
-    </span>
-  );
-}
-
-function FactorScoreCard({ title, detail }: { title: string; detail: FactorDetail }) {
-  const isMatched = detail.status === 'matched';
-  const isContradiction = detail.status === 'contradiction';
-  const isNA = detail.status === 'not_available';
-  const contributionPct = Math.round(detail.contribution * 100);
-  const weightPct = Math.round(detail.weight * 100);
-
-  return (
-    <div
-      className={`border rounded-xl p-2.5 text-xs ${
-        isMatched
-          ? 'bg-emerald-50/40 border-emerald-200'
-          : isContradiction
-          ? 'bg-rose-50/50 border-rose-200'
-          : isNA
-          ? 'bg-slate-50/80 border-slate-200'
-          : 'bg-slate-50/30 border-slate-200/60'
-      }`}
-    >
-      <div className="flex items-center justify-between gap-1 mb-1">
-        <span className="font-bold text-[#102A43] truncate">{title}</span>
-        <span
-          className={`text-[10px] font-bold px-1.5 py-0.2 rounded uppercase shrink-0 ${
-            isMatched
-              ? 'bg-emerald-100 text-[#16803C]'
-              : isContradiction
-              ? 'bg-rose-100 text-rose-800'
-              : isNA
-              ? 'bg-slate-200 text-[#627D98]'
-              : 'bg-slate-100 text-[#627D98]'
-          }`}
-        >
-          {isMatched ? `+${contributionPct}%` : isContradiction ? 'Contradiction' : isNA ? 'Not in Record' : '0%'}
-        </span>
-      </div>
-
-      <div className="text-[11px] text-[#627D98] space-y-0.5">
-        <div>
-          Weight: <strong className="text-[#243B53]">{weightPct}%</strong> | Subscore: <strong className="text-[#243B53]">{Math.round(detail.score * 100)}%</strong>
-        </div>
-        <div className="truncate text-[#486581]" title={detail.evidence?.join(', ')}>
-          {detail.evidence && detail.evidence.length > 0
-            ? detail.evidence.join(', ')
-            : isContradiction
-            ? 'Requirement conflicts with standard criteria'
-            : isNA
-            ? 'Not available in current standard record'
-            : 'No direct criteria matched'}
-        </div>
-      </div>
-    </div>
-  );
-}

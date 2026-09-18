@@ -94,6 +94,12 @@ Official BIS Portal Records (bis.gov.in)
    - Strictly neutral: Never declares a "winner", "best standard", or comparative score, reflecting that standards are often complementary references across tender schedule clauses.
    - Responsive design with dedicated mobile standard tab switching.
 
+8. **Differentiation Phase — Explainable Standard Decision Trail ("Why This Standard?" + "Why Not This Alternative?")**:
+   - Evidence-backed recommendation explanation and alternative comparison using existing deterministic matching signals.
+   - Interactive decision trail panel for every recommendation displaying visual match mathematics with actual weights and point contributions across all 6 signals.
+   - Factual dimensional comparison answering *"Why not this alternative?"* for competing standards without subjective assertions.
+   - Transparent *"What is still unknown?"* checklist tracking unrecorded criteria with direct links to requirement gap analysis and the official BIS portal.
+
 ---
 
 ## 🏛 Architecture: AI Perception vs. Deterministic Decision Logic
