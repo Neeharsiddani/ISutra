@@ -73,7 +73,7 @@ export default function AboutPage() {
           </h2>
         </div>
         <p className="text-xs sm:text-sm text-text-muted leading-relaxed mb-2">
-          ISutra is a Smart India Hackathon (SIH) prototype demonstrating an end-to-end procurement intelligence workflow across Phases 1 through 7. Recommendations are evaluated against a curated reference dataset of 40 verified BIS standards and must be independently verified against official BIS publications before procurement or compliance decisions.
+          ISutra is a Smart India Hackathon (SIH) prototype demonstrating an end-to-end procurement intelligence workflow. Recommendations are evaluated against a curated reference dataset of 40 verified BIS standards and must be independently verified against official BIS publications before procurement or compliance decisions.
         </p>
         <p className="text-[11px] text-text-light">
           Smart India Hackathon (SIH) Prototype • Not an official service of the Bureau of Indian Standards (BIS).
