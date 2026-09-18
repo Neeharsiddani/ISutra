@@ -75,7 +75,7 @@ export default function HowItWorksPage() {
             'Side-by-side comparison workspace across 11 structured dimensions',
             'Targeted physical document verification checklists',
             'Direct verification links to official BIS portal records (bis.gov.in)',
-            'Latest edition year and revision status',
+            'Curated reference edition year, lifecycle, and revision status',
           ]}
         />
       </div>

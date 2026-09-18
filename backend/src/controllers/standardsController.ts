@@ -119,3 +119,24 @@ export async function getCertifications(
     next(error);
   }
 }
+
+export async function getLifecycle(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const { getStandardLifecycle } = await import('../services/standardLifecycleService');
+    const result = getStandardLifecycle(req.params.id);
+    res.json({
+      lifecycle: result.lifecycle,
+      amendments: result.amendments,
+      coverage: result.coverage,
+      notice: result.notice,
+      data: result,
+      demo: false,
+    });
+  } catch (error) {
+    next(error);
+  }
+}

@@ -10,7 +10,6 @@ import { useEffect, useState } from 'react';
 import { useParams, useSearchParams, useLocation, Link } from 'react-router-dom';
 import {
   ArrowLeft,
-  Calendar,
   ExternalLink,
   ShieldCheck,
   CheckCircle2,
@@ -21,15 +20,68 @@ import {
   Layers,
   Sparkles,
   ArrowRight,
-  Building2,
   Info,
   BookOpen,
   FileText,
+  History,
 } from 'lucide-react';
-import type { Standard, StandardRelationship, RelationshipCoverage } from '../types';
-import { getStandardById, getRelatedStandards } from '../services/api';
+import type { Standard, StandardRelationship, RelationshipCoverage, StandardLifecycleResponse } from '../types';
+import { getStandardById, getRelatedStandards, getStandardLifecycle } from '../services/api';
 import LoadingState from '../components/ui/LoadingState';
 import ErrorState from '../components/ui/ErrorState';
+
+function formatPartialDate(dateStr?: string): string {
+  if (!dateStr || !dateStr.trim()) return 'Not available in current reference dataset.';
+  const s = dateStr.trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+    const [y, m, d] = s.split('-');
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const monthIdx = parseInt(m, 10) - 1;
+    const day = parseInt(d, 10);
+    if (monthIdx >= 0 && monthIdx < 12) {
+      return `${day} ${months[monthIdx]} ${y}`;
+    }
+    return s;
+  }
+  if (/^\d{4}-\d{2}$/.test(s)) {
+    const [y, m] = s.split('-');
+    const fullMonths = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    const monthIdx = parseInt(m, 10) - 1;
+    if (monthIdx >= 0 && monthIdx < 12) {
+      return `${fullMonths[monthIdx]} ${y}`;
+    }
+    return s;
+  }
+  if (/^\d{4}$/.test(s)) {
+    return s;
+  }
+  return s;
+}
+
+function formatLifecycleStatus(status?: string): string {
+  if (!status) return 'Not available in current reference dataset.';
+  switch (status.toLowerCase()) {
+    case 'current':
+      return 'Current — based on curated lifecycle evidence';
+    case 'reaffirmed':
+      return 'Reaffirmed';
+    case 'amended':
+      return 'Amended';
+    case 'superseded':
+      return 'Superseded';
+    case 'withdrawn':
+      return 'Withdrawn';
+    case 'not_verified':
+      return 'Not verified';
+    case 'under_revision':
+      return 'Under revision';
+    default:
+      return status;
+  }
+}
 
 export default function StandardDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -41,6 +93,7 @@ export default function StandardDetailsPage() {
   const [relationships, setRelationships] = useState<StandardRelationship[]>([]);
   const [coverage, setCoverage] = useState<RelationshipCoverage | null>(null);
   const [procurementGuidance, setProcurementGuidance] = useState<string | null>(null);
+  const [lifecycleRes, setLifecycleRes] = useState<StandardLifecycleResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -51,7 +104,7 @@ export default function StandardDetailsPage() {
       setLoading(true);
       setError(null);
       try {
-        const [stdRes, relRes] = await Promise.all([
+        const [stdRes, relRes, lcRes] = await Promise.all([
           getStandardById(id!),
           getRelatedStandards(id!).catch(() => ({
             data: [],
@@ -59,11 +112,23 @@ export default function StandardDetailsPage() {
             procurement_guidance: undefined,
             demo: false,
           })),
+          getStandardLifecycle(id!).catch(() => ({
+            lifecycle: null,
+            amendments: [],
+            coverage: {
+              lifecycle_verified: false,
+              amendments_verified: false,
+              amendment_count: 0,
+            },
+            notice:
+              'Lifecycle evidence not currently available in the curated ISutra reference dataset.',
+          })),
         ]);
         setStandard(stdRes.data);
         setRelationships(relRes.data || []);
         if (relRes.coverage) setCoverage(relRes.coverage);
         if (relRes.procurement_guidance) setProcurementGuidance(relRes.procurement_guidance);
+        setLifecycleRes(lcRes);
       } catch (err) {
         setError(
           err instanceof Error ? err.message : 'Failed to load standard details.'
@@ -343,101 +408,325 @@ export default function StandardDetailsPage() {
 
         {/* ==========================================================
             RIGHT COLUMN (~30% width on desktop)
-            Standard Metadata Card with left labels, right values,
-            and Official Reference Source link
+            BIS Lifecycle & Amendment Intelligence Card
            ========================================================== */}
         <div className="w-full lg:w-[30%] space-y-6">
-          <div className="bg-white rounded-2xl border border-[#243B53]/10 p-5 sm:p-6 shadow-xs space-y-5">
-            <h3 className="text-[12px] font-bold text-[#627D98] uppercase tracking-wider font-display">
-              Standard Metadata
-            </h3>
+          <div
+            id="lifecycle"
+            className="bg-white rounded-2xl border border-[#243B53]/10 p-5 sm:p-6 shadow-xs space-y-5 scroll-mt-6"
+          >
+            {/* Header with Title & Badge */}
+            <div className="flex items-center justify-between gap-2 border-b border-[#243B53]/10 pb-3">
+              <h3 className="text-[12px] font-bold text-[#627D98] uppercase tracking-wider font-display flex items-center gap-1.5">
+                <History className="w-3.5 h-3.5 text-[#0F766E]" />
+                BIS Lifecycle & Amendment Intelligence
+              </h3>
+              <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-300 px-2 py-0.5 rounded-md">
+                <ShieldCheck className="w-3 h-3 text-emerald-600" />
+                Verified BIS evidence
+              </span>
+            </div>
 
-            {/* Key-Value Table Rows */}
-            <div className="divide-y divide-[#243B53]/10 text-[14px] sm:text-[15px]">
-              {/* Edition / Reference Year */}
-              <div className="flex items-center justify-between gap-3 py-3">
-                <span className="text-[#627D98]">Edition / Reference Year</span>
-                <span className="font-semibold text-[#102A43] text-right">
-                  {standard.edition_year || standard.edition || '—'}
+            <p className="text-[11px] text-[#627D98]">
+              ISutra curated evidence from official BIS sources.
+            </p>
+
+            {/* LIFECYCLE DETAILS */}
+            {lifecycleRes?.lifecycle ? (
+              <div className="divide-y divide-[#243B53]/10 text-[13px] sm:text-[14px]">
+                {/* CURATED REFERENCE EDITION */}
+                <div className="py-2.5">
+                  <span className="text-[11px] font-bold text-[#627D98] uppercase tracking-wider block font-display">
+                    Curated Reference Edition
+                  </span>
+                  <span className="font-semibold text-[#102A43]">
+                    {lifecycleRes.lifecycle.edition_number
+                      ? `${lifecycleRes.lifecycle.edition_number} — ${lifecycleRes.lifecycle.edition_year}`
+                      : `${lifecycleRes.lifecycle.edition_year}`}
+                  </span>
+                </div>
+
+                {/* LIFECYCLE STATUS */}
+                <div className="py-2.5">
+                  <span className="text-[11px] font-bold text-[#627D98] uppercase tracking-wider block font-display">
+                    Lifecycle Status
+                  </span>
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 mt-1 rounded-md text-xs font-semibold bg-emerald-50 text-[#16803C] border border-emerald-200">
+                    <CheckCircle2 className="w-3 h-3 text-[#16803C]" />
+                    {formatLifecycleStatus(lifecycleRes.lifecycle.lifecycle_status)}
+                  </span>
+                </div>
+
+                {/* REAFFIRMATION */}
+                {lifecycleRes.lifecycle.reaffirmation_year && (
+                  <div className="py-2.5 space-y-1">
+                    <span className="text-[11px] font-bold text-[#627D98] uppercase tracking-wider block font-display">
+                      Reaffirmation
+                    </span>
+                    <span className="font-semibold text-[#102A43]">
+                      {lifecycleRes.lifecycle.reaffirmation_year}
+                    </span>
+                    <p className="text-[11px] text-[#627D98] leading-tight">
+                      Reaffirmation indicates that the standard was formally reviewed and reaffirmed; it is distinct from an amendment or full revision.
+                    </p>
+                  </div>
+                )}
+
+                {/* SUPERSESSION (Supersedes) */}
+                {lifecycleRes.lifecycle.supersedes_standard_number && (
+                  <div className="py-2.5">
+                    <span className="text-[11px] font-bold text-[#627D98] uppercase tracking-wider block font-display">
+                      Supersession
+                    </span>
+                    <span className="font-semibold text-[#102A43]">
+                      Supersedes: {lifecycleRes.lifecycle.supersedes_standard_number}
+                    </span>
+                  </div>
+                )}
+
+                {/* SUPERSESSION (Superseded by) */}
+                {lifecycleRes.lifecycle.superseded_by_standard_number && (
+                  <div className="py-2.5">
+                    <span className="text-[11px] font-bold text-[#627D98] uppercase tracking-wider block font-display text-rose-700">
+                      Supersession
+                    </span>
+                    <span className="font-semibold text-rose-700">
+                      Superseded by: {lifecycleRes.lifecycle.superseded_by_standard_number}
+                    </span>
+                  </div>
+                )}
+
+                {/* TRANSITION */}
+                {lifecycleRes.lifecycle.transition_end_date && (
+                  <div className="py-2.5 space-y-1">
+                    <span className="text-[11px] font-bold text-[#627D98] uppercase tracking-wider block font-display">
+                      Transition / Concurrent Running Ends
+                    </span>
+                    <span className="font-semibold text-[#B45309]">
+                      {formatPartialDate(lifecycleRes.lifecycle.transition_end_date)}
+                    </span>
+                    <p className="text-[11px] text-[#627D98] leading-tight">
+                      See official BIS implementation evidence for applicability.
+                    </p>
+                  </div>
+                )}
+
+                {/* GAZETTE NOTIFICATION REF */}
+                {lifecycleRes.lifecycle.gazette_notification_ref && (
+                  <div className="py-2.5">
+                    <span className="text-[11px] font-bold text-[#627D98] uppercase tracking-wider block font-display">
+                      Gazette Reference
+                    </span>
+                    <span className="text-[#334E68] text-xs font-mono">
+                      {lifecycleRes.lifecycle.gazette_notification_ref}
+                    </span>
+                  </div>
+                )}
+
+                {/* VERIFIED EVIDENCE */}
+                <div className="py-2.5 space-y-1.5">
+                  <span className="text-[11px] font-bold text-[#627D98] uppercase tracking-wider block font-display">
+                    Verified Evidence
+                  </span>
+                  <div className="text-[12px] text-[#334E68] leading-relaxed">
+                    {lifecycleRes.lifecycle.evidence_description}
+                  </div>
+                  <div className="text-[11px] text-[#627D98] pt-0.5">
+                    Last verified: {formatPartialDate(lifecycleRes.lifecycle.last_verified_at)}
+                  </div>
+                  {lifecycleRes.lifecycle.verified_source_url && (
+                    <div className="pt-1">
+                      <a
+                        href={lifecycleRes.lifecycle.verified_source_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#0F766E] hover:text-[#0D655E] hover:underline transition-colors"
+                      >
+                        <ShieldCheck className="w-3.5 h-3.5" />
+                        <span>Open Official BIS Evidence</span>
+                        <ExternalLink className="w-3 h-3 opacity-80" />
+                      </a>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              /* SECTION 6: LIFECYCLE EMPTY STATE */
+              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs space-y-2">
+                <p className="font-medium text-[#243B53]">
+                  Lifecycle evidence not currently available in the curated ISutra reference dataset.
+                </p>
+                <p className="text-[#627D98] leading-relaxed">
+                  Verify edition, revision, reaffirmation, withdrawal, and supersession status from the official BIS source.
+                </p>
+                {standard.source_url && (
+                  <a
+                    href={standard.source_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-[#0F766E] font-semibold hover:underline pt-1"
+                  >
+                    <span>Open Official BIS Source</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                )}
+              </div>
+            )}
+
+            {/* AMENDMENT HISTORY */}
+            <div className="pt-4 border-t border-[#243B53]/10 space-y-3">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[11px] font-bold text-[#627D98] uppercase tracking-wider block font-display">
+                  Amendment History
                 </span>
+                {lifecycleRes && lifecycleRes.amendments.length > 0 && (
+                  <span className="text-xs font-semibold text-[#0F766E] px-2 py-0.5 bg-teal-50 border border-teal-200 rounded-md">
+                    {lifecycleRes.amendments.length} verified amendment{lifecycleRes.amendments.length === 1 ? '' : 's'}
+                  </span>
+                )}
               </div>
 
-              {/* Status */}
-              <div className="flex items-center justify-between gap-3 py-3">
-                <span className="text-[#627D98]">Status</span>
-                <span className="font-semibold text-[#102A43] text-right">
-                  {standard.status}
-                </span>
-              </div>
+              {lifecycleRes && lifecycleRes.amendments.length > 0 ? (
+                <div className="space-y-3 pt-1">
+                  {lifecycleRes.amendments.map((amd) => (
+                    <div
+                      key={amd.id || amd.amendment_number}
+                      className="p-3 rounded-xl border border-emerald-200/80 bg-emerald-50/20 space-y-2 text-xs"
+                    >
+                      <div className="flex items-center justify-between gap-2 font-bold text-[#102A43] font-display">
+                        <span className="text-[#0F766E]">
+                          {amd.amendment_label || `Amendment No. ${amd.amendment_number}`}
+                        </span>
+                        <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100/70 border border-emerald-300 px-1.5 py-0.5 rounded">
+                          Verified
+                        </span>
+                      </div>
 
-              {/* Amendment Status */}
-              <div className="flex items-center justify-between gap-3 py-3">
-                <span className="text-[#627D98]">Amendment Status</span>
-                <span className="text-xs text-[#627D98] text-right italic">
-                  Not verified in current dataset
-                </span>
-              </div>
+                      {/* Dates */}
+                      <div className="space-y-0.5 text-[11px] text-[#486581]">
+                        {amd.establishment_date && (
+                          <div>
+                            <span className="text-[#627D98] font-medium">Established: </span>
+                            <span>{formatPartialDate(amd.establishment_date)}</span>
+                          </div>
+                        )}
+                        {amd.publication_date && (
+                          <div>
+                            <span className="text-[#627D98] font-medium">Published: </span>
+                            <span>{formatPartialDate(amd.publication_date)}</span>
+                          </div>
+                        )}
+                        {amd.effective_date && (
+                          <div>
+                            <span className="text-[#627D98] font-medium">Effective: </span>
+                            <span>{formatPartialDate(amd.effective_date)}</span>
+                          </div>
+                        )}
+                        {!amd.establishment_date && !amd.publication_date && !amd.effective_date && (
+                          <div className="italic text-[#9FB3C8]">
+                            Dates not available in current reference dataset.
+                          </div>
+                        )}
+                      </div>
 
-              {/* Mandatory Certification Applicability */}
-              <div className="flex items-center justify-between gap-3 py-3">
+                      {/* Affected Clauses */}
+                      {amd.affected_clauses && amd.affected_clauses.length > 0 && (
+                        <div className="space-y-1">
+                          <span className="text-[10px] font-bold text-[#627D98] uppercase tracking-wider block">
+                            Affected Clauses:
+                          </span>
+                          <div className="flex flex-wrap gap-1">
+                            {amd.affected_clauses.map((clause, cIdx) => (
+                              <span
+                                key={cIdx}
+                                className="px-1.5 py-0.5 bg-white border border-[#243B53]/15 rounded text-[10px] font-mono text-[#102A43]"
+                              >
+                                {clause}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Summary */}
+                      {amd.summary && (
+                        <div className="space-y-0.5">
+                          <span className="text-[10px] font-bold text-[#627D98] uppercase tracking-wider block">
+                            Summary:
+                          </span>
+                          <p className="text-[#334E68] text-[11px] leading-relaxed">
+                            {amd.summary}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Gazette Ref if available */}
+                      {amd.gazette_notification_ref && (
+                        <div className="text-[10px] text-[#627D98] font-mono">
+                          Gazette: {amd.gazette_notification_ref}
+                        </div>
+                      )}
+
+                      {/* Official Evidence Link */}
+                      <div className="pt-1 border-t border-emerald-200/60">
+                        <a
+                          href={amd.verified_source_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#0F766E] hover:underline"
+                        >
+                          <span>Official Evidence</span>
+                          <ExternalLink className="w-2.5 h-2.5 opacity-80" />
+                        </a>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                /* SECTION 5: IMPORTANT EMPTY STATE */
+                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs space-y-2">
+                  <p className="font-medium text-[#243B53]">
+                    No verified amendment record in the current ISutra reference dataset.
+                  </p>
+                  <p className="text-[#627D98] leading-relaxed">
+                    This does not establish that no amendment exists. Verify the official BIS source before procurement use.
+                  </p>
+                  {standard.source_url && (
+                    <a
+                      href={standard.source_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-[#0F766E] font-semibold hover:underline pt-1"
+                    >
+                      <span>Open Official BIS Source</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Additional Metadata: Certification Applicability & Source Organization */}
+            <div className="pt-4 border-t border-[#243B53]/10 space-y-2 text-[12px]">
+              <div className="flex items-center justify-between gap-3">
                 <span className="text-[#627D98]">Certification Applicability</span>
                 <span className="text-xs text-[#627D98] text-right italic">
                   Check applicable Ministry QCOs
                 </span>
               </div>
-
-              {/* Source Organization */}
-              <div className="flex items-center justify-between gap-3 py-3">
+              <div className="flex items-center justify-between gap-3">
                 <span className="text-[#627D98]">Source Organization</span>
                 <span className="font-semibold text-[#102A43] text-right">
                   {standard.source_organization || 'Bureau of Indian Standards'}
                 </span>
               </div>
-
-              {/* Last Verified */}
-              <div className="flex items-center justify-between gap-3 py-3">
-                <span className="text-[#627D98]">Last Verified</span>
-                <span className="font-semibold text-[#0F766E] text-right flex items-center gap-1.5">
-                  <Calendar className="w-3.5 h-3.5" />
-                  {standard.last_verified ? (
-                    standard.last_verified
-                  ) : (
-                    <span className="text-[#9FB3C8] font-normal italic text-[13px]">
-                      Not available in current dataset
-                    </span>
-                  )}
-                </span>
-              </div>
             </div>
 
-            {/* Official Reference Source Section */}
-            <div className="pt-4 border-t border-[#243B53]/10 space-y-2">
-              <span className="text-[11px] font-bold text-[#627D98] uppercase tracking-wider block font-display">
-                Official Reference Source
-              </span>
-
-              <div className="flex items-center gap-2 text-[14px] font-semibold text-[#102A43]">
-                <Building2 className="w-4 h-4 text-[#0F766E]" />
-                <span>Bureau of Indian Standards</span>
-              </div>
-
-              {standard.source_url ? (
-                <div className="pt-1">
-                  <a
-                    href={standard.source_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 text-[14px] font-semibold text-[#0F766E] hover:text-[#0D655E] hover:underline transition-colors"
-                  >
-                    <span>View official BIS reference</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </a>
-                </div>
-              ) : (
-                <span className="text-[13px] text-[#9FB3C8] italic block">
-                  Reference link unavailable
-                </span>
-              )}
+            {/* SECTION 15: DISCLAIMER */}
+            <div className="pt-3 border-t border-[#243B53]/10">
+              <p className="text-[11px] text-[#9FB3C8] leading-relaxed italic">
+                ISutra is a research prototype. Lifecycle and amendment information reflects the curated evidence currently available in the ISutra reference dataset. Verify the official BIS publication before procurement or compliance decisions.
+              </p>
             </div>
           </div>
         </div>

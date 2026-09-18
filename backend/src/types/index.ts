@@ -148,3 +148,14 @@ export interface StandardsSearchParams {
   page?: number;
   limit?: number;
 }
+
+export interface StandardLifecycleResponse {
+  lifecycle: import('../database/verifiedStandardLifecycles').VerifiedStandardLifecycle | null;
+  amendments: import('../database/verifiedStandardAmendments').VerifiedStandardAmendment[];
+  coverage: {
+    lifecycle_verified: boolean;
+    amendments_verified: boolean;
+    amendment_count: number;
+  };
+  notice: string;
+}

@@ -9,6 +9,7 @@ import { StandardsMatcher, StandardRecommendation, FactorDetail } from './standa
 import { analyzeRequirementGaps, RequirementGapAnalysis } from './requirementGapAnalyzer';
 import { VERIFIED_BIS_STANDARDS } from '../database/verifiedStandards';
 import { getResolvedRelationships } from './standardsRelationshipService';
+import { getStandardLifecycle } from './standardLifecycleService';
 
 export interface ReportAssociatedReference {
   standardNumber: string;
@@ -16,6 +17,35 @@ export interface ReportAssociatedReference {
   isVerified: boolean;
   evidence?: string;
   source: string;
+}
+
+export interface ReportAmendmentItem {
+  amendmentNumber: number;
+  amendmentLabel: string;
+  establishmentDate?: string;
+  publicationDate?: string;
+  effectiveDate?: string;
+  affectedClauses: string[];
+  summary: string;
+  gazetteRef?: string;
+  verifiedSourceUrl: string;
+}
+
+export interface ReportLifecycleEvidence {
+  hasEvidence: boolean;
+  edition?: string;
+  editionNumber?: string;
+  editionYear?: number;
+  lifecycleStatus?: string;
+  reaffirmationYear?: number;
+  supersedesStandard?: string;
+  supersededByStandard?: string;
+  transitionEndDate?: string;
+  gazetteRef?: string;
+  verifiedSourceUrl?: string;
+  lastVerifiedAt?: string;
+  amendments: ReportAmendmentItem[];
+  amendmentNotice: string;
 }
 
 export interface ReportStandardItem {
@@ -29,6 +59,7 @@ export interface ReportStandardItem {
   hasContradiction: boolean;
   contradictionDetails?: string[];
   associatedReferences?: ReportAssociatedReference[];
+  lifecycleEvidence?: ReportLifecycleEvidence;
 }
 
 export interface ReportCoverageItem {
@@ -123,6 +154,59 @@ export async function generateProcurementReportData(
       source: rel.source_provenance || 'Current verified reference dataset',
     }));
 
+    const lifecycleRes = getStandardLifecycle(rec.standard.id);
+    const hasLifecycle = !!lifecycleRes.lifecycle;
+    const hasAmendments = lifecycleRes.amendments.length > 0;
+    const hasEvidence = hasLifecycle || hasAmendments;
+
+    let lifecycleEvidence: ReportLifecycleEvidence | undefined = undefined;
+    if (hasEvidence) {
+      lifecycleEvidence = {
+        hasEvidence: true,
+        edition: lifecycleRes.lifecycle
+          ? `${lifecycleRes.lifecycle.edition_number} — ${lifecycleRes.lifecycle.edition_year}`
+          : undefined,
+        editionNumber: lifecycleRes.lifecycle?.edition_number,
+        editionYear: lifecycleRes.lifecycle?.edition_year,
+        lifecycleStatus: lifecycleRes.lifecycle
+          ? (lifecycleRes.lifecycle.lifecycle_status === 'current'
+              ? 'Current — based on curated lifecycle evidence'
+              : lifecycleRes.lifecycle.lifecycle_status === 'reaffirmed'
+              ? 'Reaffirmed'
+              : lifecycleRes.lifecycle.lifecycle_status === 'amended'
+              ? 'Amended'
+              : lifecycleRes.lifecycle.lifecycle_status === 'superseded'
+              ? 'Superseded'
+              : lifecycleRes.lifecycle.lifecycle_status === 'withdrawn'
+              ? 'Withdrawn'
+              : lifecycleRes.lifecycle.lifecycle_status === 'under_revision'
+              ? 'Under revision'
+              : lifecycleRes.lifecycle.lifecycle_status)
+          : undefined,
+        reaffirmationYear: lifecycleRes.lifecycle?.reaffirmation_year,
+        supersedesStandard: lifecycleRes.lifecycle?.supersedes_standard_number,
+        supersededByStandard: lifecycleRes.lifecycle?.superseded_by_standard_number,
+        transitionEndDate: lifecycleRes.lifecycle?.transition_end_date,
+        gazetteRef: lifecycleRes.lifecycle?.gazette_notification_ref,
+        verifiedSourceUrl: lifecycleRes.lifecycle?.verified_source_url,
+        lastVerifiedAt: lifecycleRes.lifecycle?.last_verified_at,
+        amendments: lifecycleRes.amendments.map((a) => ({
+          amendmentNumber: a.amendment_number,
+          amendmentLabel: a.amendment_label,
+          establishmentDate: a.establishment_date,
+          publicationDate: a.publication_date,
+          effectiveDate: a.effective_date,
+          affectedClauses: a.affected_clauses,
+          summary: a.summary,
+          gazetteRef: a.gazette_notification_ref,
+          verifiedSourceUrl: a.verified_source_url,
+        })),
+        amendmentNotice: hasAmendments
+          ? `${lifecycleRes.amendments.length} verified amendment${lifecycleRes.amendments.length === 1 ? '' : 's'}`
+          : 'No verified amendment record in the current ISutra reference dataset.',
+      };
+    }
+
     return {
       standardNumber: rec.standard.standard_number || rec.standard.id,
       title: rec.standard.title,
@@ -134,6 +218,7 @@ export async function generateProcurementReportData(
       hasContradiction,
       contradictionDetails: contradictionDetails.length > 0 ? contradictionDetails : undefined,
       associatedReferences: associatedReferences.length > 0 ? associatedReferences : undefined,
+      lifecycleEvidence,
     };
   });
 
@@ -213,6 +298,162 @@ export async function generateProcurementReportData(
   };
 }
 
+export function formatReportDate(dateStr?: string): string {
+  if (!dateStr || !dateStr.trim()) return 'Not available in current reference dataset.';
+  const s = dateStr.trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+    const [y, m, d] = s.split('-');
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const monthIdx = parseInt(m, 10) - 1;
+    const day = parseInt(d, 10);
+    if (monthIdx >= 0 && monthIdx < 12) return `${day} ${months[monthIdx]} ${y}`;
+    return s;
+  }
+  if (/^\d{4}-\d{2}$/.test(s)) {
+    const [y, m] = s.split('-');
+    const fullMonths = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    const monthIdx = parseInt(m, 10) - 1;
+    if (monthIdx >= 0 && monthIdx < 12) return `${fullMonths[monthIdx]} ${y}`;
+    return s;
+  }
+  return s;
+}
+
+function renderLifecycleSectionHtml(
+  standardsWithLifecycle: ReportStandardItem[],
+  sectionHeader: string
+): string {
+  if (standardsWithLifecycle.length === 0) return '';
+
+  const cardsHtml = standardsWithLifecycle
+    .map((s) => {
+      const lc = s.lifecycleEvidence!;
+      const amendmentsTable =
+        lc.amendments.length > 0
+          ? `<table style="width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 6px;">
+            <thead>
+              <tr style="background: #f1f5f9;">
+                <th style="padding: 6px 8px; border: 1px solid #e2e8f0;">Amendment</th>
+                <th style="padding: 6px 8px; border: 1px solid #e2e8f0;">Dates</th>
+                <th style="padding: 6px 8px; border: 1px solid #e2e8f0;">Affected Clauses</th>
+                <th style="padding: 6px 8px; border: 1px solid #e2e8f0;">Summary</th>
+                <th style="padding: 6px 8px; border: 1px solid #e2e8f0;">Official Evidence</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${lc.amendments
+                .map((amd) => {
+                  const pub = amd.publicationDate ? `Published: ${formatReportDate(amd.publicationDate)}<br/>` : '';
+                  const est = amd.establishmentDate ? `Established: ${formatReportDate(amd.establishmentDate)}<br/>` : '';
+                  const eff = amd.effectiveDate ? `Effective: ${formatReportDate(amd.effectiveDate)}` : '';
+                  const datesHtml = pub || est || eff ? `${pub}${est}${eff}` : '<span style="color: #94a3b8; font-style: italic;">Not available in current reference dataset.</span>';
+                  const gazetteHtml = amd.gazetteRef ? `<br/><span style="color: #627d98; font-size: 10px;">Gazette: ${amd.gazetteRef}</span>` : '';
+                  return `<tr>
+                    <td style="font-weight: 700; color: #0f766e; white-space: nowrap; padding: 6px 8px; border: 1px solid #e2e8f0;">${amd.amendmentLabel}</td>
+                    <td style="font-size: 11px; color: #334e68; white-space: nowrap; padding: 6px 8px; border: 1px solid #e2e8f0;">${datesHtml}</td>
+                    <td style="padding: 6px 8px; border: 1px solid #e2e8f0; font-family: monospace; font-size: 11px;">${amd.affectedClauses.join(', ')}</td>
+                    <td style="padding: 6px 8px; border: 1px solid #e2e8f0; font-size: 11px; color: #334e68;">${amd.summary}${gazetteHtml}</td>
+                    <td style="padding: 6px 8px; border: 1px solid #e2e8f0; font-size: 11px; white-space: nowrap;">
+                      <a href="${amd.verifiedSourceUrl}" target="_blank" rel="noopener noreferrer" style="color: #0f766e; text-decoration: underline;">Official Evidence</a>
+                    </td>
+                  </tr>`;
+                })
+                .join('')}
+            </tbody>
+          </table>`
+          : `<div style="font-size: 11px; color: #627d98; font-style: italic; padding: 8px 12px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px;">
+            No verified amendment record in the current ISutra reference dataset. This does not establish that no amendment exists. Verify the official BIS source before procurement use.
+          </div>`;
+
+      const reaffirmationBlock = lc.reaffirmationYear
+        ? `<div>
+            <strong style="color: #627d98; font-size: 11px; text-transform: uppercase; display: block;">Reaffirmation</strong>
+            <span style="font-weight: 600; color: #102a43;">${lc.reaffirmationYear}</span>
+            <span style="display: block; font-size: 10px; color: #627d98; font-style: italic;">Reaffirmation indicates that the standard was formally reviewed and reaffirmed; it is distinct from an amendment or full revision.</span>
+          </div>`
+        : '';
+
+      const supersedesBlock = lc.supersedesStandard
+        ? `<div>
+            <strong style="color: #627d98; font-size: 11px; text-transform: uppercase; display: block;">Supersession</strong>
+            <span style="font-weight: 600; color: #102a43;">Supersedes: ${lc.supersedesStandard}</span>
+          </div>`
+        : '';
+
+      const supersededByBlock = lc.supersededByStandard
+        ? `<div>
+            <strong style="color: #627d98; font-size: 11px; text-transform: uppercase; display: block;">Supersession</strong>
+            <span style="font-weight: 600; color: #c5221f;">Superseded by: ${lc.supersededByStandard}</span>
+          </div>`
+        : '';
+
+      const transitionBlock = lc.transitionEndDate
+        ? `<div>
+            <strong style="color: #627d98; font-size: 11px; text-transform: uppercase; display: block;">Transition / Concurrent Running Ends</strong>
+            <span style="font-weight: 600; color: #b45309;">${formatReportDate(lc.transitionEndDate)}</span>
+            <span style="display: block; font-size: 10px; color: #627d98; font-style: italic;">See official BIS implementation evidence for applicability.</span>
+          </div>`
+        : '';
+
+      const sourceLinkBlock = lc.verifiedSourceUrl
+        ? `<div>
+            <strong style="color: #627d98; font-size: 11px; text-transform: uppercase; display: block;">Official BIS Evidence</strong>
+            <a href="${lc.verifiedSourceUrl}" target="_blank" rel="noopener noreferrer" style="color: #0f766e; text-decoration: underline; font-weight: 600; font-size: 11px;">Open Official BIS Evidence</a>
+          </div>`
+        : '';
+
+      const amdHeaderCount = lc.amendments.length > 0
+        ? `(${lc.amendments.length} verified amendment${lc.amendments.length === 1 ? '' : 's'})`
+        : '(No verified amendments in reference dataset)';
+
+      return `<div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-bottom: 16px;">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px; border-bottom: 1px solid #cbd5e1; padding-bottom: 8px; margin-bottom: 12px;">
+          <div>
+            <span style="font-size: 16px; font-weight: 700; color: #0f766e;">${s.standardNumber}</span>
+            <span style="font-size: 13px; font-weight: 600; color: #102a43; margin-left: 8px;">${s.title}</span>
+          </div>
+          <span style="font-size: 11px; font-weight: 600; background: #e6f4ea; color: #137333; border: 1px solid #ceead6; padding: 2px 8px; border-radius: 4px;">
+            Verified BIS evidence
+          </span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; font-size: 12px; margin-bottom: 12px;">
+          <div>
+            <strong style="color: #627d98; font-size: 11px; text-transform: uppercase; display: block;">Curated Reference Edition</strong>
+            <span style="font-weight: 600; color: #102a43;">${lc.edition || 'Not available in current reference dataset.'}</span>
+          </div>
+          <div>
+            <strong style="color: #627d98; font-size: 11px; text-transform: uppercase; display: block;">Lifecycle Status</strong>
+            <span style="font-weight: 600; color: #102a43;">${lc.lifecycleStatus || 'Not available in current reference dataset.'}</span>
+          </div>
+          ${reaffirmationBlock}
+          ${supersedesBlock}
+          ${supersededByBlock}
+          ${transitionBlock}
+          ${sourceLinkBlock}
+        </div>
+
+        <div style="margin-top: 10px; border-top: 1px dashed #cbd5e1; padding-top: 10px;">
+          <div style="font-size: 12px; font-weight: 700; color: #102a43; margin-bottom: 8px;">
+            Amendment History
+            <span style="font-weight: normal; color: #627d98; font-size: 11px; margin-left: 6px;">${amdHeaderCount}</span>
+          </div>
+          ${amendmentsTable}
+        </div>
+      </div>`;
+    })
+    .join('');
+
+  return `<div class="section-title">${sectionHeader}</div>
+    <div style="font-size: 12px; color: #627d98; margin-bottom: 12px;">
+      Curated lifecycle, reaffirmation, supersession, and amendment intelligence from official Bureau of Indian Standards (BIS) records and Gazettes. ISutra is a research prototype; verify official BIS sources before procurement commitments.
+    </div>
+    ${cardsHtml}`;
+}
+
 /**
  * Generate clean, self-contained printable HTML report with print stylesheets
  */
@@ -279,10 +520,29 @@ export function generatePrintableHtmlReport(report: ProcurementReportData): stri
     }
   }
 
+  const standardsWithLifecycle = report.applicableStandards.filter(
+    (s) => s.lifecycleEvidence && s.lifecycleEvidence.hasEvidence
+  );
+
+  let currentSectionIdx = 2;
+  const associatedSectionHeader = allAssociated.length > 0
+    ? `${++currentSectionIdx}. Associated References & Allied Standards Trail`
+    : '';
+  const lifecycleSectionHeader = standardsWithLifecycle.length > 0
+    ? `${++currentSectionIdx}. BIS Lifecycle & Amendment Evidence`
+    : '';
+  const coverageSectionHeader = `${++currentSectionIdx}. Requirement Coverage Matrix`;
+  const gapsSectionHeader = `${++currentSectionIdx}. Missing Information & Identified Gaps`;
+
+  const lifecycleSectionHtml = renderLifecycleSectionHtml(
+    standardsWithLifecycle,
+    lifecycleSectionHeader
+  );
+
   const associatedSectionHtml =
     allAssociated.length > 0
       ? `
-    <div class="section-title">3. Associated References & Allied Standards Trail</div>
+    <div class="section-title">${associatedSectionHeader}</div>
     <div style="font-size: 12px; color: #627d98; margin-bottom: 10px;">
       Relationship classifications are evidence-backed where verified citations exist in official publications. Unclassified references indicate cross-citations recorded in standard scopes/specifications.
     </div>
@@ -564,7 +824,9 @@ export function generatePrintableHtmlReport(report: ProcurementReportData): stri
 
     ${associatedSectionHtml}
 
-    <div class="section-title">${associatedSectionHtml ? '4' : '3'}. Requirement Coverage Matrix</div>
+    ${lifecycleSectionHtml}
+
+    <div class="section-title">${coverageSectionHeader}</div>
     <table>
       <thead>
         <tr>
@@ -579,7 +841,7 @@ export function generatePrintableHtmlReport(report: ProcurementReportData): stri
       </tbody>
     </table>
 
-    <div class="section-title">${associatedSectionHtml ? '5' : '4'}. Missing Information & Identified Gaps</div>
+    <div class="section-title">${gapsSectionHeader}</div>
     <ul style="font-size: 13px; color: #334e68; margin-top: 6px; padding-left: 20px;">
       ${gapsList}
     </ul>

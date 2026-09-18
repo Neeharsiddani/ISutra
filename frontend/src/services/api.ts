@@ -17,6 +17,7 @@ import type {
   RecommendationsResponse,
   GapAnalysisResponse,
   ComparisonResponse,
+  StandardLifecycleResponse,
 } from '../types';
 import {
   DEMO_STANDARDS,
@@ -218,6 +219,27 @@ export async function getRelatedStandards(
       procurement_guidance:
         'Demo standards relationship data. Not official BIS relationship information.',
       demo: isDemo,
+    };
+  }
+}
+
+export async function getStandardLifecycle(
+  id: string
+): Promise<StandardLifecycleResponse> {
+  try {
+    const res = await fetchApi<StandardLifecycleResponse>(`/standards/${id}/lifecycle`);
+    return (res as any).data && (res as any).coverage ? (res as any) : res.data;
+  } catch {
+    return {
+      lifecycle: null,
+      amendments: [],
+      coverage: {
+        lifecycle_verified: false,
+        amendments_verified: false,
+        amendment_count: 0,
+      },
+      notice:
+        'Lifecycle evidence not currently available in the curated ISutra reference dataset. Verify edition, revision, reaffirmation, withdrawal, and supersession status from the official BIS source.',
     };
   }
 }

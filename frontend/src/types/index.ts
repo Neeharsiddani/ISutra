@@ -561,3 +561,70 @@ export interface ComparisonResponse {
     statusCode: number;
   };
 }
+
+// ============================================================
+// Phase 9B: BIS Lifecycle & Amendment Intelligence Models
+// ============================================================
+
+export type LifecycleStatus =
+  | 'current'
+  | 'reaffirmed'
+  | 'amended'
+  | 'under_revision'
+  | 'superseded'
+  | 'withdrawn'
+  | 'not_verified';
+
+export interface VerifiedStandardLifecycle {
+  id: string;
+  standard_id: string;
+  standard_number: string;
+  edition_number: string;
+  edition_year: number;
+  lifecycle_status: LifecycleStatus;
+  reaffirmation_year?: number;
+  supersedes_standard_number?: string;
+  superseded_by_standard_number?: string;
+  transition_end_date?: string;
+  gazette_notification_ref?: string;
+  evidence_description: string;
+  verified_source_url: string;
+  last_verified_at: string;
+}
+
+export interface VerifiedStandardAmendment {
+  id: string;
+  standard_id: string;
+  standard_number: string;
+  amendment_number: number;
+  amendment_label: string;
+  publication_date?: string;
+  establishment_date?: string;
+  effective_date?: string;
+  affected_clauses: string[];
+  summary: string;
+  gazette_notification_ref?: string;
+  verified_source_url: string;
+  verification_status: 'verified';
+}
+
+export interface StandardLifecycleCoverage {
+  lifecycle_verified: boolean;
+  amendments_verified: boolean;
+  amendment_count: number;
+}
+
+export interface StandardLifecycleResponse {
+  lifecycle: VerifiedStandardLifecycle | null;
+  amendments: VerifiedStandardAmendment[];
+  coverage: StandardLifecycleCoverage;
+  notice: string;
+  data?: {
+    lifecycle: VerifiedStandardLifecycle | null;
+    amendments: VerifiedStandardAmendment[];
+    coverage: StandardLifecycleCoverage;
+    notice: string;
+  };
+  demo?: boolean;
+}
+
