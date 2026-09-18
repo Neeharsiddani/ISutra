@@ -73,7 +73,21 @@ async function runPhase9BTests() {
       lc7098.lifecycle.supersedes_standard_number === 'IS 7098 (Part 1):1988',
       'IS 7098 (Part 1):2025 supersedes IS 7098 (Part 1):1988'
     );
+    testAssert(lc7098.lifecycle.edition_number === 'Third Revision', 'IS 7098 (Part 1):2025 edition_number is "Third Revision"');
     testAssert(lc7098.lifecycle.transition_end_date === '2025-12-09', 'Transition end date is 2025-12-09');
+    testAssert(lc7098.lifecycle.transition_end_date !== '2026-03-31', 'Transition end date must not be fabricated date "2026-03-31"');
+
+    const lc10322 = getStandardLifecycle('bis-is-10322-5-3-2026');
+    testAssert(lc10322.lifecycle !== null, 'IS 10322 (Part 5/Sec 3):2026 returns non-null lifecycle');
+    testAssert(lc10322.lifecycle.edition_number === 'Second Revision', 'IS 10322 (Part 5/Sec 3):2026 is strictly "Second Revision" per official evidence');
+    testAssert(lc10322.lifecycle.edition_number !== 'First Revision', 'IS 10322 (Part 5/Sec 3):2026 must NOT regress to "First Revision"');
+    testAssert(lc10322.lifecycle.supersedes_standard_number === 'IS 10322 (Part 5/Sec 3):2012', 'IS 10322 (Part 5/Sec 3):2026 supersedes 2012 edition');
+    testAssert(lc10322.lifecycle.lifecycle_status === 'current', 'IS 10322 (Part 5/Sec 3):2026 lifecycle_status is "current"');
+
+    const lc8519 = getStandardLifecycle('bis-is-8519-2024');
+    testAssert(lc8519.lifecycle !== null, 'IS 8519:2024 returns non-null lifecycle');
+    testAssert(lc8519.lifecycle.edition_number === 'First Revision', 'IS 8519:2024 is strictly "First Revision" per official evidence');
+    testAssert(lc8519.lifecycle.supersedes_standard_number === 'IS 8519:1977', 'IS 8519:2024 supersedes 1977 edition');
 
     const lc15748 = getStandardLifecycle('bis-is-15748-2022');
     testAssert(lc15748.lifecycle !== null, 'IS 15748:2022 returns non-null lifecycle');
