@@ -106,6 +106,12 @@ Official BIS Portal Records (bis.gov.in)
    - Seamless procurement navigation: Recommendation → Why This Standard? → Explore Associated Standards → Clause Evidence → Official BIS Verification.
    - Integration into the Printable Procurement Evaluation Report with parent-standard cross-reference traceability and regulatory disclaimers.
 
+10. **Phase 9A — Verified BIS Lifecycle & Amendment Data Foundation**:
+    - Evidence foundation for curated BIS lifecycle and amendment intelligence.
+    - Curated lifecycle dataset establishing edition baseline, reaffirmation years, supersession links, and transition cutoffs without assuming currency from edition year alone.
+    - Discrete, one-to-many clause-level amendment records with Gazette and official BIS portal provenance.
+    - Zero fabrication: Quarantines unverified standards and distinguishes base revisions from amendments and periodic committee reaffirmations.
+
 ---
 
 ## 🏛 Architecture: AI Perception vs. Deterministic Decision Logic
@@ -140,7 +146,7 @@ ISutra enforces a strict separation between natural-language understanding and p
 
 4. **Standards Relationships, Amendments & Mandatory Certification**:
    - **Relationships**: Evidence-backed relationship intelligence (normative references, test methods, installation guides) is provided strictly where authoritative clause citations have been verified. Unclassified associated references are recorded citations from standard scopes and must not be assumed to be normative without independent verification.
-   - **Amendments**: Live amendment tracking is not verified in the current reference dataset; users must verify the latest published amendments via official BIS gazette notifications.
+   - **Amendments & Lifecycle**: Evidence foundation for curated BIS lifecycle and amendment intelligence. Curated evidence records are maintained for audited standards. Live amendment synchronization with the Gazette of India is not implemented; users must verify the latest published amendments via official BIS gazette notifications.
    - **Mandatory Certification**: Statutory certification requirements (e.g. ISI mark under Quality Control Orders) are not determined automatically by the prototype; procurement officers must consult applicable Ministry QCOs and official BIS portals.
 
 ---
