@@ -17,6 +17,8 @@ export interface ReportAssociatedReference {
   isVerified: boolean;
   evidence?: string;
   source: string;
+  verifiedSourceUrl?: string;
+  parentStandard?: string;
 }
 
 export interface ReportAmendmentItem {
@@ -147,11 +149,19 @@ export async function generateProcurementReportData(
               ? 'Test Method'
               : rel.relationship_type === 'installation_standard'
               ? 'Installation Standard'
+              : rel.relationship_type === 'safety_standard'
+              ? 'Safety Standard'
+              : rel.relationship_type === 'terminology'
+              ? 'Terminology Standard'
+              : rel.relationship_type === 'related_product'
+              ? 'Related Product'
               : 'Allied Standard')
           : 'Associated reference — relationship type not classified',
       isVerified: rel.verification_status === 'verified',
       evidence: rel.evidence_clause,
       source: rel.source_provenance || 'Current verified reference dataset',
+      verifiedSourceUrl: rel.verified_source_url,
+      parentStandard: rec.standard.standard_number,
     }));
 
     const lifecycleRes = getStandardLifecycle(rec.standard.id);
@@ -503,6 +513,7 @@ export function generatePrintableHtmlReport(report: ProcurementReportData): stri
     isVerified: boolean;
     evidence?: string;
     source: string;
+    verifiedSourceUrl?: string;
   }[] = [];
 
   for (const s of report.applicableStandards) {
@@ -515,6 +526,7 @@ export function generatePrintableHtmlReport(report: ProcurementReportData): stri
           isVerified: ref.isVerified,
           evidence: ref.evidence,
           source: ref.source,
+          verifiedSourceUrl: ref.verifiedSourceUrl,
         });
       }
     }
@@ -554,6 +566,7 @@ export function generatePrintableHtmlReport(report: ProcurementReportData): stri
           <th>Relationship Classification</th>
           <th>Verification Evidence / Notes</th>
           <th>Source Provenance</th>
+          <th>Action</th>
         </tr>
       </thead>
       <tbody>
@@ -574,6 +587,13 @@ export function generatePrintableHtmlReport(report: ProcurementReportData): stri
             </td>
             <td style="font-size: 12px; color: #486581;">${a.evidence || 'Recorded cross-reference in standard specification / scope.'}</td>
             <td style="font-size: 11px; color: #627d98;">${a.source}</td>
+            <td style="font-size: 11px; white-space: nowrap;">
+              ${
+                a.verifiedSourceUrl
+                  ? `<a href="${a.verifiedSourceUrl}" target="_blank" rel="noopener noreferrer" style="color: #0f766e; font-weight: 600; text-decoration: none;">Verify at BIS &rarr;</a>`
+                  : `<a href="https://www.bis.gov.in/know-your-standard/?lang=en" target="_blank" rel="noopener noreferrer" style="color: #627d98; text-decoration: none;">BIS Portal &rarr;</a>`
+              }
+            </td>
           </tr>
         `
           )

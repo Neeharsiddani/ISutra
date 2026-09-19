@@ -66,6 +66,8 @@ export interface Standard {
 export interface StandardRelationship {
   id: string;
   source_standard_id: string;
+  source_standard_number?: string;
+  source_standard?: Standard;
   target_standard_id: string;
   target_standard_number?: string;
   relationship_type: RelationshipType | 'unspecified' | null;

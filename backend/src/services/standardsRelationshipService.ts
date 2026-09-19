@@ -89,6 +89,8 @@ export function getResolvedRelationships(id: string): RelationshipResolutionResp
       resolvedList.push({
         id: matchedVerified.id,
         source_standard_id: standard.id,
+        source_standard_number: standard.standard_number,
+        source_standard: standard,
         target_standard_id: matchedVerified.target_standard_id,
         target_standard_number: matchedVerified.target_standard_number,
         relationship_type: matchedVerified.relationship_type,
@@ -110,6 +112,8 @@ export function getResolvedRelationships(id: string): RelationshipResolutionResp
       resolvedList.push({
         id: `rel-${index}`,
         source_standard_id: standard.id,
+        source_standard_number: standard.standard_number,
+        source_standard: standard,
         target_standard_id: relName,
         target_standard_number: relName,
         relationship_type: 'unspecified',
@@ -118,6 +122,7 @@ export function getResolvedRelationships(id: string): RelationshipResolutionResp
         source_provenance: 'ISutra Verified BIS Reference Dataset',
         created_at: standard.last_verified || '2026-09-13',
         target_standard: targetStd,
+        verified_source_url: targetStd?.source_url || 'https://www.bis.gov.in/know-your-standard/?lang=en',
       });
     }
   });
@@ -135,6 +140,8 @@ export function getResolvedRelationships(id: string): RelationshipResolutionResp
       resolvedList.push({
         id: vm.id,
         source_standard_id: standard.id,
+        source_standard_number: standard.standard_number,
+        source_standard: standard,
         target_standard_id: vm.target_standard_id,
         target_standard_number: vm.target_standard_number,
         relationship_type: vm.relationship_type,
@@ -149,6 +156,17 @@ export function getResolvedRelationships(id: string): RelationshipResolutionResp
       });
     }
   }
+
+  // Deterministic ordering:
+  // 1. Verified relationships first, then unclassified references
+  // 2. Alphabetical by target standard number
+  resolvedList.sort((a, b) => {
+    if (a.verification_status === 'verified' && b.verification_status !== 'verified') return -1;
+    if (a.verification_status !== 'verified' && b.verification_status === 'verified') return 1;
+    const numA = (a.target_standard_number || a.target_standard_id || '').toLowerCase();
+    const numB = (b.target_standard_number || b.target_standard_id || '').toLowerCase();
+    return numA.localeCompare(numB);
+  });
 
   const verifiedCount = resolvedList.filter((r) => r.verification_status === 'verified').length;
   const unclassifiedCount = resolvedList.filter((r) => r.verification_status !== 'verified').length;
