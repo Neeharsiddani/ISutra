@@ -79,7 +79,7 @@ export default function DashboardPage() {
             className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#0F766E] hover:bg-[#0D655E] text-white text-xs sm:text-sm font-semibold shadow-xs transition-all active:scale-[0.99] cursor-pointer"
           >
             <Plus className="w-4 h-4" />
-            <span>Start New Analysis</span>
+            <span>New Analysis</span>
           </button>
         </div>
       </div>
@@ -107,7 +107,7 @@ export default function DashboardPage() {
               onClick={() => navigate('/analyze')}
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0F766E] hover:bg-[#0D655E] text-white text-xs sm:text-sm font-semibold shadow-xs transition-all active:scale-[0.99] cursor-pointer"
             >
-              <span>Start New Analysis</span>
+              <span>New Analysis</span>
               <ArrowRight className="w-4 h-4" />
             </button>
 
@@ -358,7 +358,7 @@ export default function DashboardPage() {
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs font-semibold text-[#0F766E] hover:bg-slate-50 transition-colors cursor-pointer"
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  <span>Start First Analysis</span>
+                  <span>New Analysis</span>
                 </button>
               </div>
             )}

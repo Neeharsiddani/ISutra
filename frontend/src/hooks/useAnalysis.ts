@@ -17,7 +17,7 @@ interface UseAnalysisReturn {
   status: AnalysisStatus;
   analysisResult: AIAnalysisResult | null;
   error: string | null;
-  analyze: () => Promise<AIAnalysisResult | null>;
+  analyze: (overrideType?: InputType) => Promise<AIAnalysisResult | null>;
   analyzeFile: (file: File) => Promise<AIAnalysisResult | null>;
   clear: () => void;
 }
@@ -30,7 +30,7 @@ export function useAnalysis(): UseAnalysisReturn {
   const [analysisResult, setAnalysisResult] = useState<AIAnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const analyze = useCallback(async (): Promise<AIAnalysisResult | null> => {
+  const analyze = useCallback(async (overrideType?: InputType): Promise<AIAnalysisResult | null> => {
     if (!inputText.trim()) {
       setError('Please enter a procurement specification to analyze.');
       return null;
@@ -40,7 +40,8 @@ export function useAnalysis(): UseAnalysisReturn {
     setError(null);
 
     try {
-      const result = await analyzeSpecification(inputType, inputText);
+      const typeToSend = overrideType || inputType || 'product_description';
+      const result = await analyzeSpecification(typeToSend, inputText);
       setAnalysisResult(result);
       setStatus('completed');
       return result;
