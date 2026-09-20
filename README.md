@@ -129,7 +129,7 @@ ISutra enforces a strict separation between natural-language understanding and p
 | **Reference Data** | Authentic standard metadata, scopes, and URLs | Verified BIS reference dataset (`verifiedStandards.ts`) | Curated Reference Data |
 
 > **Why this matters for Government Procurement**:
-> A black-box LLM that hallucinates clause numbers or invents compliance claims creates legal liability in public tenders. ISutra leverages AI strictly to comprehend ambiguous human language, while using deterministic, auditable mathematics to evaluate standards alignment.
+> In public procurement, citing unverified standard references or inaccurate clauses introduces tender risk. ISutra uses AI to structure messy procurement requirements, then applies deterministic and evidence-backed standards analysis against a verified reference dataset. The official BIS source remains the authority for final verification.
 
 ---
 

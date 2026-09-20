@@ -124,21 +124,21 @@ export const RegulatoryCheckSection: React.FC<RegulatoryCheckSectionProps> = ({
                 {/* Status Badge */}
                 <div>
                   {isVerified && (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-bold tracking-wide bg-emerald-100 text-emerald-800 border border-emerald-300">
                       <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" />
-                      <span>Verified applicability</span>
+                      <span>VERIFIED APPLICABILITY</span>
                     </span>
                   )}
                   {isReq && (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-semibold bg-amber-100 text-amber-900 border border-amber-300">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-bold tracking-wide bg-amber-100 text-amber-900 border border-amber-300">
                       <AlertTriangle className="w-3.5 h-3.5 text-amber-700" />
-                      <span>Verification required</span>
+                      <span>VERIFICATION REQUIRED</span>
                     </span>
                   )}
                   {isNoRecord && (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-300">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-bold tracking-wide bg-slate-100 text-slate-700 border border-slate-300">
                       <Info className="w-3.5 h-3.5 text-slate-500" />
-                      <span>No Verified Regulatory Record</span>
+                      <span>NO VERIFIED REGULATORY RECORD</span>
                     </span>
                   )}
                   {scheme.status === 'not_assessed' && (

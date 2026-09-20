@@ -108,15 +108,13 @@ export default function HowItWorksPage() {
           />
           <ArchCard
             icon={<FileText className="w-5 h-5" />}
-            title="Document Processing (OCR)"
-            description="Future pipeline for arbitrary PDF and DOCX text extraction from scanned tender documents."
-            planned
+            title="Document Processing"
+            description="Local extraction for digital PDF, DOCX, DOC, and TXT tender files. Scanned images require digitized text."
           />
           <ArchCard
             icon={<Globe className="w-5 h-5" />}
-            title="Multilingual Support"
-            description="Support for procurement specifications in multiple Indian languages with NLP-based translation."
-            planned
+            title="Multilingual Layer"
+            description="Structured requirement extraction for English, Hindi, and Telugu procurement inputs before deterministic standards matching."
           />
         </div>
       </div>

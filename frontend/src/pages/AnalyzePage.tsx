@@ -480,8 +480,8 @@ export default function AnalyzePage() {
           <div className="p-3 bg-[#0F766E]/5 border border-[#0F766E]/20 rounded-xl text-xs text-[#0F766E] flex items-start gap-2.5">
             <ShieldCheck className="w-4 h-4 text-[#0F766E] shrink-0 mt-0.5" />
             <p className="text-[#102A43] leading-relaxed text-[11px] sm:text-xs">
-              <strong className="font-semibold text-[#0F766E]">Verified BIS Reference Dataset: </strong>
-              Requirements are matched against a curated reference dataset of 40 verified Indian Standards with 5-stage mathematical traceability to official BIS portal records (<span className="font-mono text-[11px]">services.bis.gov.in</span> / <span className="font-mono text-[11px]">bis.gov.in</span>).
+              <strong className="font-semibold text-[#0F766E]">40 Verified BIS Reference Records: </strong>
+              Requirements are matched against a curated reference dataset of 40 verified Indian Standards. This prototype is not an exhaustive BIS catalogue. The official BIS source remains the authority for final verification.
             </p>
           </div>
 

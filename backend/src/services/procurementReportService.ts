@@ -355,7 +355,8 @@ export async function generateProcurementReportData(
   };
 
   const limitations = [
-    '40 Verified BIS Reference Records: Recommendations are constrained strictly to the curated reference dataset. This prototype is not an exhaustive BIS catalogue.',
+    '40 Verified BIS Reference Records: Recommendations are constrained strictly to the curated reference dataset of 40 verified Indian Standards. This prototype is not an exhaustive BIS catalogue.',
+    'ISutra uses AI to structure messy procurement requirements, then applies deterministic and evidence-backed standards analysis. The official BIS source remains the authority for final verification.',
     "'not_available' indicates that the specific parameter is not recorded in the reference record, not necessarily non-compliance.",
     'Procurement officers must verify all mandatory specifications and amendments with the official Bureau of Indian Standards publication before tender issuance.',
     'Associated standards may affect testing, safety, or installation requirements; verify relationship classification and normative applicability directly against official BIS publications.',

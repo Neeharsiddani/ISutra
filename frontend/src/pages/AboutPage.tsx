@@ -33,7 +33,7 @@ export default function AboutPage() {
           specifications and tender documents.
         </p>
         <p className="text-xs sm:text-sm text-text-muted leading-relaxed">
-          Currently, procurement officials must search manually through thousands of standards to find applicable ones, identify normative references, check for latest amendments, and determine relevant standards. ISutra streamlines this workflow with an intelligent requirement understanding layer and explainable standards recommendations.
+          Currently, procurement officials must search manually through thousands of standards to find applicable ones, identify normative references, check for published amendments, and determine relevant standards. ISutra streamlines this workflow with an intelligent requirement understanding layer and explainable standards recommendations.
         </p>
       </Card>
 
@@ -73,10 +73,10 @@ export default function AboutPage() {
           </h2>
         </div>
         <p className="text-xs sm:text-sm text-text-muted leading-relaxed mb-2">
-          ISutra is a Smart India Hackathon (SIH) prototype demonstrating an end-to-end procurement intelligence workflow. Recommendations are evaluated against a curated reference dataset of 40 verified BIS standards and must be independently verified against official BIS publications before procurement or compliance decisions.
+          <strong>40 Verified BIS Reference Records:</strong> This prototype is not an exhaustive BIS catalogue. Recommendations are constrained to the verified reference dataset. ISutra uses AI to structure messy procurement requirements, then applies deterministic and evidence-backed standards analysis. The official BIS source remains the authority for final verification.
         </p>
         <p className="text-[11px] text-text-light">
-          Smart India Hackathon (SIH) Prototype • Not an official service of the Bureau of Indian Standards (BIS).
+          Smart India Hackathon (SIH) Prototype • 40 Verified BIS Reference Records • Not an official service of the Bureau of Indian Standards (BIS).
         </p>
       </Card>
     </div>
