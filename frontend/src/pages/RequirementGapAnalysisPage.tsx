@@ -319,7 +319,7 @@ export default function RequirementGapAnalysisPage() {
                 </span>
               </div>
               <p className="text-[11px] text-[#627D98] leading-tight pt-1">
-                Extent of requirement set comparable against verified reference data.
+                Reference coverage indicates how much of the procurement requirement can be evaluated against the current reference dataset. It is not a compliance determination.
               </p>
             </div>
 
@@ -607,34 +607,34 @@ export default function RequirementGapAnalysisPage() {
 // ------------------------------------------------------------
 // Status Pill Helper Component
 // ------------------------------------------------------------
-function StatusPill({ status, label }: { status: RequirementGapStatus; label: string }) {
+function StatusPill({ status }: { status: RequirementGapStatus; label?: string }) {
   switch (status) {
     case 'supported':
       return (
         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-emerald-50 text-emerald-800 border border-emerald-300">
           <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-          <span>{label}</span>
+          <span>SUPPORTED</span>
         </span>
       );
     case 'needs_verification':
       return (
         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-amber-50 text-amber-900 border border-amber-300">
           <HelpCircle className="w-3 h-3 text-amber-600" />
-          <span>{label}</span>
+          <span>NEEDS VERIFICATION</span>
         </span>
       );
     case 'not_available':
       return (
         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-slate-100 text-[#486581] border border-slate-300">
           <Info className="w-3 h-3 text-[#627D98]" />
-          <span>{label}</span>
+          <span>NOT AVAILABLE</span>
         </span>
       );
     case 'not_supported':
       return (
         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-rose-50 text-rose-800 border border-rose-300">
           <XCircle className="w-3 h-3 text-rose-600" />
-          <span>{label}</span>
+          <span>NOT SUPPORTED</span>
         </span>
       );
   }

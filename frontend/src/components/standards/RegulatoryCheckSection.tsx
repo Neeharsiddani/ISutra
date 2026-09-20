@@ -73,7 +73,7 @@ export const RegulatoryCheckSection: React.FC<RegulatoryCheckSectionProps> = ({
             </h3>
           </div>
           <p className="text-xs text-[#627D98] mt-1">
-            Statutory certification regimes evaluated strictly from curated Government Quality Control Orders (QCOs), Compulsory Registration Scheme (CRS), and Hallmarking orders.
+            Statutory certification regimes evaluated strictly from curated Government Quality Control Orders (QCOs), Compulsory Registration Scheme (CRS), and Hallmarking orders. Regulatory evidence does not affect the standards matching score.
           </p>
         </div>
 
@@ -206,7 +206,7 @@ export const RegulatoryCheckSection: React.FC<RegulatoryCheckSectionProps> = ({
                   <div className="flex items-start gap-2 text-[#486581]">
                     <span className="font-semibold text-[#627D98] shrink-0">Reason:</span>
                     <p className="leading-relaxed">
-                      {scheme.reason || 'No verified regulatory applicability record is stored for this product in the current ISutra reference dataset.'}
+                      {scheme.reason || 'Verification required against the applicable Ministry / BIS regulatory publication.'}
                     </p>
                   </div>
 

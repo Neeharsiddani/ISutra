@@ -73,7 +73,7 @@ export default function AboutPage() {
           </h2>
         </div>
         <p className="text-xs sm:text-sm text-text-muted leading-relaxed mb-2">
-          <strong>40 Verified BIS Reference Records:</strong> This prototype is not an exhaustive BIS catalogue. Recommendations are constrained to the verified reference dataset. ISutra uses AI to structure messy procurement requirements, then applies deterministic and evidence-backed standards analysis. The official BIS source remains the authority for final verification.
+          <strong>40 Verified BIS Reference Records:</strong> This prototype is not an exhaustive BIS catalogue. Recommendations are limited to the verified reference dataset. The matching and evidence model is designed to operate over a larger verified BIS catalogue when additional records are incorporated. ISutra uses AI to structure messy procurement requirements, then applies deterministic and evidence-backed standards analysis. The official BIS source remains the authority for final verification.
         </p>
         <p className="text-[11px] text-text-light">
           Smart India Hackathon (SIH) Prototype • 40 Verified BIS Reference Records • Not an official service of the Bureau of Indian Standards (BIS).

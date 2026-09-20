@@ -234,7 +234,7 @@ export default function StandardsComparisonPage() {
           Side-by-Side Evaluation of {standardIds.length} Indian Standards
         </h1>
         <p className="text-xs text-[#627D98] max-w-3xl leading-relaxed">
-          Objective evidence comparison derived strictly from verified BIS records. ISutra does not designate a "winner" or "best" standard. Standards frequently fulfill complementary roles in tender schedules.
+          Side-by-Side Standards Comparison derived strictly from verified BIS records. This workspace presents documented differences; it does not select a winning standard.
         </p>
       </div>
 

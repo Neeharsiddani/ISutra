@@ -335,7 +335,7 @@ export default function AnalyzePage() {
             </div>
 
             <p className="text-[11px] text-slate-500 leading-normal">
-              You can describe the procurement requirement in English, Hindi, or Telugu.
+              Language selection affects requirement extraction. Standards matching still uses the verified BIS reference dataset.
             </p>
           </div>
 
@@ -481,7 +481,7 @@ export default function AnalyzePage() {
             <ShieldCheck className="w-4 h-4 text-[#0F766E] shrink-0 mt-0.5" />
             <p className="text-[#102A43] leading-relaxed text-[11px] sm:text-xs">
               <strong className="font-semibold text-[#0F766E]">40 Verified BIS Reference Records: </strong>
-              Requirements are matched against a curated reference dataset of 40 verified Indian Standards. This prototype is not an exhaustive BIS catalogue. The official BIS source remains the authority for final verification.
+              Recommendations are limited to the verified reference dataset. This prototype is not an exhaustive BIS catalogue. The matching and evidence model is designed to operate over a larger verified BIS catalogue when additional records are incorporated. The official BIS source remains the authority for final verification.
             </p>
           </div>
 

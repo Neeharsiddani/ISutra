@@ -62,21 +62,21 @@ export const AlliedStandardsExplorer: React.FC<AlliedStandardsExplorerProps> = (
   const formatRelationshipLabel = (type: RelationshipType | 'unspecified' | null | undefined): string => {
     switch (type) {
       case 'normative_reference':
-        return 'Normative Reference';
+        return 'Verified Normative Reference';
       case 'test_method':
-        return 'Test Method';
+        return 'Verified Test Method';
       case 'safety_standard':
-        return 'Safety Standard';
+        return 'Verified Safety Standard';
       case 'installation_standard':
-        return 'Installation Standard';
+        return 'Verified Installation Standard';
       case 'terminology':
-        return 'Terminology Standard';
+        return 'Verified Terminology Standard';
       case 'related_product':
-        return 'Related Product';
+        return 'Verified Related Product';
       case 'allied_standard':
-        return 'Allied Standard';
+        return 'Verified Associated Standard';
       default:
-        return 'Associated Reference';
+        return 'Associated reference — relationship type not verified in the current dataset.';
     }
   };
 
@@ -298,7 +298,7 @@ export const AlliedStandardsExplorer: React.FC<AlliedStandardsExplorerProps> = (
             </div>
           ) : (
             <div className="p-4 bg-white rounded-xl border border-slate-200 text-xs text-slate-500 italic ml-4">
-              No allied standards or references recorded for this standard in the curated dataset.
+              No verified relationship evidence is available for this standard in the current reference dataset.
             </div>
           )}
         </div>
@@ -503,7 +503,7 @@ export const AlliedStandardsExplorer: React.FC<AlliedStandardsExplorerProps> = (
             </div>
           ) : (
             <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-500 italic">
-              No verified relationship records are currently compiled for this standard. Unclassified references are listed below.
+              No verified relationship evidence is available for this standard in the current reference dataset.
             </div>
           )}
         </div>
@@ -573,7 +573,7 @@ export const AlliedStandardsExplorer: React.FC<AlliedStandardsExplorerProps> = (
                       </div>
 
                       <p className="text-[11px] text-[#627D98] italic">
-                        Relationship type not verified in current ISutra dataset.
+                        Associated reference — relationship type not verified in the current dataset.
                       </p>
                     </div>
 

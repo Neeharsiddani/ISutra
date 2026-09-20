@@ -18,6 +18,9 @@ import {
   History,
   ShieldCheck,
   FileText,
+  CheckCircle2,
+  Scale,
+  ExternalLink,
 } from 'lucide-react';
 import { getAnalysisHistory } from '../services/api';
 import type { AnalysisHistoryItem } from '../types';
@@ -60,15 +63,15 @@ export default function DashboardPage() {
         <div className="space-y-1">
           <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#0F766E]/8 border border-[#0F766E]/20 text-[11px] font-semibold text-[#0F766E] uppercase tracking-wider">
             <Sparkles className="w-3 h-3 text-[#0F766E]" />
-            <span>BIS Standards Recommendation Engine</span>
+            <span>BIS Standards Decision Intelligence</span>
           </div>
 
-          <h1 className="text-[24px] sm:text-[28px] lg:text-[32px] font-bold text-[#102A43] tracking-tight leading-tight font-display">
-            Procurement Intelligence
+          <h1 className="text-[22px] sm:text-[26px] lg:text-[30px] font-bold text-[#102A43] tracking-tight leading-tight font-display">
+            From Procurement Requirement → Explainable BIS Standards Intelligence
           </h1>
 
-          <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-2xl">
-            Turn procurement requirements into explainable, traceable BIS reference standards with transparent multi-signal verification.
+          <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-3xl">
+            ISutra structures unstructured procurement requirements, matches them against a verified BIS reference dataset, explains why standards were surfaced, identifies evidence gaps, and provides an auditable path to official BIS verification.
           </p>
 
           <div className="flex flex-wrap items-center gap-2 pt-0.5">
@@ -77,7 +80,7 @@ export default function DashboardPage() {
               40 Verified BIS Reference Records
             </span>
             <span className="text-[11px] text-slate-400 font-medium">
-              Prototype Scope • This prototype is not an exhaustive BIS catalogue.
+              Prototype Scope • This prototype is not an exhaustive BIS catalogue. Recommendations are limited to the verified reference dataset.
             </span>
           </div>
         </div>
@@ -133,76 +136,61 @@ export default function DashboardPage() {
       </div>
 
       {/* ============================================================
-          3. SECTION B: WHAT ISUTRA DOES (4 CORE CAPABILITIES)
+          3. SECTION B: EXPLAINABLE STANDARDS DECISION CAPABILITIES
          ============================================================ */}
       <div className="space-y-3">
-        <div className="flex items-center gap-1.5">
-          <Sparkles className="w-3.5 h-3.5 text-[#0F766E]" />
-          <h2 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-[#102A43] font-display">
-            What ISutra Does
-          </h2>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-[#0F766E]" />
+            <h2 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-[#102A43] font-display">
+              Explainable Standards Decision Workflow
+            </h2>
+          </div>
+          <span className="text-[11px] text-slate-500 hidden sm:inline font-medium">
+            11 Traceable Capabilities
+          </span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          {/* Card 1 */}
-          <div className="bg-white rounded-xl border border-slate-200/80 p-4 shadow-2xs hover:shadow-xs transition-shadow flex flex-col justify-between">
-            <div>
-              <div className="w-9 h-9 rounded-lg bg-[#0F766E]/10 flex items-center justify-center text-[#0F766E] mb-3">
-                <Sliders className="w-4 h-4" />
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
+          {[
+            { step: '01', title: 'Requirement Extraction', desc: 'Structure messy procurement specifications into parameters.', icon: Sliders },
+            { step: '02', title: 'Human Review', desc: 'Inspect and confirm parameters before matching.', icon: CheckCircle2 },
+            { step: '03', title: 'Multi-Signal Matching', desc: 'Deterministic scoring across 6 weighted signals.', icon: Compass },
+            { step: '04', title: 'Why This Standard?', desc: 'Auditable factor contributions with zero guessing.', icon: Sparkles },
+            { step: '05', title: 'Allied Standards', desc: 'Normative references and test methods trail.', icon: Layers },
+            { step: '06', title: 'Gap Analysis', desc: 'Reference coverage and missing parameter verification.', icon: FileCheck },
+            { step: '07', title: 'Lifecycle & Amendments', desc: 'Curated edition history and reaffirmation status.', icon: History },
+            { step: '08', title: 'Standards Comparison', desc: 'Neutral side-by-side evaluation without winner bias.', icon: Scale },
+            { step: '09', title: 'Regulatory Evidence', desc: 'Mandatory QCO and CRS order applicability.', icon: ShieldCheck },
+            { step: '10', title: 'Procurement Report', desc: 'Self-contained audit report with Print/PDF export.', icon: FileText },
+            { step: '11', title: 'Official BIS Verification', desc: 'Direct portal links to bis.gov.in verification.', icon: ExternalLink },
+            { step: '12', title: 'Dataset Scalability', desc: 'Designed to scale over larger verified BIS catalogue.', icon: BookOpen },
+          ].map((cap) => {
+            const IconComp = cap.icon;
+            return (
+              <div
+                key={cap.step}
+                className="bg-white rounded-xl border border-slate-200/80 p-3 shadow-2xs hover:shadow-xs transition-all flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="w-7 h-7 rounded-lg bg-[#0F766E]/10 flex items-center justify-center text-[#0F766E]">
+                      <IconComp className="w-3.5 h-3.5" />
+                    </div>
+                    <span className="text-[10px] font-mono font-bold text-slate-400">
+                      {cap.step}
+                    </span>
+                  </div>
+                  <h3 className="text-xs font-bold text-[#102A43] mb-1 font-display">
+                    {cap.title}
+                  </h3>
+                  <p className="text-[11px] text-slate-500 leading-tight">
+                    {cap.desc}
+                  </p>
+                </div>
               </div>
-              <h3 className="text-xs sm:text-sm font-bold text-[#102A43] mb-1 font-display">
-                1. Requirement Extraction
-              </h3>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                Turn unstructured procurement text into structured requirements.
-              </p>
-            </div>
-          </div>
-
-          {/* Card 2 */}
-          <div className="bg-white rounded-xl border border-slate-200/80 p-4 shadow-2xs hover:shadow-xs transition-shadow flex flex-col justify-between">
-            <div>
-              <div className="w-9 h-9 rounded-lg bg-[#0F766E]/10 flex items-center justify-center text-[#0F766E] mb-3">
-                <Compass className="w-4 h-4" />
-              </div>
-              <h3 className="text-xs sm:text-sm font-bold text-[#102A43] mb-1 font-display">
-                2. Explainable BIS Matching
-              </h3>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                Match requirements against the verified BIS reference dataset using transparent multi-signal scoring.
-              </p>
-            </div>
-          </div>
-
-          {/* Card 3 */}
-          <div className="bg-white rounded-xl border border-slate-200/80 p-4 shadow-2xs hover:shadow-xs transition-shadow flex flex-col justify-between">
-            <div>
-              <div className="w-9 h-9 rounded-lg bg-[#0F766E]/10 flex items-center justify-center text-[#0F766E] mb-3">
-                <FileCheck className="w-4 h-4" />
-              </div>
-              <h3 className="text-xs sm:text-sm font-bold text-[#102A43] mb-1 font-display">
-                3. Evidence & Gap Analysis
-              </h3>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                See why a standard matched and identify information that needs verification.
-              </p>
-            </div>
-          </div>
-
-          {/* Card 4 */}
-          <div className="bg-white rounded-xl border border-slate-200/80 p-4 shadow-2xs hover:shadow-xs transition-shadow flex flex-col justify-between">
-            <div>
-              <div className="w-9 h-9 rounded-lg bg-[#0F766E]/10 flex items-center justify-center text-[#0F766E] mb-3">
-                <Layers className="w-4 h-4" />
-              </div>
-              <h3 className="text-xs sm:text-sm font-bold text-[#102A43] mb-1 font-display">
-                4. Standards Comparison
-              </h3>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                Compare relevant standards side-by-side using documented reference fields.
-              </p>
-            </div>
-          </div>
+            );
+          })}
         </div>
       </div>
 
@@ -285,12 +273,17 @@ export default function DashboardPage() {
             </h3>
 
             <p className="text-xs text-slate-600 leading-relaxed">
-              ISutra currently demonstrates its workflow against a curated reference dataset of 40 verified BIS standards across selected infrastructure sectors.
+              ISutra demonstrates its workflow against 40 Verified BIS Reference Records across selected infrastructure sectors. This prototype is not an exhaustive BIS catalogue; recommendations are limited to the verified reference dataset.
             </p>
 
-            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200/70 text-[11px] text-slate-500 leading-relaxed">
-              <strong className="text-slate-700 font-semibold">Scope note: </strong>
-              Covers representative Indian Standards across Road & Street Lighting, Electrical Cables, Construction, Pipes & Water Supply, and Renewable Systems.
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200/70 text-[11px] text-slate-600 leading-relaxed space-y-1">
+              <p>
+                <strong className="text-slate-800 font-semibold">Scope note: </strong>
+                Covers representative Indian Standards across Road & Street Lighting, Electrical Cables, Construction, Pipes & Water Supply, and Renewable Systems.
+              </p>
+              <p className="text-slate-500 italic">
+                The matching and evidence model is designed to operate over a larger verified BIS catalogue when additional records are incorporated.
+              </p>
             </div>
           </div>
 

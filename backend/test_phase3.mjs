@@ -26,7 +26,7 @@ async function runTests() {
     const allRes = await fetch(`${BASE_URL}/standards?limit=100`);
     const allJson = await allRes.json();
     const standards = allJson.data.standards;
-    assert(standards.length === 12, `Total standards count is exactly 12 (received: ${standards.length})`);
+    assert(standards.length === 40, `Total standards count is verified 40-record dataset (received: ${standards.length})`);
 
     // 2. Search "street light"
     console.log('\n--- Test 2: Search "street light" ---');

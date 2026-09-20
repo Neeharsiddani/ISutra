@@ -349,7 +349,7 @@ export default function RecommendationsResultsPage() {
               40 Verified BIS Reference Records
             </span>
             <span className="text-[#627D98] block">
-              This prototype is not an exhaustive BIS catalogue. Recommendations are constrained to the verified reference dataset. Absence from results does not mean that no other BIS standard exists.
+              This prototype is not an exhaustive BIS catalogue. Recommendations are limited to the verified reference dataset. The matching and evidence model is designed to operate over a larger verified BIS catalogue when additional records are incorporated. Absence from results does not mean that no other BIS standard exists.
             </span>
           </div>
         </div>
@@ -602,7 +602,7 @@ export default function RecommendationsResultsPage() {
                     </div>
 
                     {/* Visual Score Gauge & Factor Contributions */}
-                    <div className="sm:text-right shrink-0 bg-slate-50 border border-slate-200/80 rounded-xl p-3 min-w-[190px]">
+                    <div className="sm:text-right shrink-0 bg-slate-50 border border-slate-200/80 rounded-xl p-3 min-w-[210px]">
                       <div className="flex items-baseline sm:justify-end gap-1.5">
                         <span className="text-2xl font-bold font-display text-[#102A43]">
                           {rec.relevancePercentage}%
@@ -620,10 +620,31 @@ export default function RecommendationsResultsPage() {
                           style={{ width: `${Math.max(5, rec.relevancePercentage)}%` }}
                         />
                       </div>
-                      <div className="text-[10px] text-[#627D98] space-y-0.5 sm:text-right">
-                        <div>Product: +{Math.round(rec.factorStatuses.productCategory.contribution * 100)}%</div>
-                        <div>Keywords: +{Math.round(rec.factorStatuses.keywordsTitleScope.contribution * 100)}%</div>
-                        <div>App & Env: +{Math.round((rec.factorStatuses.application.contribution + rec.factorStatuses.environment.contribution) * 100)}%</div>
+                      <div className="text-[10px] font-mono text-[#486581] space-y-0.5 sm:text-right">
+                        <div className="flex justify-between sm:justify-end gap-2">
+                          <span className="text-[#627D98]">Product Alignment:</span>
+                          <span className="font-bold text-[#102A43]">+{Math.round(rec.factorStatuses.productCategory.contribution * 100)}%</span>
+                        </div>
+                        <div className="flex justify-between sm:justify-end gap-2">
+                          <span className="text-[#627D98]">Keyword / Scope:</span>
+                          <span className="font-bold text-[#102A43]">+{Math.round(rec.factorStatuses.keywordsTitleScope.contribution * 100)}%</span>
+                        </div>
+                        <div className="flex justify-between sm:justify-end gap-2">
+                          <span className="text-[#627D98]">Application Context:</span>
+                          <span className="font-bold text-[#102A43]">+{Math.round(rec.factorStatuses.application.contribution * 100)}%</span>
+                        </div>
+                        <div className="flex justify-between sm:justify-end gap-2">
+                          <span className="text-[#627D98]">Environment Fit:</span>
+                          <span className="font-bold text-[#102A43]">+{Math.round(rec.factorStatuses.environment.contribution * 100)}%</span>
+                        </div>
+                        <div className="flex justify-between sm:justify-end gap-2">
+                          <span className="text-[#627D98]">Technical Parameters:</span>
+                          <span className="font-bold text-[#627D98]">+{Math.round(rec.factorStatuses.technicalParameters.contribution * 100)}%</span>
+                        </div>
+                        <div className="flex justify-between sm:justify-end gap-2">
+                          <span className="text-[#627D98]">Safety / Testing:</span>
+                          <span className="font-bold text-[#627D98]">+{Math.round(rec.factorStatuses.safetyTesting.contribution * 100)}%</span>
+                        </div>
                       </div>
                       <div className="text-[9px] text-[#829AB1] pt-1.5 mt-1.5 border-t border-slate-200/60 sm:text-right leading-tight">
                         Reference relevance is calculated from six deterministic matching signals. It is not a compliance score or certification assessment.
@@ -631,20 +652,36 @@ export default function RecommendationsResultsPage() {
                     </div>
                   </div>
 
-                  {/* Dynamic Match Reason */}
-                  <div className="mt-3.5 bg-slate-50/70 border border-slate-200/60 rounded-xl p-3 text-xs text-[#243B53] flex items-start justify-between gap-2">
-                    <div className="flex items-start gap-2 min-w-0">
-                      <Sparkles className="w-4 h-4 text-[#0F766E] shrink-0 mt-0.5" />
-                      <div>
-                        <strong className="text-[#102A43]">Why This Matched: </strong>
-                        <span>{rec.reason}</span>
+                  {/* Hero Moment: "WHY THIS STANDARD?" Match Reason & VIEW MATCH EVIDENCE Action */}
+                  <div className="mt-3.5 bg-slate-50/90 border border-slate-200/80 rounded-xl p-3 sm:p-4 text-xs text-[#243B53] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="space-y-1 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <Sparkles className="w-4 h-4 text-[#0F766E] shrink-0" />
+                        <strong className="text-[#102A43] font-display uppercase tracking-wider text-[11px]">
+                          WHY THIS STANDARD?
+                        </strong>
                       </div>
+                      <p className="text-[#486581] text-[11px] leading-relaxed">
+                        Match is based on the extracted procurement requirements and the standard's recorded scope/category/application attributes.
+                      </p>
+                      <p className="text-[#102A43] text-xs font-medium pt-0.5">
+                        {rec.reason}
+                      </p>
                     </div>
                     <button
+                      type="button"
                       onClick={() => toggleExpand(rec.standardId)}
-                      className="shrink-0 text-xs font-bold text-[#0F766E] hover:text-[#0C5D57] hover:underline flex items-center gap-1 ml-2 transition-colors cursor-pointer"
+                      aria-expanded={isExpanded}
+                      aria-label={`View match evidence for ${rec.standard.standard_number || rec.standard.is_number}`}
+                      className="shrink-0 text-xs font-bold px-3.5 py-2 rounded-xl bg-[#0F766E] hover:bg-[#0D655E] text-white flex items-center justify-center gap-1.5 transition-all shadow-2xs cursor-pointer"
                     >
-                      <span>{isExpanded ? 'Hide trail' : 'Why this standard? →'}</span>
+                      <Layers className="w-3.5 h-3.5" />
+                      <span>{isExpanded ? 'CLOSE EVIDENCE' : 'VIEW MATCH EVIDENCE'}</span>
+                      {isExpanded ? (
+                        <ChevronUp className="w-3.5 h-3.5" />
+                      ) : (
+                        <ChevronDown className="w-3.5 h-3.5" />
+                      )}
                     </button>
                   </div>
 
@@ -779,7 +816,7 @@ export default function RecommendationsResultsPage() {
             <Info className="w-4 h-4 text-[#0F766E] shrink-0 mt-0.5" />
             <div className="space-y-1">
               <p>
-                <strong>40 Verified BIS Reference Records.</strong> This prototype is not an exhaustive BIS catalogue. Recommendations are constrained to the verified reference dataset. Absence from results does not mean that no other BIS standard exists.
+                <strong>40 Verified BIS Reference Records.</strong> This prototype is not an exhaustive BIS catalogue. Recommendations are limited to the verified reference dataset. The matching and evidence model is designed to operate over a larger verified BIS catalogue when additional records are incorporated. Absence from results does not mean that no other BIS standard exists.
               </p>
               <p>
                 <strong>Reference Relevance:</strong> Reference relevance is calculated from six deterministic matching signals. It is not a compliance score or certification assessment. Recommendations should be independently verified against official BIS publications before procurement or compliance decisions.
