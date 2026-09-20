@@ -70,6 +70,16 @@ export default function DashboardPage() {
           <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-2xl">
             Turn procurement requirements into explainable, traceable BIS reference standards with transparent multi-signal verification.
           </p>
+
+          <div className="flex flex-wrap items-center gap-2 pt-0.5">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200/80 text-[11px] font-medium text-emerald-800">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+              40 Verified BIS Reference Records
+            </span>
+            <span className="text-[11px] text-slate-400 font-medium">
+              Prototype Scope • This prototype is not an exhaustive BIS catalogue.
+            </span>
+          </div>
         </div>
 
         <div className="shrink-0 flex items-center gap-2">

@@ -355,7 +355,7 @@ export async function generateProcurementReportData(
   };
 
   const limitations = [
-    'Recommendations are generated strictly from ISutra verified Indian Standards dataset.',
+    '40 Verified BIS Reference Records: Recommendations are constrained strictly to the curated reference dataset. This prototype is not an exhaustive BIS catalogue.',
     "'not_available' indicates that the specific parameter is not recorded in the reference record, not necessarily non-compliance.",
     'Procurement officers must verify all mandatory specifications and amendments with the official Bureau of Indian Standards publication before tender issuance.',
     'Associated standards may affect testing, safety, or installation requirements; verify relationship classification and normative applicability directly against official BIS publications.',
@@ -962,7 +962,7 @@ export function generatePrintableHtmlReport(report: ProcurementReportData): stri
     <div class="header">
       <div>
         <div class="logo">ISutra <span>BIS</span></div>
-        <div style="font-size: 13px; color: #627d98; margin-top: 2px;">Intelligent Indian Standards Procurement Evaluation Report</div>
+        <div style="font-size: 13px; color: #627d98; margin-top: 2px;">Procurement Evaluation Report • 40 Verified BIS Reference Records (Prototype)</div>
       </div>
       <div class="report-meta">
         <div><strong>Report ID:</strong> ${report.reportId}</div>

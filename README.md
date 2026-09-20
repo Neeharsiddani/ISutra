@@ -71,7 +71,7 @@ Official BIS Portal Records (bis.gov.in)
      - Safety & Testing Specifications (10%)
    - Specificity-aware ranking: Distinguishes finished assemblies from subcomponents (e.g. dedicated street light luminaires strictly outrank generic LED lamps for street lighting tenders).
    - Mathematical score transparency: Total relevance percentage is the exact sum of weighted factor contributions.
-   - 100% deterministic and reproducible across consecutive runs.
+   - Deterministic matching and downstream analysis, reproducible across consecutive runs.
    - Defensive guardrails returning `insufficientInformation` states for vague inputs and zero matches for unrelated domains.
 
 5. **Phase 5 — Evidence, Traceability & Trust Architecture**:
@@ -121,11 +121,11 @@ ISutra enforces a strict separation between natural-language understanding and p
 | Layer | Responsibility | Technology | Nature |
 |:---|:---|:---|:---|
 | **Perception Layer** | Extract structured procurement parameters from unstructured specification text | Google Gemini / OpenAI (structured JSON prompt); built-in offline NLP pattern extractor fallback | Generative AI / NLP |
-| **Decision Layer** | Match requirements against BIS standards | 6-factor weighted multi-signal engine (`standardsMatcher.ts`) | 100% Deterministic |
+| **Decision Layer** | Match requirements against BIS standards | 6-factor weighted multi-signal engine (`standardsMatcher.ts`) | Deterministic matching and downstream analysis |
 | **Relationship Layer** | Evidence-backed relationship resolution & coverage tracking | Relational resolver (`standardsRelationshipService.ts`) | Curated & Verified Data |
-| **Audit Layer** | Traceability chain & factor contribution breakdown | Provenance generator (`standardsMatcher.ts`) | 100% Deterministic |
-| **Gap Analysis Layer** | Requirement coverage evaluation & physical verification checklist | 4-state ontology analyzer (`requirementGapAnalyzer.ts`) | 100% Deterministic |
-| **Comparison Layer** | Side-by-side matrix & set-difference distinctions | Multi-standard relational comparator (`standardsComparator.ts`) | 100% Deterministic |
+| **Audit Layer** | Traceability chain & factor contribution breakdown | Provenance generator (`standardsMatcher.ts`) | Deterministic matching and downstream analysis |
+| **Gap Analysis Layer** | Requirement coverage evaluation & physical verification checklist | 4-state ontology analyzer (`requirementGapAnalyzer.ts`) | Deterministic matching and downstream analysis |
+| **Comparison Layer** | Side-by-side matrix & set-difference distinctions | Multi-standard relational comparator (`standardsComparator.ts`) | Deterministic matching and downstream analysis |
 | **Reference Data** | Authentic standard metadata, scopes, and URLs | Verified BIS reference dataset (`verifiedStandards.ts`) | Curated Reference Data |
 
 > **Why this matters for Government Procurement**:

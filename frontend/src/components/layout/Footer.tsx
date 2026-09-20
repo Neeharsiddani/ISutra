@@ -12,7 +12,7 @@ export default function Footer() {
         <div className="flex items-center gap-2">
           <span className="font-semibold text-slate-700">ISutra</span>
           <span className="text-slate-300">•</span>
-          <span className="text-slate-400">SIH Prototype • Not an official BIS service</span>
+          <span className="text-slate-400">SIH Prototype • 40 Verified BIS Reference Records • Not an official BIS service</span>
         </div>
 
         <div className="flex items-center gap-3 sm:gap-4 font-medium">

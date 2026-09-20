@@ -24,7 +24,7 @@ import {
   Layers,
   History,
 } from 'lucide-react';
-import { getAnalysisRecommendations, getRecommendations } from '../services/api';
+import { getAnalysisRecommendations, getRecommendations, getProcurementReportHtmlUrl } from '../services/api';
 import { WhyThisStandardPanel } from '../components/standards/WhyThisStandardPanel';
 import type {
   RecommendationsResponse,
@@ -297,7 +297,7 @@ export default function RecommendationsResultsPage() {
         <div className="flex flex-wrap items-center gap-2 self-start md:self-auto">
           {id && (
             <a
-              href={`/api/analysis/${id}/report/html`}
+              href={getProcurementReportHtmlUrl(id)}
               target="_blank"
               rel="noopener noreferrer"
               className="min-h-[40px] px-3.5 py-2 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-300 text-xs font-semibold text-[#102A43] flex items-center gap-1.5 transition-colors shadow-2xs"
@@ -337,7 +337,7 @@ export default function RecommendationsResultsPage() {
             </h2>
           </div>
           <span className="text-[11px] font-semibold text-[#0F766E] bg-teal-50 border border-teal-200/80 px-2.5 py-0.5 rounded-full">
-            Reference scope: 40 verified BIS standards
+            40 Verified BIS Reference Records
           </span>
         </div>
 
@@ -346,10 +346,10 @@ export default function RecommendationsResultsPage() {
           <Info className="w-4 h-4 text-[#0F766E] shrink-0 mt-0.5" />
           <div className="space-y-0.5">
             <span className="font-semibold text-[#102A43]">
-              Reference scope: 40 verified BIS standards.
+              40 Verified BIS Reference Records
             </span>
             <span className="text-[#627D98] block">
-              Results are limited to the current curated reference dataset. Absence from results does not mean that no other BIS standard exists.
+              This prototype is not an exhaustive BIS catalogue. Recommendations are constrained to the verified reference dataset. Absence from results does not mean that no other BIS standard exists.
             </span>
           </div>
         </div>
@@ -384,7 +384,7 @@ export default function RecommendationsResultsPage() {
 
           <div className="bg-slate-50/80 rounded-xl p-2.5 border border-slate-200/60">
             <span className="text-[#627D98] block text-[10px] uppercase tracking-wider font-semibold">
-              Reference Alignment
+              Top Relevance
             </span>
             <span className="font-bold text-emerald-700">
               {processedRecommendations.length > 0 ? `${processedRecommendations[0].relevancePercentage}%` : 'N/A'}
@@ -524,6 +524,14 @@ export default function RecommendationsResultsPage() {
               5. RECOMMENDATIONS LIST
              ============================================================ */}
           <div className="space-y-4">
+            <div className="flex items-center justify-between pb-1">
+              <h2 className="text-base font-semibold text-[#102A43]">
+                Top Recommendations ({processedRecommendations.length})
+              </h2>
+              <span className="text-xs text-[#627D98]">
+                Each standard is evaluated independently with individual relevance scoring
+              </span>
+            </div>
             {processedRecommendations.map((rec) => {
               const isExpanded = expandedCards[rec.standardId] ?? (rec.rank === 1);
               const isHigh = rec.category === 'high';
@@ -771,7 +779,7 @@ export default function RecommendationsResultsPage() {
             <Info className="w-4 h-4 text-[#0F766E] shrink-0 mt-0.5" />
             <div className="space-y-1">
               <p>
-                <strong>Reference scope: 40 verified BIS standards.</strong> Results are limited to the current curated reference dataset. Absence from results does not mean that no other BIS standard exists.
+                <strong>40 Verified BIS Reference Records.</strong> This prototype is not an exhaustive BIS catalogue. Recommendations are constrained to the verified reference dataset. Absence from results does not mean that no other BIS standard exists.
               </p>
               <p>
                 <strong>Reference Relevance:</strong> Reference relevance is calculated from six deterministic matching signals. It is not a compliance score or certification assessment. Recommendations should be independently verified against official BIS publications before procurement or compliance decisions.

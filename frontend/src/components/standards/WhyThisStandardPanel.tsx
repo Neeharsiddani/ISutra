@@ -304,7 +304,7 @@ export const WhyThisStandardPanel: React.FC<WhyThisStandardPanelProps> = ({
     // Edition and amendments
     items.push({
       title: 'Current edition and Gazette amendments',
-      explanation: `Curated reference edition is ${rec.standard.edition_year || 'latest'}. Reaffirmation status or recently notified Gazette amendments must be re-checked.`,
+      explanation: `Curated reference edition is ${rec.standard.edition_year || 'per curated lifecycle evidence'}. Reaffirmation status or recently notified Gazette amendments must be re-checked.`,
       action: 'Verify current edition status on official BIS portal.',
     });
 
