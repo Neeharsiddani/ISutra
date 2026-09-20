@@ -525,7 +525,7 @@ export default function RecommendationsResultsPage() {
              ============================================================ */}
           <div className="space-y-4">
             {processedRecommendations.map((rec) => {
-              const isExpanded = expandedCards[rec.standardId] ?? false;
+              const isExpanded = expandedCards[rec.standardId] ?? (rec.rank === 1);
               const isHigh = rec.category === 'high';
 
               return (
@@ -600,7 +600,7 @@ export default function RecommendationsResultsPage() {
                           {rec.relevancePercentage}%
                         </span>
                         <span className="text-[10px] font-semibold text-[#627D98] uppercase">
-                          Reference Alignment
+                          Reference Relevance
                         </span>
                       </div>
                       {/* Progress Bar */}
@@ -618,7 +618,7 @@ export default function RecommendationsResultsPage() {
                         <div>App & Env: +{Math.round((rec.factorStatuses.application.contribution + rec.factorStatuses.environment.contribution) * 100)}%</div>
                       </div>
                       <div className="text-[9px] text-[#829AB1] pt-1.5 mt-1.5 border-t border-slate-200/60 sm:text-right leading-tight">
-                        Reference Alignment is calculated from six deterministic matching signals. It is not a compliance score or certification assessment.
+                        Reference relevance is calculated from six deterministic matching signals. It is not a compliance score or certification assessment.
                       </div>
                     </div>
                   </div>
@@ -765,7 +765,7 @@ export default function RecommendationsResultsPage() {
           </div>
 
           {/* ============================================================
-              6. COMPLIANCE & ACCURACY DISCLAIMER
+              6. REFERENCE SCOPE & STATUTORY DISCLAIMER
              ============================================================ */}
           <div className="bg-slate-50 border border-[#243B53]/10 rounded-xl p-3.5 text-xs text-[#627D98] flex items-start gap-2.5">
             <Info className="w-4 h-4 text-[#0F766E] shrink-0 mt-0.5" />
@@ -774,7 +774,7 @@ export default function RecommendationsResultsPage() {
                 <strong>Reference scope: 40 verified BIS standards.</strong> Results are limited to the current curated reference dataset. Absence from results does not mean that no other BIS standard exists.
               </p>
               <p>
-                <strong>Reference Alignment:</strong> Reference Alignment is calculated from six deterministic matching signals. It is not a compliance score or certification assessment. Recommendations should be independently verified against official BIS publications before procurement or compliance decisions.
+                <strong>Reference Relevance:</strong> Reference relevance is calculated from six deterministic matching signals. It is not a compliance score or certification assessment. Recommendations should be independently verified against official BIS publications before procurement or compliance decisions.
               </p>
             </div>
           </div>
