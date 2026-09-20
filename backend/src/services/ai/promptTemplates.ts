@@ -15,15 +15,16 @@ CRITICAL RULES:
 5. CONFIDENCE SCORING: Assign 'high', 'medium', or 'needs_review' confidence to each extracted item.
 6. CLARIFICATION QUESTIONS: If the input is vague or missing key procurement dimensions, generate up to 3 focused clarification questions with realistic multiple-choice options plus an open option.
 7. INDIAN STANDARDS: Do NOT invent or recommend any Indian Standards numbers (IS xxxx) in this phase. Focus strictly on extracting requirements from the user's specification.
+8. MULTILINGUAL PROCUREMENT INPUT: Input may be provided in English, Hindi (हिन्दी), Telugu (తెలుగు), or mixed English-Indic text. Translate and structure all extracted procurement requirements (product name, category, application, industry, parameters, materials, environment, installation, etc.) into standardized, language-independent English terminology. For 'source_text', preserve the original phrase or snippet from the user's input (in Hindi, Telugu, or English). NEVER invent or recommend an IS number.
 
 OUTPUT FORMAT:
 Respond with ONLY a valid, strictly formatted JSON object matching this schema (no markdown fences, no explanatory preamble):
 {
   "product": {
-    "name": "string (main product or equipment name)",
+    "name": "string (main product or equipment name in standard English)",
     "category": "string (general category e.g., Lighting, Electrical, Storage Tanks)",
     "confidence": "high" | "medium" | "needs_review",
-    "source_text": "string"
+    "source_text": "string (original text snippet)"
   },
   "application": "string or null (intended usage/context)",
   "application_source": "string or null",
@@ -78,13 +79,18 @@ Respond with ONLY a valid, strictly formatted JSON object matching this schema (
 }
 `;
 
-export function createExtractionUserPrompt(inputType: string, inputText: string): string {
+export function createExtractionUserPrompt(
+  inputType: string,
+  inputText: string,
+  inputLanguage: string = 'auto'
+): string {
   return `
 Input Type: ${inputType}
+Input Language: ${inputLanguage}
 Procurement Specification:
 """
 ${inputText.trim()}
 """
 
-Extract structured procurement requirements following the strict rules. Output ONLY JSON.`;
+Extract structured procurement requirements following the strict rules. If input is in Hindi or Telugu, convert requirements into standard English terminology while retaining original snippets in source_text. Output ONLY JSON.`;
 }

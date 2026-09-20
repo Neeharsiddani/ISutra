@@ -4,17 +4,76 @@
 // ============================================================
 
 import type { StructuredRequirements, TechnicalParameterItem, TaggedRequirementItem, ClarificationQuestion, ConfidenceLevel } from './types';
+import { detectInputLanguage, translateIndicProcurementConcepts, LanguageMetadata } from './multilingualService';
 
-export function extractWithPatternMatching(inputText: string, inputType: string): StructuredRequirements {
+export function extractWithPatternMatching(
+  inputText: string,
+  inputType: string,
+  languageMeta?: LanguageMetadata
+): StructuredRequirements {
   const text = inputText.trim();
   const lower = text.toLowerCase();
 
-  // 1. Identify Product & Category
-  let productName = 'Unspecified Equipment';
-  let category = 'General Procurement';
-  let productSource: string | undefined = undefined;
+  // If language metadata is not supplied, run script heuristic detection
+  const lang = languageMeta || detectInputLanguage(text);
 
-  // Specific domain product patterns
+  // If unsupported script is detected, safely return without hallucination
+  if (lang && !lang.is_supported) {
+    const errorMsg =
+      lang.details ||
+      'Language script not supported in current prototype. Supported input languages are English, Hindi, and Telugu.';
+    return {
+      product: {
+        name: 'Unspecified Product (Unsupported Script)',
+        category: 'General Procurement',
+        confidence: 'needs_review',
+        source_text: text.slice(0, 100),
+      },
+      application: null,
+      application_source: undefined,
+      industry: null,
+      technical_parameters: [],
+      materials: [],
+      environment: [],
+      safety_requirements: [],
+      performance_requirements: [],
+      testing_requirements: [],
+      installation_requirements: [],
+      certification_mentions: [],
+      quantity: null,
+      quantity_source: undefined,
+      additional_requirements: [],
+      missing_information: [errorMsg],
+      blocking_missing_information: [errorMsg],
+      clarification_questions: [
+        {
+          id: 'q-lang-support',
+          field: 'Input Language',
+          question:
+            'The submitted specification uses an unsupported language script. Please provide procurement requirements in English, Hindi, or Telugu.',
+          options: [
+            'Provide specification in English',
+            'Provide specification in Hindi',
+            'Provide specification in Telugu',
+          ],
+          suggestedAnswer: 'Provide specification in English',
+        },
+      ],
+      overall_confidence: 'needs_review',
+      ready_for_matching: false,
+    };
+  }
+
+  // Pre-translate any Indic procurement concepts (Hindi, Telugu, or Mixed)
+  const indic = translateIndicProcurementConcepts(text);
+
+  // 1. Identify Product & Category
+  let productName = indic.productName || 'Unspecified Equipment';
+  let category = indic.category || 'General Procurement';
+  let productSource: string | undefined = indic.productSource;
+
+  // Specific domain product patterns (only if product not already identified)
+  if (productName === 'Unspecified Equipment') {
   if (/emergency\s+(?:lighting\s+)?(?:luminaires?|fittings?|systems?|lights?)|self-contained\s+emergency/i.test(text)) {
     productName = 'Emergency lighting luminaires';
     category = 'Lighting & Luminaires';
@@ -151,42 +210,59 @@ export function extractWithPatternMatching(inputText: string, inputType: string)
       productSource = firstClause;
     }
   }
+  }
 
   // 2. Application & Industry
-  let application: string | null = null;
-  let application_source: string | undefined = undefined;
-  let industry: string | null = null;
+  let application: string | null = indic.application || null;
+  let application_source: string | undefined = indic.applicationSource;
+  let industry: string | null = indic.industry || null;
 
-  if (/government\s+facility/i.test(text)) {
-    application = 'Government facility';
-    application_source = text.match(/government\s+facility/i)?.[0];
-    industry = 'Public Sector / Government';
-  } else if (/municipal\s+(?:road|street|expressway)s?|highway|expressways?|street\s+lighting/i.test(text)) {
-    if (/light|luminaire|lamp|illumination/i.test(text)) {
-      application = 'Highway & Municipal road lighting';
-      application_source = text.match(/municipal\s+(?:road|street|expressway)s?(?:\s+lighting)?|highway|road\s+lighting|street\s+lighting(?:\s+illumination)?/i)?.[0];
-      industry = 'Urban Infrastructure / Municipal';
-    } else {
-      application = 'Highway & Municipal infrastructure';
-      application_source = text.match(/municipal\s+(?:road|street|expressway)s?|highway|expressways?/i)?.[0];
-      industry = 'Urban Infrastructure / Transportation';
+  if (!application) {
+    if (/government\s+facility/i.test(text)) {
+      application = 'Government facility';
+      application_source = text.match(/government\s+facility/i)?.[0];
+      industry = 'Public Sector / Government';
+    } else if (/municipal\s+(?:road|street|expressway)s?|highway|expressways?|street\s+lighting/i.test(text)) {
+      if (/light|luminaire|lamp|illumination/i.test(text)) {
+        application = 'Highway & Municipal road lighting';
+        application_source = text.match(/municipal\s+(?:road|street|expressway)s?(?:\s+lighting)?|highway|road\s+lighting|street\s+lighting(?:\s+illumination)?/i)?.[0];
+        industry = 'Urban Infrastructure / Municipal';
+      } else {
+        application = 'Highway & Municipal infrastructure';
+        application_source = text.match(/municipal\s+(?:road|street|expressway)s?|highway|expressways?/i)?.[0];
+        industry = 'Urban Infrastructure / Transportation';
+      }
+    } else if (/industrial/i.test(text)) {
+      application = 'Industrial installation';
+      application_source = text.match(/industrial/i)?.[0];
+      industry = 'Manufacturing & Heavy Industry';
+    } else if (/\boutdoor\b/i.test(text)) {
+      application = 'Outdoor';
+      application_source = text.match(/\boutdoor\b/i)?.[0];
+      industry = 'Lighting & Infrastructure';
     }
-  } else if (/industrial/i.test(text)) {
-    application = 'Industrial installation';
-    application_source = text.match(/industrial/i)?.[0];
-    industry = 'Manufacturing & Heavy Industry';
-  } else if (/\boutdoor\b/i.test(text)) {
-    application = 'Outdoor';
-    application_source = text.match(/\boutdoor\b/i)?.[0];
-    industry = 'Lighting & Infrastructure';
   }
 
   // 3. Technical Parameters
   const technical_parameters: TechnicalParameterItem[] = [];
 
+  // Seed with Indic extracted parameters if present
+  for (const p of indic.parameters) {
+    technical_parameters.push({
+      parameter: p.parameter,
+      value: p.value,
+      unit: p.unit,
+      confidence: 'high',
+      source_text: p.source_text,
+    });
+  }
+
+  const hasParam = (name: string) =>
+    technical_parameters.some((p) => p.parameter.toLowerCase() === name.toLowerCase());
+
   // Power (W, kW, HP)
   const powerMatch = text.match(/(\d+(?:\.\d+)?)\s*(W|kW|MW|Watts?|hp)\b/i);
-  if (powerMatch) {
+  if (powerMatch && !hasParam('Power')) {
     technical_parameters.push({
       parameter: 'Power',
       value: powerMatch[0].trim(),
@@ -198,7 +274,7 @@ export function extractWithPatternMatching(inputText: string, inputType: string)
 
   // Voltage (V, kV)
   const voltageMatch = text.match(/(\d+(?:\.\d+)?)\s*(V|kV|Volts?)\b/i);
-  if (voltageMatch) {
+  if (voltageMatch && !hasParam('Operating Voltage') && !hasParam('Voltage Rating')) {
     technical_parameters.push({
       parameter: 'Operating Voltage',
       value: voltageMatch[0].trim(),
@@ -210,7 +286,7 @@ export function extractWithPatternMatching(inputText: string, inputType: string)
 
   // Enclosure / IP Rating
   const ipMatch = text.match(/\b(IP\s*\d{2})\b/i);
-  if (ipMatch) {
+  if (ipMatch && !hasParam('Ingress Protection')) {
     technical_parameters.push({
       parameter: 'Ingress Protection',
       value: ipMatch[1].replace(/\s+/, '').toUpperCase(),
@@ -222,7 +298,7 @@ export function extractWithPatternMatching(inputText: string, inputType: string)
 
   // Luminous Efficacy
   const efficacyMatch = text.match(/(\d+(?:\.\d+)?)\s*(lm\/W|lumens?\s+per\s+watt)/i);
-  if (efficacyMatch) {
+  if (efficacyMatch && !hasParam('Luminous Efficacy')) {
     technical_parameters.push({
       parameter: 'Luminous Efficacy',
       value: efficacyMatch[0].trim(),
@@ -234,7 +310,7 @@ export function extractWithPatternMatching(inputText: string, inputType: string)
 
   // Surge Protection
   const surgeMatch = text.match(/surge\s+protection\s*[:\-]?\s*(\d+(?:\.\d+)?\s*(?:kV|V))/i);
-  if (surgeMatch) {
+  if (surgeMatch && !hasParam('Surge Protection')) {
     technical_parameters.push({
       parameter: 'Surge Protection',
       value: surgeMatch[1].trim(),
@@ -246,7 +322,7 @@ export function extractWithPatternMatching(inputText: string, inputType: string)
 
   // Capacity / Volume
   const capMatch = text.match(/(\d+(?:\.\d+)?)\s*(liters?|litres?|L|kL|gallons?)\b/i);
-  if (capMatch) {
+  if (capMatch && !hasParam('Capacity')) {
     technical_parameters.push({
       parameter: 'Capacity',
       value: capMatch[0].trim(),
@@ -313,8 +389,20 @@ export function extractWithPatternMatching(inputText: string, inputType: string)
   // 5. Environment
   const environment: TaggedRequirementItem[] = [];
 
+  // Seed with Indic extracted environment items
+  for (const env of indic.environment) {
+    environment.push({
+      name: env.name,
+      confidence: 'high',
+      source_text: env.source_text,
+    });
+  }
+
+  const hasEnv = (name: string) =>
+    environment.some((e) => e.name.toLowerCase().includes(name.toLowerCase()));
+
   const outdoorMatch = text.match(/\b(?:outdoor\s+installation|outdoor\s+use|external\s+use|exterior\s+use|continuous\s+outdoor\s+operation|outdoor)\b/i);
-  if (outdoorMatch) {
+  if (outdoorMatch && !hasEnv('outdoor')) {
     environment.push({
       name: 'Outdoor',
       confidence: 'high',
@@ -323,7 +411,7 @@ export function extractWithPatternMatching(inputText: string, inputType: string)
   }
 
   const weatherMatch = text.match(/\b(?:weather[\s-]+resistant|weather[\s-]*proof)\b/i);
-  if (weatherMatch) {
+  if (weatherMatch && !hasEnv('weather')) {
     environment.push({
       name: 'Weather resistant',
       confidence: 'high',
@@ -332,7 +420,7 @@ export function extractWithPatternMatching(inputText: string, inputType: string)
   }
 
   const dustMatch = text.match(/\b(?:dust[\s-]+resistant|dust[\s-]*proof)\b/i);
-  if (dustMatch) {
+  if (dustMatch && !hasEnv('dust')) {
     environment.push({
       name: 'Dust resistant',
       confidence: 'high',
@@ -341,7 +429,7 @@ export function extractWithPatternMatching(inputText: string, inputType: string)
   }
 
   const moistureMatch = text.match(/\b(?:moisture[\s-]+resistant|moisture[\s-]*proof)\b/i);
-  if (moistureMatch) {
+  if (moistureMatch && !hasEnv('moisture')) {
     environment.push({
       name: 'Moisture resistant',
       confidence: 'high',
@@ -350,7 +438,7 @@ export function extractWithPatternMatching(inputText: string, inputType: string)
   }
 
   const corrosiveMatch = text.match(/\b(?:corrosion[\s-]+resistant|corrosive|saline|marine)\b/i);
-  if (corrosiveMatch) {
+  if (corrosiveMatch && !hasEnv('corros')) {
     environment.push({
       name: 'Corrosive / Marine',
       confidence: 'medium',
@@ -359,7 +447,7 @@ export function extractWithPatternMatching(inputText: string, inputType: string)
   }
 
   const tempMatch = text.match(/\b(?:high\s+temperature|heat\s+resistant)\b/i);
-  if (tempMatch) {
+  if (tempMatch && !hasEnv('temperature') && !hasEnv('heat')) {
     environment.push({
       name: 'High temperature',
       confidence: 'high',
@@ -369,6 +457,19 @@ export function extractWithPatternMatching(inputText: string, inputType: string)
 
   // 6. Installation
   const installation_requirements: TaggedRequirementItem[] = [];
+
+  // Seed with Indic extracted installation items
+  for (const inst of indic.installation) {
+    installation_requirements.push({
+      name: inst.name,
+      confidence: 'high',
+      source_text: inst.source_text,
+    });
+  }
+
+  const hasInst = (name: string) =>
+    installation_requirements.some((i) => i.name.toLowerCase().includes(name.toLowerCase()));
+
   const instDefList = [
     {
       name: 'Pole mounted',
@@ -402,7 +503,7 @@ export function extractWithPatternMatching(inputText: string, inputType: string)
 
   for (const item of instDefList) {
     const match = text.match(item.pattern);
-    if (match) {
+    if (match && !hasInst(item.name)) {
       installation_requirements.push({
         name: item.name,
         confidence: 'high',
@@ -515,12 +616,20 @@ export function extractWithPatternMatching(inputText: string, inputType: string)
   }
 
   for (const inst of installation_requirements) {
-    technical_parameters.push({
-      parameter: 'Installation / Mounting',
-      value: inst.name,
-      confidence: inst.confidence,
-      source_text: inst.source_text,
-    });
+    if (
+      !technical_parameters.some(
+        (tp) =>
+          tp.parameter.toLowerCase().includes('installation') ||
+          tp.parameter.toLowerCase().includes('mounting')
+      )
+    ) {
+      technical_parameters.push({
+        parameter: 'Installation / Mounting',
+        value: inst.name,
+        confidence: inst.confidence,
+        source_text: inst.source_text,
+      });
+    }
   }
 
   for (const safe of safety_requirements) {

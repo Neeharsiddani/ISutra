@@ -12,7 +12,7 @@ export async function analyze(
   next: NextFunction
 ): Promise<void> {
   try {
-    const { input_type, input_text } = req.body;
+    const { input_type, input_text, input_language } = req.body;
 
     if (!input_type || !input_text) {
       res.status(400).json({
@@ -51,7 +51,8 @@ export async function analyze(
 
     const result = await analysisService.analyzeSpecification(
       input_type,
-      input_text
+      input_text,
+      input_language
     );
 
     res.json({
@@ -172,12 +173,14 @@ export async function uploadDocument(
       return;
     }
 
+    const inputLanguage = req.body?.input_language;
+
     const result = await analysisService.analyzeDocument({
       buffer: file.buffer,
       originalname: file.originalname,
       mimetype: file.mimetype,
       size: file.size,
-    });
+    }, inputLanguage);
 
     res.json({
       data: result,

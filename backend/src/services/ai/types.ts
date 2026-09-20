@@ -59,11 +59,30 @@ export interface StructuredRequirements {
   confirmed?: boolean;
 }
 
+export type DetectedLanguage = 'en' | 'hi' | 'te' | 'mixed' | 'unsupported';
+export type DetectionMethod =
+  | 'user_selected'
+  | 'script_heuristic'
+  | 'ai_detected'
+  | 'fallback_default';
+
+export interface LanguageMetadata {
+  detected_language: DetectedLanguage;
+  detected_language_label: string;
+  detection_method: DetectionMethod;
+  confidence: number;
+  is_supported: boolean;
+  user_selected_language?: string;
+  details?: string;
+}
+
 export interface AIAnalysisResult {
   analysis_id: string;
   status: 'completed' | 'processing' | 'error';
   input_type: string;
   input_text: string;
+  input_language?: string;
+  language_metadata?: LanguageMetadata;
   requirements: StructuredRequirements;
   missing_information: string[];
   blocking_missing_information?: string[];

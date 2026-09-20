@@ -50,18 +50,29 @@ async function fetchApi<T>(
 
 export async function analyzeSpecification(
   inputType: string,
-  inputText: string
+  inputText: string,
+  inputLanguage?: string
 ): Promise<AIAnalysisResult> {
   const res = await fetchApi<AIAnalysisResult>('/analyze', {
     method: 'POST',
-    body: JSON.stringify({ input_type: inputType, input_text: inputText }),
+    body: JSON.stringify({
+      input_type: inputType,
+      input_text: inputText,
+      input_language: inputLanguage,
+    }),
   });
   return res.data;
 }
 
-export async function uploadDocument(file: File): Promise<AIAnalysisResult> {
+export async function uploadDocument(
+  file: File,
+  inputLanguage?: string
+): Promise<AIAnalysisResult> {
   const formData = new FormData();
   formData.append('document', file);
+  if (inputLanguage) {
+    formData.append('input_language', inputLanguage);
+  }
 
   const response = await fetch(`${API_BASE_URL}/analysis/upload`, {
     method: 'POST',

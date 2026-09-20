@@ -6,6 +6,7 @@
 import { REQUIREMENT_EXTRACTION_SYSTEM_PROMPT, createExtractionUserPrompt } from './promptTemplates';
 import { extractWithPatternMatching } from './nlpExtractor';
 import type { StructuredRequirements } from './types';
+import type { LanguageMetadata } from './multilingualService';
 
 export interface AIClientResponse {
   requirements: StructuredRequirements;
@@ -18,7 +19,9 @@ export interface AIClientResponse {
 
 export async function extractRequirementsWithAI(
   inputText: string,
-  inputType: string
+  inputType: string,
+  inputLanguage?: string,
+  languageMeta?: LanguageMetadata
 ): Promise<AIClientResponse> {
   const provider = (process.env.AI_PROVIDER || '').toLowerCase();
   const apiKey = process.env.AI_API_KEY;
@@ -27,7 +30,7 @@ export async function extractRequirementsWithAI(
   // If no external API key is provided, clearly mark as Demo Mode
   if (!apiKey || apiKey.trim() === '') {
     console.log('[ISutra AI] AI_API_KEY is not configured. Operating in Demo Mode.');
-    const result = extractWithPatternMatching(inputText, inputType);
+    const result = extractWithPatternMatching(inputText, inputType, languageMeta);
     return {
       requirements: result,
       provider: 'demo_mode',
@@ -49,7 +52,7 @@ export async function extractRequirementsWithAI(
             role: 'user',
             parts: [
               { text: REQUIREMENT_EXTRACTION_SYSTEM_PROMPT },
-              { text: createExtractionUserPrompt(inputType, inputText) },
+              { text: createExtractionUserPrompt(inputType, inputText, inputLanguage) },
             ],
           },
         ],
@@ -87,7 +90,7 @@ export async function extractRequirementsWithAI(
       };
     } catch (err) {
       console.warn('[ISutra AI] Gemini call failed, operating in Demo Mode:', (err as Error).message);
-      const fallbackResult = extractWithPatternMatching(inputText, inputType);
+      const fallbackResult = extractWithPatternMatching(inputText, inputType, languageMeta);
       return {
         requirements: fallbackResult,
         provider: 'demo_mode',
@@ -108,7 +111,7 @@ export async function extractRequirementsWithAI(
         model,
         messages: [
           { role: 'system', content: REQUIREMENT_EXTRACTION_SYSTEM_PROMPT },
-          { role: 'user', content: createExtractionUserPrompt(inputType, inputText) },
+          { role: 'user', content: createExtractionUserPrompt(inputType, inputText, inputLanguage) },
         ],
         response_format: { type: 'json_object' },
         temperature: 0.1,
@@ -145,7 +148,7 @@ export async function extractRequirementsWithAI(
       };
     } catch (err) {
       console.warn('[ISutra AI] OpenAI call failed, operating in Demo Mode:', (err as Error).message);
-      const fallbackResult = extractWithPatternMatching(inputText, inputType);
+      const fallbackResult = extractWithPatternMatching(inputText, inputType, languageMeta);
       return {
         requirements: fallbackResult,
         provider: 'demo_mode',
@@ -159,7 +162,7 @@ export async function extractRequirementsWithAI(
 
   // Unknown provider fallback
   return {
-    requirements: extractWithPatternMatching(inputText, inputType),
+    requirements: extractWithPatternMatching(inputText, inputType, languageMeta),
     provider: 'demo_mode',
     modelUsed: 'Demo Mode',
     isConfigured: false,

@@ -7,6 +7,7 @@ import { getSupabaseClient, isSupabaseConfigured } from '../database/supabase';
 import { runRequirementExtractionPipeline } from './ai/requirementExtractor';
 import { validateAndSanitizeRequirements } from './ai/validation';
 import type { StructuredRequirements, ClarificationQuestion } from './ai/types';
+import type { LanguageMetadata } from './ai/multilingualService';
 import type { InputType } from '../types';
 import { extractDocument, DocumentUploadInput, DocumentExtractionResult } from './documentExtractionService';
 
@@ -42,6 +43,8 @@ export interface StoredAnalysis {
   demo: boolean;
   warning?: string;
   document_provenance?: DocumentProvenance;
+  input_language?: string;
+  language_metadata?: LanguageMetadata;
 }
 
 // In-memory analysis store for instant local development and fallback when Supabase is not configured
@@ -49,13 +52,14 @@ const inMemoryStore: Map<string, StoredAnalysis> = new Map();
 
 export async function analyzeSpecification(
   inputType: InputType,
-  inputText: string
+  inputText: string,
+  inputLanguage?: string
 ) {
   const analysisId = `analysis-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
   const createdAt = new Date().toISOString();
 
-  // Run AI Requirement Extraction Pipeline
-  const extraction = await runRequirementExtractionPipeline(inputText, inputType);
+  // Run AI Requirement Extraction Pipeline with language detection
+  const extraction = await runRequirementExtractionPipeline(inputText, inputType, inputLanguage);
   const readyForMatching = Boolean(extraction.requirements.ready_for_matching);
   const blockingMissingInfo = extraction.requirements.blocking_missing_information || [];
 
@@ -79,6 +83,8 @@ export async function analyzeSpecification(
     document_provenance: {
       source_type: 'direct_text',
     },
+    input_language: extraction.input_language,
+    language_metadata: extraction.language_metadata,
   };
 
   // Always save in inMemoryStore
@@ -163,6 +169,8 @@ export async function analyzeSpecification(
     provider_used: extraction.provider_used,
     demo: extraction.demo,
     warning: extraction.warning,
+    input_language: extraction.input_language,
+    language_metadata: extraction.language_metadata,
   };
 }
 
@@ -277,7 +285,8 @@ export async function getAnalysisHistory(): Promise<Array<{
 }
 
 export async function analyzeDocument(
-  fileInput?: DocumentUploadInput | string
+  fileInput?: DocumentUploadInput | string,
+  inputLanguage?: string
 ) {
   // Check if real document upload buffer was provided
   if (fileInput && typeof fileInput === 'object' && 'buffer' in fileInput) {
@@ -296,7 +305,7 @@ export async function analyzeDocument(
     const createdAt = new Date().toISOString();
 
     // Run existing AI Requirement Extraction Pipeline on the real extracted document text
-    const extraction = await runRequirementExtractionPipeline(extracted.text, 'tender_document');
+    const extraction = await runRequirementExtractionPipeline(extracted.text, 'tender_document', inputLanguage);
     const readyForMatching = Boolean(extraction.requirements.ready_for_matching);
     const blockingMissingInfo = extraction.requirements.blocking_missing_information || [];
 
@@ -332,6 +341,8 @@ export async function analyzeDocument(
       demo: extraction.demo,
       warning: extracted.warnings.length > 0 ? extracted.warnings.join(' | ') : extraction.warning,
       document_provenance: provenance,
+      input_language: extraction.input_language,
+      language_metadata: extraction.language_metadata,
     };
 
     inMemoryStore.set(analysisId, record);
@@ -352,6 +363,8 @@ export async function analyzeDocument(
       demo: extraction.demo,
       warning: extracted.warnings.length > 0 ? extracted.warnings.join(' | ') : extraction.warning,
       document_provenance: provenance,
+      input_language: extraction.input_language,
+      language_metadata: extraction.language_metadata,
     };
   }
 
@@ -359,7 +372,7 @@ export async function analyzeDocument(
   const demoFileName = typeof fileInput === 'string' && fileInput.trim() ? fileInput : 'Sample_Municipal_LED_Streetlight_Tender_Extract.pdf';
   const sampleExtractedText = `Demonstration Tender Extract (${demoFileName}):\nRequirement for Municipal LED Street Lighting Luminaire 100W, outdoor weather-resistant housing, pole mounted with surge protection 10kV, CCT 4000K, luminous efficacy >= 120 lm/W.`;
 
-  const extraction = await runRequirementExtractionPipeline(sampleExtractedText, 'tender_document');
+  const extraction = await runRequirementExtractionPipeline(sampleExtractedText, 'tender_document', inputLanguage);
   const analysisId = `doc-analysis-${Date.now()}`;
   const createdAt = new Date().toISOString();
   const readyForMatching = Boolean(extraction.requirements.ready_for_matching);
@@ -396,6 +409,8 @@ export async function analyzeDocument(
     provider_used: extraction.provider_used,
     demo: true,
     document_provenance: demoProvenance,
+    input_language: extraction.input_language,
+    language_metadata: extraction.language_metadata,
   };
 
   inMemoryStore.set(analysisId, record);
@@ -415,5 +430,7 @@ export async function analyzeDocument(
     provider_used: extraction.provider_used,
     demo: true,
     document_provenance: demoProvenance,
+    input_language: extraction.input_language,
+    language_metadata: extraction.language_metadata,
   };
 }

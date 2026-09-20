@@ -20,6 +20,7 @@ import {
   Upload,
   FileUp,
   ShieldCheck,
+  Globe,
 } from 'lucide-react';
 import { useAnalysis } from '../hooks/useAnalysis';
 import type { InputType } from '../types';
@@ -27,20 +28,39 @@ import AnalysisLoading from '../components/analysis/AnalysisLoading';
 
 const EXAMPLE_SPECS = [
   {
-    title: 'Outdoor LED Street Lighting',
+    title: 'Outdoor LED Street Lighting (EN)',
     text: 'Outdoor LED street lighting system, 100W, weather resistant, pole mounted, IP65 enclosure, surge protection 10kV.',
+    lang: 'en',
+  },
+  {
+    title: 'एलईडी स्ट्रीट लाइट (Hindi)',
+    text: 'नगर निगम सड़क प्रकाश व्यवस्था के लिए 100 वाट एलईडी स्ट्रीट लाइट, बाहरी मौसम प्रतिरोधी, पोल माउंटेड, आईपी65, 10 केवी सर्ज सुरक्षा',
+    lang: 'hi',
+  },
+  {
+    title: 'ఎల్‌ఈడీ వీధి దీపాలు (Telugu)',
+    text: 'మున్సిపల్ రోడ్ల కోసం 100 వాట్లు ఎల్‌ఈడీ స్ట్రీట్ లైట్లు, బహిరంగ వాతావరణ నిరోధక, పోల్ మౌంటెడ్, ఐపీ65, 10 కేవీ సర్జ్ రక్షణ',
+    lang: 'te',
+  },
+  {
+    title: 'Mixed Language (Hinglish/Indic)',
+    text: '100W LED street light for नगर निगम, outdoor IP65 with 10kV surge protection, खंभे पर स्थापित',
+    lang: 'auto',
   },
   {
     title: 'Water Storage Tanks',
     text: 'Procure 500 stainless steel water storage tanks for a municipal government facility, corrosion resistant Grade 304.',
+    lang: 'en',
   },
   {
     title: 'High-Temp Electrical Cables',
     text: 'Supply industrial electrical cables suitable for high temperature environments, 1.1kV grade XLPE insulated copper conductor.',
+    lang: 'en',
   },
   {
     title: 'Vague Input Test',
     text: 'Need LED street lights.',
+    lang: 'en',
   },
 ];
 
@@ -71,6 +91,8 @@ export default function AnalyzePage() {
   const navigate = useNavigate();
   const {
     setInputType,
+    inputLanguage,
+    setInputLanguage,
     inputText,
     setInputText,
     uploadedFile,
@@ -139,7 +161,7 @@ export default function AnalyzePage() {
       return;
     }
     setValidationError(null);
-    const result = await analyzeFile(uploadedFile.file);
+    const result = await analyzeFile(uploadedFile.file, inputLanguage);
     if (result && result.analysis_id) {
       navigate(`/analysis/${result.analysis_id}/review`, {
         state: { analysis: result },
@@ -167,7 +189,7 @@ export default function AnalyzePage() {
       : 'product_description';
 
     setInputType(inferredType);
-    const result = await analyze(inferredType);
+    const result = await analyze(inferredType, inputLanguage);
 
     if (result && result.analysis_id) {
       navigate(`/analysis/${result.analysis_id}/review`, {
@@ -261,6 +283,7 @@ export default function AnalyzePage() {
                   type="button"
                   onClick={() => {
                     setInputText(ex.text);
+                    setInputLanguage(ex.lang || 'auto');
                     setUploadedFile(null);
                     setValidationError(null);
                   }}
@@ -270,6 +293,50 @@ export default function AnalyzePage() {
                 </button>
               ))}
             </div>
+          </div>
+
+          {/* Input Language Selector */}
+          <div className="p-3 bg-slate-50/80 border border-slate-200/70 rounded-xl space-y-2">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
+              <div className="flex items-center gap-2">
+                <Globe className="w-4 h-4 text-[#0F766E]" />
+                <label className="text-xs font-bold text-[#102A43] uppercase tracking-wider font-display">
+                  Input Language
+                </label>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#0F766E]/10 text-[#0F766E] font-semibold border border-[#0F766E]/20">
+                  Multilingual Layer
+                </span>
+              </div>
+              <span className="text-[11px] text-slate-500 italic">
+                Supports English, Hindi and Telugu procurement input in this prototype.
+              </span>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+              {[
+                { id: 'auto', label: 'Auto Detect' },
+                { id: 'en', label: 'English' },
+                { id: 'hi', label: 'Hindi (हिंदी)' },
+                { id: 'te', label: 'Telugu (తెలుగు)' },
+              ].map((langOpt) => (
+                <button
+                  key={langOpt.id}
+                  type="button"
+                  onClick={() => setInputLanguage(langOpt.id)}
+                  className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all cursor-pointer border ${
+                    inputLanguage === langOpt.id
+                      ? 'bg-[#0F766E] text-white border-[#0F766E] shadow-2xs font-semibold'
+                      : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:text-slate-900'
+                  }`}
+                >
+                  {langOpt.label}
+                </button>
+              ))}
+            </div>
+
+            <p className="text-[11px] text-slate-500 leading-normal">
+              You can describe the procurement requirement in English, Hindi, or Telugu.
+            </p>
           </div>
 
           {/* Primary Textarea */}

@@ -94,6 +94,25 @@ export interface StructuredRequirements {
   confirmed?: boolean;
 }
 
+// --- Multilingual Procurement Input Types ---
+export type SupportedLanguage = 'en' | 'hi' | 'te';
+export type DetectedLanguage = 'en' | 'hi' | 'te' | 'mixed' | 'unsupported';
+export type DetectionMethod =
+  | 'user_selected'
+  | 'script_heuristic'
+  | 'ai_detected'
+  | 'fallback_default';
+
+export interface LanguageMetadata {
+  detected_language: DetectedLanguage;
+  detected_language_label: string;
+  detection_method: DetectionMethod;
+  confidence: number;
+  is_supported: boolean;
+  user_selected_language?: string;
+  details?: string;
+}
+
 export interface AIAnalysisResult {
   analysis_id: string;
   status: 'completed' | 'processing' | 'error';
@@ -112,6 +131,8 @@ export interface AIAnalysisResult {
   warning?: string;
   message?: string;
   document_provenance?: DocumentProvenance;
+  input_language?: string;
+  language_metadata?: LanguageMetadata;
 }
 
 export interface DocumentProvenance {

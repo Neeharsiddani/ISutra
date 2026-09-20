@@ -21,6 +21,7 @@ import {
   HelpCircle,
   Info,
   FileArchive,
+  Globe,
 } from 'lucide-react';
 import { getAnalysisById, updateAnalysisRequirements } from '../services/api';
 import type {
@@ -299,6 +300,40 @@ export default function RequirementReviewPage() {
           </p>
         </div>
       </div>
+
+      {/* ============================================================
+          MULTILINGUAL INPUT INTELLIGENCE BANNER
+         ============================================================ */}
+      {analysis.language_metadata && (
+        <div className="bg-slate-50 border border-[#0F766E]/30 rounded-2xl p-4 sm:p-5 shadow-2xs animate-fade-in flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-start gap-3">
+            <div className="w-9 h-9 rounded-xl bg-[#0F766E]/10 flex items-center justify-center text-[#0F766E] shrink-0 mt-0.5">
+              <Globe className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs sm:text-sm font-bold text-[#102A43]">
+                  Detected language: {analysis.language_metadata.detected_language_label}
+                </span>
+                <span className="px-2 py-0.5 text-[10px] font-bold uppercase rounded bg-[#0F766E]/10 text-[#0F766E] border border-[#0F766E]/20">
+                  {analysis.language_metadata.detected_language.toUpperCase()}
+                </span>
+                {analysis.language_metadata.detection_method && (
+                  <span className="text-[11px] text-slate-400">
+                    ({analysis.language_metadata.detection_method === 'user_selected' ? 'User Selected' : 'Script Heuristic'})
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+                ISutra converts the input into structured procurement requirements before standards matching.
+              </p>
+            </div>
+          </div>
+          <div className="text-[11px] text-[#0F766E] font-medium shrink-0 bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-2xs">
+            Standardized English representation
+          </div>
+        </div>
+      )}
 
       {/* ============================================================
           DOCUMENT PROVENANCE CARD (Only shown when source is document upload)
