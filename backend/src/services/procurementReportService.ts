@@ -10,6 +10,7 @@ import { analyzeRequirementGaps, RequirementGapAnalysis } from './requirementGap
 import { VERIFIED_BIS_STANDARDS } from '../database/verifiedStandards';
 import { getResolvedRelationships } from './standardsRelationshipService';
 import { getStandardLifecycle } from './standardLifecycleService';
+import { getStandardRegulatoryCheck, REGULATORY_DISCLAIMER } from './regulatoryService';
 
 export interface ReportAssociatedReference {
   standardNumber: string;
@@ -73,6 +74,31 @@ export interface ReportCoverageItem {
   status: 'matched' | 'partially_matched' | 'not_available' | 'contradicted';
 }
 
+export interface ReportRegulatoryScheme {
+  schemeCode: string;
+  schemeName: string;
+  status: string;
+  statusLabel: string;
+  reason?: string;
+  evidenceOrder?: string;
+  authority?: string;
+  effectiveDate?: string;
+  sourceUrl: string;
+  notesLimitations?: string;
+}
+
+export interface ReportStandardRegulatoryItem {
+  standardNumber: string;
+  standardTitle: string;
+  hasVerifiedRequirement: boolean;
+  schemes: ReportRegulatoryScheme[];
+}
+
+export interface ReportRegulatoryVerification {
+  disclaimer: string;
+  standards: ReportStandardRegulatoryItem[];
+}
+
 export interface ProcurementReportData {
   reportId: string;
   generatedAt: string;
@@ -90,6 +116,7 @@ export interface ProcurementReportData {
   requirementCoverage: ReportCoverageItem[];
   missingInformation: string[];
   limitations: string[];
+  regulatoryVerification?: ReportRegulatoryVerification;
 }
 
 /**
@@ -280,12 +307,60 @@ export async function generateProcurementReportData(
     }
   }
 
+  // Compile regulatory / certification verification for top standards
+  const regulatoryStandards: ReportStandardRegulatoryItem[] = [];
+  for (const rec of recommendations.slice(0, 5)) {
+    try {
+      const regCheck = await getStandardRegulatoryCheck(rec.standard.id);
+      regulatoryStandards.push({
+        standardNumber: rec.standard.standard_number || rec.standard.id,
+        standardTitle: rec.standard.title,
+        hasVerifiedRequirement: regCheck.has_verified_requirement,
+        schemes: regCheck.schemes.map((s) => ({
+          schemeCode: s.scheme_code,
+          schemeName: s.scheme_name,
+          status: s.status,
+          statusLabel: s.status_label,
+          reason: s.reason,
+          evidenceOrder: s.evidence_order,
+          authority: s.authority,
+          effectiveDate: s.effective_date,
+          sourceUrl: s.source_url,
+          notesLimitations: s.notes_limitations,
+        })),
+      });
+    } catch {
+      // Fallback safe entry
+      regulatoryStandards.push({
+        standardNumber: rec.standard.standard_number || rec.standard.id,
+        standardTitle: rec.standard.title,
+        hasVerifiedRequirement: false,
+        schemes: [
+          {
+            schemeCode: 'bis_product_certification',
+            schemeName: 'BIS Product Certification (Scheme I / ISI Mark & QCOs)',
+            status: 'verification_required',
+            statusLabel: 'Verification required',
+            reason: 'Regulatory verification check pending.',
+            sourceUrl: rec.standard.source_url || 'https://www.bis.gov.in',
+          },
+        ],
+      });
+    }
+  }
+
+  const regulatoryVerification: ReportRegulatoryVerification = {
+    disclaimer: REGULATORY_DISCLAIMER,
+    standards: regulatoryStandards,
+  };
+
   const limitations = [
     'Recommendations are generated strictly from ISutra verified Indian Standards dataset.',
     "'not_available' indicates that the specific parameter is not recorded in the reference record, not necessarily non-compliance.",
     'Procurement officers must verify all mandatory specifications and amendments with the official Bureau of Indian Standards publication before tender issuance.',
     'Associated standards may affect testing, safety, or installation requirements; verify relationship classification and normative applicability directly against official BIS publications.',
     'Automated matching does not constitute formal engineering sign-off or statutory product certification.',
+    'Certification applicability is based only on curated authoritative regulatory evidence available in the ISutra reference dataset. Absence of a record does not establish that no legal requirement exists. Verify applicable Government/BIS orders before procurement.',
   ];
 
   return {
@@ -305,6 +380,7 @@ export async function generateProcurementReportData(
     requirementCoverage,
     missingInformation: reqs.missing_information || [],
     limitations,
+    regulatoryVerification,
   };
 }
 
@@ -464,6 +540,89 @@ function renderLifecycleSectionHtml(
     ${cardsHtml}`;
 }
 
+function renderRegulatorySectionHtml(
+  regulatoryVerification: ReportRegulatoryVerification | undefined,
+  sectionHeader: string
+): string {
+  if (!regulatoryVerification || regulatoryVerification.standards.length === 0) {
+    return '';
+  }
+
+  const standardsCards = regulatoryVerification.standards
+    .map((std) => {
+      const schemesRows = std.schemes
+        .map((s) => {
+          const isVerified = s.status === 'verified_requirement';
+          const isReq = s.status === 'verification_required';
+          const badgeStyle = isVerified
+            ? 'background: #e6f4ea; color: #137333; border: 1px solid #ceead6;'
+            : isReq
+            ? 'background: #fef3c7; color: #92400e; border: 1px solid #fde68a;'
+            : 'background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1;';
+
+          const evidenceText = isVerified
+            ? `<strong>Order:</strong> ${s.evidenceOrder || 'Official Regulatory Order'}<br/>` +
+              (s.authority ? `<strong>Authority:</strong> ${s.authority}<br/>` : '') +
+              (s.effectiveDate ? `<strong>Effective:</strong> ${formatReportDate(s.effectiveDate)}<br/>` : '') +
+              (s.notesLimitations ? `<span style="font-size: 10px; color: #627d98;">${s.notesLimitations}</span>` : '')
+            : `<span style="color: #627d98;">${s.reason || 'No verified regulatory applicability record is stored for this product in the current ISutra reference dataset.'}</span>`;
+
+          const actionLink = s.sourceUrl
+            ? `<a href="${s.sourceUrl}" target="_blank" rel="noopener noreferrer" style="color: #0f766e; font-weight: 600; text-decoration: none; font-size: 11px;">${isVerified ? 'Open Official Source &rarr;' : 'Verify official source &rarr;'}</a>`
+            : '<span style="color: #94a3b8; font-size: 11px;">Verification pending</span>';
+
+          return `<tr>
+            <td style="font-weight: 700; color: #0f766e; white-space: nowrap; padding: 8px 10px; border: 1px solid #e2e8f0; font-size: 12px;">${s.schemeName}</td>
+            <td style="padding: 8px 10px; border: 1px solid #e2e8f0; white-space: nowrap;">
+              <span style="display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; ${badgeStyle}">
+                ${s.statusLabel}
+              </span>
+            </td>
+            <td style="padding: 8px 10px; border: 1px solid #e2e8f0; font-size: 11px; color: #334e68;">${evidenceText}</td>
+            <td style="padding: 8px 10px; border: 1px solid #e2e8f0; font-size: 11px; white-space: nowrap;">${actionLink}</td>
+          </tr>`;
+        })
+        .join('');
+
+      return `<div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; margin-bottom: 14px;">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px; border-bottom: 1px solid #cbd5e1; padding-bottom: 6px; margin-bottom: 10px;">
+          <div>
+            <span style="font-size: 15px; font-weight: 700; color: #0f766e;">${std.standardNumber}</span>
+            <span style="font-size: 13px; font-weight: 600; color: #102a43; margin-left: 8px;">${std.standardTitle}</span>
+          </div>
+          <span style="font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 4px; ${std.hasVerifiedRequirement ? 'background: #e6f4ea; color: #137333; border: 1px solid #ceead6;' : 'background: #f8fafc; color: #627d98; border: 1px solid #cbd5e1;'}">
+            ${std.hasVerifiedRequirement ? 'Mandatory Order Verified' : 'Verification Required'}
+          </span>
+        </div>
+        <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+          <thead>
+            <tr style="background: #f1f5f9;">
+              <th style="padding: 6px 10px; border: 1px solid #e2e8f0; text-align: left;">Scheme / Certification Type</th>
+              <th style="padding: 6px 10px; border: 1px solid #e2e8f0; text-align: left;">Regulatory Status</th>
+              <th style="padding: 6px 10px; border: 1px solid #e2e8f0; text-align: left;">Regulatory Evidence & Scope</th>
+              <th style="padding: 6px 10px; border: 1px solid #e2e8f0; text-align: left;">Official Portal</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${schemesRows}
+          </tbody>
+        </table>
+      </div>`;
+    })
+    .join('');
+
+  return `
+    <div class="section-title">${sectionHeader}</div>
+    <div style="font-size: 12px; color: #627d98; margin-bottom: 10px;">
+      Statutory certification requirements (BIS Product Certification Scheme I / ISI Mark & QCOs, Compulsory Registration Scheme CRS Scheme II, and Hallmarking Scheme IV) derived strictly from verified Government Quality Control Orders and gazetted notifications.
+    </div>
+    ${standardsCards}
+    <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 10px 14px; margin-top: 10px; font-size: 11px; color: #166534;">
+      <strong>Regulatory Disclaimer:</strong> ${regulatoryVerification.disclaimer}
+    </div>
+  `;
+}
+
 /**
  * Generate clean, self-contained printable HTML report with print stylesheets
  */
@@ -543,12 +702,18 @@ export function generatePrintableHtmlReport(report: ProcurementReportData): stri
   const lifecycleSectionHeader = standardsWithLifecycle.length > 0
     ? `${++currentSectionIdx}. BIS Lifecycle & Amendment Evidence`
     : '';
+  const regulatorySectionHeader = `${++currentSectionIdx}. Regulatory / Certification Verification`;
   const coverageSectionHeader = `${++currentSectionIdx}. Requirement Coverage Matrix`;
   const gapsSectionHeader = `${++currentSectionIdx}. Missing Information & Identified Gaps`;
 
   const lifecycleSectionHtml = renderLifecycleSectionHtml(
     standardsWithLifecycle,
     lifecycleSectionHeader
+  );
+
+  const regulatorySectionHtml = renderRegulatorySectionHtml(
+    report.regulatoryVerification,
+    regulatorySectionHeader
   );
 
   const associatedSectionHtml =
@@ -845,6 +1010,8 @@ export function generatePrintableHtmlReport(report: ProcurementReportData): stri
     ${associatedSectionHtml}
 
     ${lifecycleSectionHtml}
+
+    ${regulatorySectionHtml}
 
     <div class="section-title">${coverageSectionHeader}</div>
     <table>

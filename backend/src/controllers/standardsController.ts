@@ -140,3 +140,21 @@ export async function getLifecycle(
     next(error);
   }
 }
+
+export async function getRegulatoryCheck(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const { getStandardRegulatoryCheck } = await import('../services/regulatoryService');
+    const result = await getStandardRegulatoryCheck(req.params.id);
+    res.json({
+      success: true,
+      data: result,
+      disclaimer: result.disclaimer,
+    });
+  } catch (error) {
+    next(error);
+  }
+}

@@ -20,11 +20,12 @@ import {
   Sparkles,
   History,
 } from 'lucide-react';
-import type { Standard, StandardRelationship, RelationshipCoverage, StandardLifecycleResponse } from '../types';
-import { getStandardById, getRelatedStandards, getStandardLifecycle } from '../services/api';
+import type { Standard, StandardRelationship, RelationshipCoverage, StandardLifecycleResponse, RegulatoryAssessmentResponse } from '../types';
+import { getStandardById, getRelatedStandards, getStandardLifecycle, getRegulatoryCheck } from '../services/api';
 import LoadingState from '../components/ui/LoadingState';
 import ErrorState from '../components/ui/ErrorState';
 import { AlliedStandardsExplorer } from '../components/standards/AlliedStandardsExplorer';
+import { RegulatoryCheckSection } from '../components/standards/RegulatoryCheckSection';
 
 function formatPartialDate(dateStr?: string): string {
   if (!dateStr || !dateStr.trim()) return 'Not available in current reference dataset.';
@@ -90,6 +91,7 @@ export default function StandardDetailsPage() {
   const [coverage, setCoverage] = useState<RelationshipCoverage | null>(null);
   const [procurementGuidance, setProcurementGuidance] = useState<string | null>(null);
   const [lifecycleRes, setLifecycleRes] = useState<StandardLifecycleResponse | null>(null);
+  const [regulatoryRes, setRegulatoryRes] = useState<RegulatoryAssessmentResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -100,7 +102,7 @@ export default function StandardDetailsPage() {
       setLoading(true);
       setError(null);
       try {
-        const [stdRes, relRes, lcRes] = await Promise.all([
+        const [stdRes, relRes, lcRes, regRes] = await Promise.all([
           getStandardById(id!),
           getRelatedStandards(id!).catch(() => ({
             data: [],
@@ -119,12 +121,14 @@ export default function StandardDetailsPage() {
             notice:
               'Lifecycle evidence not currently available in the curated ISutra reference dataset.',
           })),
+          getRegulatoryCheck(id!).catch(() => null),
         ]);
         setStandard(stdRes.data);
         setRelationships(relRes.data || []);
         if (relRes.coverage) setCoverage(relRes.coverage);
         if (relRes.procurement_guidance) setProcurementGuidance(relRes.procurement_guidance);
         setLifecycleRes(lcRes);
+        setRegulatoryRes(regRes);
       } catch (err) {
         setError(
           err instanceof Error ? err.message : 'Failed to load standard details.'
@@ -400,6 +404,9 @@ export default function StandardDetailsPage() {
               </div>
             </div>
           </div>
+
+          {/* CARD 5: REGULATORY / CERTIFICATION CHECK */}
+          <RegulatoryCheckSection assessment={regulatoryRes} loading={loading} />
         </div>
 
         {/* ==========================================================
@@ -705,10 +712,15 @@ export default function StandardDetailsPage() {
             {/* Additional Metadata: Certification Applicability & Source Organization */}
             <div className="pt-4 border-t border-[#243B53]/10 space-y-2 text-[12px]">
               <div className="flex items-center justify-between gap-3">
-                <span className="text-[#627D98]">Certification Applicability</span>
-                <span className="text-xs text-[#627D98] text-right italic">
-                  Check applicable Ministry QCOs
-                </span>
+                <span className="text-[#627D98]">Regulatory Applicability</span>
+                <a
+                  href="#regulatory-check"
+                  className="text-xs font-semibold text-[#0F766E] hover:underline text-right"
+                >
+                  {regulatoryRes?.has_verified_requirement
+                    ? 'Verified Order Available →'
+                    : 'Verification Required →'}
+                </a>
               </div>
               <div className="flex items-center justify-between gap-3">
                 <span className="text-[#627D98]">Source Organization</span>

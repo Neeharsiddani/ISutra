@@ -259,3 +259,5 @@ export async function getCertifications(id: string) {
     notice: 'Mandatory certification applicability is not verified in the current dataset. Check applicable Ministry Quality Control Orders (QCOs) and official BIS certification information.',
   };
 }
+
+export { getStandardRegulatoryCheck } from './regulatoryService';

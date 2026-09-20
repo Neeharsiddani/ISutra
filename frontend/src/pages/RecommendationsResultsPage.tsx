@@ -728,6 +728,15 @@ export default function RecommendationsResultsPage() {
                       </Link>
 
                       <Link
+                        to={`/standards/${rec.standard.id}?fromAnalysis=${id || ''}#regulatory-check`}
+                        state={{ fromAnalysisId: id }}
+                        className="min-h-[36px] px-3.5 py-1.5 rounded-lg border border-[#243B53]/20 hover:bg-slate-50 text-xs font-semibold text-[#243B53] flex items-center gap-1.5 transition-colors shadow-2xs"
+                      >
+                        <ShieldCheck className="w-3.5 h-3.5 text-[#0F766E]" />
+                        <span>Check Regulatory / QCO</span>
+                      </Link>
+
+                      <Link
                         to={`/standards/${rec.standard.id}?fromAnalysis=${id || ''}`}
                         state={{ fromAnalysisId: id }}
                         className="min-h-[36px] px-3 py-1.5 rounded-lg border border-[#243B53]/20 hover:bg-slate-50 text-xs font-semibold text-[#243B53] flex items-center gap-1 transition-colors"

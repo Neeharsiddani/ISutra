@@ -18,6 +18,7 @@ import type {
   GapAnalysisResponse,
   ComparisonResponse,
   StandardLifecycleResponse,
+  RegulatoryAssessmentResponse,
 } from '../types';
 import {
   DEMO_STANDARDS,
@@ -305,6 +306,60 @@ export async function getCertifications(
       notice: isDemo
         ? 'Demo data — not official BIS certification information.'
         : 'Mandatory certification applicability is not verified in the current dataset. Check applicable Ministry Quality Control Orders (QCOs) and official BIS certification information.',
+    };
+  }
+}
+
+export async function getRegulatoryCheck(
+  id: string
+): Promise<RegulatoryAssessmentResponse> {
+  try {
+    const res = await fetchApi<RegulatoryAssessmentResponse>(
+      `/standards/${id}/regulatory`
+    );
+    return res.data;
+  } catch {
+    const isDemo = id.toLowerCase().startsWith('demo-');
+    return {
+      standard_id: id,
+      standard_number: id,
+      standard_title: isDemo ? '[DEMO] Demonstration Standard' : 'Standard',
+      is_verified_standard: !isDemo,
+      is_demo: isDemo,
+      has_verified_requirement: false,
+      verified_requirements_count: 0,
+      schemes: [
+        {
+          scheme_code: 'bis_product_certification',
+          scheme_name: 'BIS Product Certification (Scheme I / ISI Mark & QCOs)',
+          scheme_category: 'Product Certification Scheme I',
+          status: 'verification_required',
+          status_label: 'Verification required',
+          reason: 'No verified regulatory applicability record is stored for this product in the current ISutra reference dataset.',
+          source_url: 'https://www.bis.gov.in/product-certification/products-under-compulsory-certification/',
+        },
+        {
+          scheme_code: 'crs',
+          scheme_name: 'Compulsory Registration Scheme (CRS — Scheme II)',
+          scheme_category: 'Self-Declaration of Conformity',
+          status: 'no_verified_record',
+          status_label: 'No Verified Regulatory Record',
+          reason: 'No verified Compulsory Registration Scheme (CRS) record is stored for this product in the current ISutra reference dataset.',
+          source_url: 'https://www.crsbis.in/BIS/products-lic.do',
+        },
+        {
+          scheme_code: 'hallmarking',
+          scheme_name: 'Hallmarking Scheme (Scheme IV)',
+          scheme_category: 'Precious Metals Certification',
+          status: 'no_verified_record',
+          status_label: 'No Verified Regulatory Record',
+          reason: 'Hallmarking (Scheme IV) applies exclusively to precious metal articles (gold and silver). It is not applicable to this product domain.',
+          source_url: 'https://www.bis.gov.in/hallmarking-overview/',
+        },
+      ],
+      disclaimer:
+        'Certification applicability is based only on curated authoritative regulatory evidence available in the ISutra reference dataset. Absence of a record does not establish that no legal requirement exists. Verify applicable Government/BIS orders before procurement.',
+      notice: isDemo ? 'Demo data — not official regulatory information.' : undefined,
     };
   }
 }

@@ -651,3 +651,44 @@ export interface StandardLifecycleResponse {
   demo?: boolean;
 }
 
+// --- SIH26108 Regulatory & Certification Check Types ---
+export type RegulatorySchemeCode =
+  | 'bis_product_certification'
+  | 'crs'
+  | 'hallmarking';
+
+export type RegulatoryAssessmentState =
+  | 'verified_requirement'
+  | 'verification_required'
+  | 'no_verified_record'
+  | 'not_assessed';
+
+export interface SchemeAssessment {
+  scheme_code: RegulatorySchemeCode;
+  scheme_name: string;
+  scheme_category: string;
+  status: RegulatoryAssessmentState;
+  status_label: string;
+  reason?: string;
+  evidence_order?: string;
+  authority?: string;
+  effective_date?: string;
+  last_verified_date?: string;
+  source?: string;
+  source_url: string;
+  notes_limitations?: string;
+}
+
+export interface RegulatoryAssessmentResponse {
+  standard_id: string;
+  standard_number: string;
+  standard_title: string;
+  is_verified_standard: boolean;
+  is_demo: boolean;
+  has_verified_requirement: boolean;
+  verified_requirements_count: number;
+  schemes: SchemeAssessment[];
+  disclaimer: string;
+  notice?: string;
+}
+

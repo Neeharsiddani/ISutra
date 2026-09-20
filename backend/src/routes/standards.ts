@@ -28,4 +28,8 @@ router.get('/:id/amendments', standardsController.getAmendments);
 // GET /api/standards/:id/certifications — Get certifications
 router.get('/:id/certifications', standardsController.getCertifications);
 
+// GET /api/standards/:id/regulatory — Get regulatory / certification check
+router.get('/:id/regulatory', standardsController.getRegulatoryCheck);
+router.get('/:id/regulatory-evidence', standardsController.getRegulatoryCheck);
+
 export default router;
