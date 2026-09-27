@@ -32,6 +32,8 @@ export default function StandardsSearchPage() {
   const [subcategory, setSubcategory] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [editionYear, setEditionYear] = useState('');
+  const [regulatoryFilter, setRegulatoryFilter] = useState('');
+  const [relationshipFilter, setRelationshipFilter] = useState('');
   const [sortBy, setSortBy] = useState<'standard_number' | 'title' | 'edition_year'>('standard_number');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
@@ -72,6 +74,13 @@ export default function StandardsSearchPage() {
 
       let items = result.standards || [];
 
+      if (regulatoryFilter === 'qco') {
+        items = items.filter((s) => s.has_regulatory_evidence);
+      }
+      if (relationshipFilter === 'has_allied') {
+        items = items.filter((s) => Boolean(s.relationship_count && s.relationship_count > 0));
+      }
+
       // Client-side sorting
       items.sort((a, b) => {
         let valA = '';
@@ -102,7 +111,7 @@ export default function StandardsSearchPage() {
     } finally {
       setLoading(false);
     }
-  }, [searchQuery, category, subcategory, statusFilter, editionYear, sortBy, sortOrder]);
+  }, [searchQuery, category, subcategory, statusFilter, editionYear, regulatoryFilter, relationshipFilter, sortBy, sortOrder]);
 
   // Sync with URL query param if present
   useEffect(() => {
@@ -122,13 +131,16 @@ export default function StandardsSearchPage() {
     setSubcategory('');
     setStatusFilter('');
     setEditionYear('');
+    setRegulatoryFilter('');
+    setRelationshipFilter('');
     setSortBy('standard_number');
     setSortOrder('asc');
     setSearchParams({});
   };
 
   const hasActiveFilters =
-    searchQuery || category || subcategory || statusFilter || editionYear;
+    searchQuery || category || subcategory || statusFilter || editionYear || regulatoryFilter || relationshipFilter;
+
 
   return (
     <div className="space-y-6 w-full pb-16 animate-fade-in text-[#243B53]">
@@ -305,6 +317,36 @@ export default function StandardsSearchPage() {
                     {yr}
                   </option>
                 ))}
+              </select>
+            </div>
+
+            {/* Regulatory Intelligence Filter */}
+            <div>
+              <label className="block text-[11px] font-bold text-[#627D98] uppercase tracking-wider mb-1.5 font-display">
+                Regulatory / QCO
+              </label>
+              <select
+                value={regulatoryFilter}
+                onChange={(e) => setRegulatoryFilter(e.target.value)}
+                className="w-full text-[13px] p-2 bg-[#F7F9FC] border border-[#243B53]/15 rounded-xl text-[#243B53] outline-hidden focus:border-[#0F766E]"
+              >
+                <option value="">All Standards</option>
+                <option value="qco">Mandatory QCO / Regulated Only</option>
+              </select>
+            </div>
+
+            {/* Relationships Filter */}
+            <div>
+              <label className="block text-[11px] font-bold text-[#627D98] uppercase tracking-wider mb-1.5 font-display">
+                Allied Standards
+              </label>
+              <select
+                value={relationshipFilter}
+                onChange={(e) => setRelationshipFilter(e.target.value)}
+                className="w-full text-[13px] p-2 bg-[#F7F9FC] border border-[#243B53]/15 rounded-xl text-[#243B53] outline-hidden focus:border-[#0F766E]"
+              >
+                <option value="">All Standards</option>
+                <option value="has_allied">Has Allied / Normative References</option>
               </select>
             </div>
 

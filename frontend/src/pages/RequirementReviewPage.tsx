@@ -1010,9 +1010,16 @@ export default function RequirementReviewPage() {
                     key={p.id || idx}
                     className="flex items-center justify-between p-3 rounded-xl bg-surface border border-[#243B53]/5"
                   >
-                    <span className="text-xs font-semibold text-[#627D98] uppercase tracking-[0.05em]">
-                      {p.parameter}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-semibold text-[#627D98] uppercase tracking-[0.05em]">
+                        {p.parameter}
+                      </span>
+                      {p.confidence === 'needs_review' && (
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300">
+                          Uncertain / Review
+                        </span>
+                      )}
+                    </div>
                     <span className="text-sm sm:text-base font-bold font-display text-[#243B53]">
                       {formatParamDisplay(p)}
                     </span>
@@ -1482,6 +1489,23 @@ export default function RequirementReviewPage() {
                         className="flex-1 px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs outline-hidden"
                         placeholder="Value"
                       />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updated = [...draftParams];
+                          const newConf = updated[idx].confidence === 'needs_review' ? 'high' : 'needs_review';
+                          updated[idx] = { ...updated[idx], confidence: newConf };
+                          setDraftParams(updated);
+                        }}
+                        className={`px-2 py-1 text-[11px] font-bold rounded-lg border cursor-pointer transition-colors ${
+                          p.confidence === 'needs_review'
+                            ? 'bg-amber-100 text-amber-900 border-amber-300'
+                            : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
+                        }`}
+                        title={p.confidence === 'needs_review' ? 'Marked as uncertain (click to clear)' : 'Click to mark as uncertain / needs review'}
+                      >
+                        {p.confidence === 'needs_review' ? 'Uncertain' : 'Verified'}
+                      </button>
                       <button
                         type="button"
                         onClick={() => handleRemoveDraftParam(idx)}

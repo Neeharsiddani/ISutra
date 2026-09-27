@@ -58,13 +58,30 @@ export default function StandardTable({ standards }: StandardTableProps) {
                     <div className="text-[13px] sm:text-[14px] font-medium text-[#102A43] leading-snug">
                       {standard.title}
                     </div>
-                    <div className="text-[11px] text-[#627D98] mt-0.5 flex items-center gap-1.5 flex-wrap">
+                    <div className="text-[11px] text-[#627D98] mt-1 flex items-center gap-1.5 flex-wrap">
                       <span>{standard.category}</span>
                       {standard.subcategory && (
                         <>
                           <span className="text-[#9FB3C8]">→</span>
                           <span className="font-medium text-[#243B53]">{standard.subcategory}</span>
                         </>
+                      )}
+                    </div>
+                    <div className="mt-1.5 flex items-center gap-1.5 flex-wrap">
+                      {standard.has_regulatory_evidence && (
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+                          QCO / Regulated
+                        </span>
+                      )}
+                      {standard.lifecycle_status && (
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200 capitalize">
+                          {standard.lifecycle_status}
+                        </span>
+                      )}
+                      {standard.relationship_count !== undefined && standard.relationship_count > 0 && (
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-teal-50 text-[#0F766E] border border-teal-200">
+                          {standard.relationship_count} Allied Ref{standard.relationship_count > 1 ? 's' : ''}
+                        </span>
                       )}
                     </div>
                   </td>
@@ -144,6 +161,23 @@ export default function StandardTable({ standards }: StandardTableProps) {
                 <p className="text-[12px] text-[#627D98] mt-1">
                   {standard.category} {standard.subcategory ? `→ ${standard.subcategory}` : ''}
                 </p>
+                <div className="mt-2 flex items-center gap-1.5 flex-wrap">
+                  {standard.has_regulatory_evidence && (
+                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+                      QCO / Regulated
+                    </span>
+                  )}
+                  {standard.lifecycle_status && (
+                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200 capitalize">
+                      {standard.lifecycle_status}
+                    </span>
+                  )}
+                  {Boolean(standard.relationship_count && standard.relationship_count > 0) && (
+                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-teal-50 text-[#0F766E] border border-teal-200">
+                      {standard.relationship_count} Allied
+                    </span>
+                  )}
+                </div>
               </div>
 
               <div className="flex items-center justify-between text-[12px] text-[#627D98] pt-2 border-t border-[#243B53]/5">

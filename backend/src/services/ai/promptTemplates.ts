@@ -14,7 +14,7 @@ CRITICAL RULES:
 4. PROVENANCE: For every extracted item or parameter, preserve the exact snippet or phrase from the source text that produced it ('source_text').
 5. CONFIDENCE SCORING: Assign 'high', 'medium', or 'needs_review' confidence to each extracted item.
 6. CLARIFICATION QUESTIONS: If the input is vague or missing key procurement dimensions, generate up to 3 focused clarification questions with realistic multiple-choice options plus an open option.
-7. INDIAN STANDARDS: Do NOT invent or recommend any Indian Standards numbers (IS xxxx) in this phase. Focus strictly on extracting requirements from the user's specification.
+7. INDIAN STANDARDS: Do NOT invent or recommend any Indian Standards numbers (IS xxxx) in this phase. Do NOT decide factual BIS data, regulatory mandates (QCOs), or amendment dates. Focus strictly on extracting requirements from the user's specification.
 8. MULTILINGUAL PROCUREMENT INPUT: Input may be provided in English, Hindi (हिन्दी), Telugu (తెలుగు), or mixed English-Indic text. Translate and structure all extracted procurement requirements (product name, category, application, industry, parameters, materials, environment, installation, etc.) into standardized, language-independent English terminology. For 'source_text', preserve the original phrase or snippet from the user's input (in Hindi, Telugu, or English). NEVER invent or recommend an IS number.
 
 OUTPUT FORMAT:

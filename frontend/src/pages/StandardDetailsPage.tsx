@@ -468,6 +468,43 @@ export default function StandardDetailsPage() {
               ISutra curated evidence from official BIS sources.
             </p>
 
+            {/* 5-Stage Lifecycle Evolution Timeline */}
+            <div className="p-3 bg-[#F7F9FC] border border-[#243B53]/10 rounded-xl space-y-2">
+              <div className="text-[10px] font-bold text-[#627D98] uppercase tracking-wider font-display">
+                Lifecycle Evolution Timeline
+              </div>
+              <div className="grid grid-cols-5 gap-1 text-[10px] font-semibold">
+                <div className="text-center p-1.5 rounded-lg bg-teal-50 border border-teal-200 text-[#0F766E]">
+                  <div className="font-bold text-[8px] uppercase tracking-wider opacity-70">1. Standard</div>
+                  <div className="truncate font-mono">{stdNumber?.split(':')[0] || 'IS'}</div>
+                </div>
+                <div className="text-center p-1.5 rounded-lg bg-indigo-50 border border-indigo-200 text-indigo-700">
+                  <div className="font-bold text-[8px] uppercase tracking-wider opacity-70">2. Revision</div>
+                  <div className="truncate">
+                    {lifecycleRes?.lifecycle?.edition_number || (standard.edition_year ? `Ed. ${standard.edition_year}` : 'Standard')}
+                  </div>
+                </div>
+                <div className="text-center p-1.5 rounded-lg bg-amber-50 border border-amber-200 text-amber-800">
+                  <div className="font-bold text-[8px] uppercase tracking-wider opacity-70">3. Amendment</div>
+                  <div className="truncate">
+                    {lifecycleRes && lifecycleRes.amendments.length > 0 ? `${lifecycleRes.amendments.length} Amd.` : 'None'}
+                  </div>
+                </div>
+                <div className="text-center p-1.5 rounded-lg bg-purple-50 border border-purple-200 text-purple-700">
+                  <div className="font-bold text-[8px] uppercase tracking-wider opacity-70">4. Review</div>
+                  <div className="truncate">
+                    {lifecycleRes?.lifecycle?.reaffirmation_year ? `Reaff. ${lifecycleRes.lifecycle.reaffirmation_year}` : 'Standard'}
+                  </div>
+                </div>
+                <div className="text-center p-1.5 rounded-lg bg-emerald-50 border border-emerald-200 text-[#16803C]">
+                  <div className="font-bold text-[8px] uppercase tracking-wider opacity-70">5. Verify</div>
+                  <div className="truncate">
+                    {lifecycleRes?.lifecycle ? 'Verified' : 'BIS Source'}
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* LIFECYCLE DETAILS */}
             {lifecycleRes?.lifecycle ? (
               <div className="divide-y divide-[#243B53]/10 text-[13px] sm:text-[14px]">

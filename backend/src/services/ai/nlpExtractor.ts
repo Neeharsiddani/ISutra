@@ -98,6 +98,18 @@ export function extractWithPatternMatching(
     productName = 'Fixed general purpose luminaires';
     category = 'Lighting & Luminaires';
     productSource = text.match(/fixed\s+(?:general\s+purpose\s+)?(?:indoor\s+)?luminaires?|general\s+purpose\s+indoor\s+luminaires?/i)?.[0];
+  } else if (/(?:led\s+)?lighting\s+system\s+(?:for\s+)?(?:municipal\s+|city\s+|public\s+)?(?:roads?|highways?|streets?)|lighting\s+(?:system\s+)?for\s+municipal\s+roads/i.test(text)) {
+    productName = 'LED street lighting luminaire';
+    category = 'Lighting & Luminaires';
+    productSource = text.match(/(?:led\s+)?lighting\s+system\s+(?:for\s+)?(?:municipal\s+|city\s+|public\s+)?(?:roads?|highways?|streets?)|lighting\s+(?:system\s+)?for\s+municipal\s+roads/i)?.[0];
+  } else if (/(?:outdoor\s+)?led\s+luminaires?\s+(?:for\s+)?(?:municipal\s+|highway\s+|road\s+|street\s+)?(?:lighting\s+system)?/i.test(text)) {
+    productName = 'LED street lighting luminaire';
+    category = 'Lighting & Luminaires';
+    productSource = text.match(/(?:outdoor\s+)?led\s+luminaires?\s+(?:for\s+)?(?:municipal\s+|highway\s+|road\s+|street\s+)?(?:lighting\s+system)?/i)?.[0];
+  } else if (/outdoor\s+led\s+luminaires?|led\s+luminaires?\b/i.test(text)) {
+    productName = 'LED street lighting luminaire';
+    category = 'Lighting & Luminaires';
+    productSource = text.match(/outdoor\s+led\s+luminaires?|led\s+luminaires?\b/i)?.[0];
   } else if (/led\s+street\s+lighting\s+system/i.test(text)) {
     productName = 'LED street lighting system';
     category = 'Lighting & Luminaires';
@@ -114,6 +126,10 @@ export function extractWithPatternMatching(
     productName = 'Aerial bunched cables';
     category = 'Cables & Conductors';
     productSource = text.match(/aerial\s+bunched\s+cables?|abc\s+cables?/i)?.[0];
+  } else if (/(?:high[\s-]temperature|heat[\s-]resistant)\s+(?:industrial\s+)?cables?/i.test(text)) {
+    productName = 'Halogen free flame retardant cables';
+    category = 'Cables & Conductors';
+    productSource = text.match(/(?:high[\s-]temperature|heat[\s-]resistant)\s+(?:industrial\s+)?cables?/i)?.[0];
   } else if (/xlpe(?:\s+[\w\-]+){0,4}\s+cables?/i.test(text)) {
     productName = 'XLPE insulated power cables';
     category = 'Cables & Conductors';
@@ -134,7 +150,7 @@ export function extractWithPatternMatching(
     productName = 'PVC insulated electric cables';
     category = 'Cables & Conductors';
     productSource = text.match(/(?:pvc\s+insulated\s+)?heavy\s+duty\s+electric\s+cables?|pvc\s+cables?/i)?.[0];
-  } else if (/electrical\s+cables?/i.test(text)) {
+  } else if (/industrial\s+electrical\s+cables?|electrical\s+cables?/i.test(text)) {
     productName = 'Industrial electrical cables';
     category = 'Cables & Conductors';
     productSource = text.match(/industrial\s+electrical\s+cables?|electrical\s+cables?/i)?.[0];
@@ -236,6 +252,10 @@ export function extractWithPatternMatching(
       application = 'Industrial installation';
       application_source = text.match(/industrial/i)?.[0];
       industry = 'Manufacturing & Heavy Industry';
+    } else if (/foundation(?:\s+works?)?|structural\s+(?:concrete|works?)|bridge|building\s+construction/i.test(text)) {
+      application = 'Structural civil construction';
+      application_source = text.match(/foundation(?:\s+works?)?|structural\s+(?:concrete|works?)|bridge|building\s+construction/i)?.[0];
+      industry = 'Civil Infrastructure & Construction';
     } else if (/\boutdoor\b/i.test(text)) {
       application = 'Outdoor';
       application_source = text.match(/\boutdoor\b/i)?.[0];
@@ -330,6 +350,108 @@ export function extractWithPatternMatching(
       confidence: 'high',
       source_text: capMatch[0],
     });
+  }
+
+  // Color Temperature (CCT)
+  const cctMatch = text.match(/\b(?:cct|correlated\s+color\s+temperature|color\s+temp(?:erature)?)\s*[:\-]?\s*(\d{4})\s*K?\b/i) ||
+    text.match(/\b(\d{4})\s*K\s*(?:\((?:neutral|warm|cool)\s+white\))?/i);
+  if (cctMatch && !hasParam('Color Temperature') && !hasParam('CCT')) {
+    const val = cctMatch[1] ? `${cctMatch[1]}K` : cctMatch[0].trim();
+    technical_parameters.push({
+      parameter: 'Color Temperature (CCT)',
+      value: val,
+      unit: 'K',
+      confidence: 'high',
+      source_text: cctMatch[0],
+    });
+  }
+
+  // Power Factor (PF)
+  const pfMatch = text.match(/\b(?:power\s+factor|pf)\s*[:\-]?\s*(?:>=?|>)?\s*(0\.\d+)\b/i);
+  if (pfMatch && !hasParam('Power Factor')) {
+    technical_parameters.push({
+      parameter: 'Power Factor',
+      value: `>= ${pfMatch[1]}`,
+      unit: 'PF',
+      confidence: 'high',
+      source_text: pfMatch[0],
+    });
+  }
+
+  // Total Harmonic Distortion (THD)
+  const thdMatch = text.match(/\b(?:thd|total\s+harmonic\s+distortion)\s*[:\-]?\s*(?:<=?|<)?\s*(\d+(?:\.\d+)?%?)\b/i);
+  if (thdMatch && !hasParam('Total Harmonic Distortion') && !hasParam('THD')) {
+    const thdVal = thdMatch[1].endsWith('%') ? thdMatch[1] : `${thdMatch[1]}%`;
+    technical_parameters.push({
+      parameter: 'Total Harmonic Distortion (THD)',
+      value: `< ${thdVal}`,
+      unit: '%',
+      confidence: 'high',
+      source_text: thdMatch[0],
+    });
+  }
+
+  // Frequency
+  const freqMatch = text.match(/\b(\d+)\s*(?:Hz|hertz)\b/i);
+  if (freqMatch && !hasParam('Frequency')) {
+    technical_parameters.push({
+      parameter: 'Frequency',
+      value: `${freqMatch[1]} Hz`,
+      unit: 'Hz',
+      confidence: 'high',
+      source_text: freqMatch[0],
+    });
+  }
+
+  // Color Rendering Index (CRI)
+  const criMatch = text.match(/\b(?:cri|color\s+rendering\s+index)\s*[:\-]?\s*(?:>=?|>)?\s*(\d+)\b/i);
+  if (criMatch && !hasParam('Color Rendering Index') && !hasParam('CRI')) {
+    technical_parameters.push({
+      parameter: 'Color Rendering Index (CRI)',
+      value: `>= ${criMatch[1]}`,
+      unit: 'Ra',
+      confidence: 'high',
+      source_text: criMatch[0],
+    });
+  }
+
+  // Conductor Cores & Cross-Sectional Area (Cables)
+  const cableCoreMatch = text.match(/\b(\d+(?:\.5)?)\s*core\s*(?:x|by|\*)\s*(\d+(?:\.\d+)?)\s*(?:sq\.?\s*mm|mm2|sqmm)\b/i);
+  if (cableCoreMatch && !hasParam('Cable Specification')) {
+    technical_parameters.push({
+      parameter: 'Conductor Size',
+      value: `${cableCoreMatch[1]} Core x ${cableCoreMatch[2]} sq.mm`,
+      unit: 'sq.mm',
+      confidence: 'high',
+      source_text: cableCoreMatch[0],
+    });
+  }
+
+  // Rebar / Structural Steel Grade (e.g., Fe 500D, Fe 415, Fe 550)
+  const rebarGradeMatch = text.match(/\b(Fe\s*500D?|Fe\s*415D?|Fe\s*550D?|Fe\s*600)\b/i);
+  if (rebarGradeMatch && !hasParam('Steel Grade')) {
+    technical_parameters.push({
+      parameter: 'Steel Grade',
+      value: rebarGradeMatch[1].replace(/\s+/g, ' ').toUpperCase(),
+      unit: 'Grade',
+      confidence: 'high',
+      source_text: rebarGradeMatch[0],
+    });
+  }
+
+  // Physical Dimensions (Diameter, Height, Thickness, Length)
+  const dimMatch = text.match(/\b(diameter|thickness|nominal\s+height|height|length|width)\s*[:\-]?\s*(\d+(?:\.\d+)?)\s*(mm|cm|meters?|m)\b/i);
+  if (dimMatch) {
+    const dimParam = dimMatch[1].charAt(0).toUpperCase() + dimMatch[1].slice(1).toLowerCase();
+    if (!hasParam(dimParam)) {
+      technical_parameters.push({
+        parameter: dimParam,
+        value: `${dimMatch[2]} ${dimMatch[3]}`,
+        unit: dimMatch[3],
+        confidence: 'high',
+        source_text: dimMatch[0],
+      });
+    }
   }
 
   // 4. Materials
@@ -653,7 +775,90 @@ export function extractWithPatternMatching(
     });
   }
 
-  // 9. Genuinely Useful Missing Information Detection (Not random!)
+  // 9. Testing Requirements
+  const testing_requirements: TaggedRequirementItem[] = [];
+  const testPatterns = [
+    { name: 'Type test report / certificate', pattern: /\b(type\s+test(?:ing|s)?(?:\s+report|\s+certificate)?)\b/i },
+    { name: 'Routine / acceptance test', pattern: /\b(routine\s+test(?:ing|s)?|factory\s+acceptance\s+test(?:ing|s)?|acceptance\s+test(?:ing)?)\b/i },
+    { name: 'Photometric test', pattern: /\b(photometric\s+test(?:ing)?|lumen\s+maintenance\s+test(?:ing)?)\b/i },
+    { name: 'Dielectric / high voltage test', pattern: /\b(dielectric\s+test(?:ing)?|insulation\s+resistance\s+test(?:ing)?|high\s+voltage\s+test(?:ing)?)\b/i },
+    { name: 'Ingress / water spray test', pattern: /\b(water\s+ingress\s+test(?:ing)?|spray\s+test(?:ing)?|ip\s+rating\s+test(?:ing)?)\b/i },
+    { name: 'Tensile / bend test', pattern: /\b(tensile\s+test(?:ing)?|bend\s+test(?:ing)?|rebend\s+test(?:ing)?)\b/i },
+    { name: 'Temperature rise test', pattern: /\b(temperature\s+rise\s+test(?:ing)?|thermal\s+endurance\s+test(?:ing)?)\b/i },
+  ];
+
+  for (const t of testPatterns) {
+    const m = text.match(t.pattern);
+    if (m && !testing_requirements.some((tr) => tr.name.toLowerCase() === t.name.toLowerCase())) {
+      testing_requirements.push({
+        name: t.name,
+        confidence: 'high',
+        source_text: m[0].trim(),
+      });
+    }
+  }
+
+  // 10. Performance Requirements
+  const performance_requirements: TaggedRequirementItem[] = [];
+  if (efficacyMatch) {
+    performance_requirements.push({
+      name: `Luminous Efficacy: ${efficacyMatch[0].trim()}`,
+      confidence: 'high',
+      source_text: efficacyMatch[0].trim(),
+    });
+  }
+  if (pfMatch) {
+    performance_requirements.push({
+      name: `Power Factor: >= ${pfMatch[1]}`,
+      confidence: 'high',
+      source_text: pfMatch[0].trim(),
+    });
+  }
+  if (thdMatch) {
+    performance_requirements.push({
+      name: `THD: < ${thdMatch[1].endsWith('%') ? thdMatch[1] : thdMatch[1] + '%'}`,
+      confidence: 'high',
+      source_text: thdMatch[0].trim(),
+    });
+  }
+  const lifeMatch = text.match(/(\d{1,3}(?:,\d{3})*|\d+)\s*(?:burning\s+hours|operating\s+hours|hours\s+rated\s+life)\b/i);
+  if (lifeMatch) {
+    performance_requirements.push({
+      name: `Rated Operational Life: ${lifeMatch[0].trim()}`,
+      confidence: 'high',
+      source_text: lifeMatch[0].trim(),
+    });
+  }
+  const strengthMatch = text.match(/\b(tensile\s+strength|yield\s+stress|compressive\s+strength)\s*[:\-]?\s*(?:>=?|>)?\s*(\d+(?:\.\d+)?\s*(?:MPa|N\/mm2|kN))\b/i);
+  if (strengthMatch) {
+    performance_requirements.push({
+      name: `${strengthMatch[1]}: ${strengthMatch[2]}`,
+      confidence: 'high',
+      source_text: strengthMatch[0].trim(),
+    });
+  }
+
+  // 11. Additional Requirements & Constraints
+  const additional_requirements: TaggedRequirementItem[] = [];
+  const warrantyMatch = text.match(/\b(?:warranty|guarantee)\s*(?:period\s*)?[:\-]?\s*(\d+)\s*(years?|yrs?|months?)\b/i);
+  if (warrantyMatch) {
+    additional_requirements.push({
+      name: `Warranty: ${warrantyMatch[1]} ${warrantyMatch[2]}`,
+      confidence: 'high',
+      source_text: warrantyMatch[0].trim(),
+    });
+    if (!hasParam('Warranty')) {
+      technical_parameters.push({
+        parameter: 'Warranty',
+        value: `${warrantyMatch[1]} ${warrantyMatch[2]}`,
+        unit: warrantyMatch[2],
+        confidence: 'high',
+        source_text: warrantyMatch[0].trim(),
+      });
+    }
+  }
+
+  // 12. Genuinely Useful Missing Information Detection (Not random!)
   const missing_information: string[] = [];
   const isLighting = /led|light|luminaire/i.test(text);
 
@@ -683,7 +888,7 @@ export function extractWithPatternMatching(
     }
   }
 
-  // 10. Clarification Questions for vague inputs
+  // 13. Clarification Questions for vague inputs
   const clarification_questions: ClarificationQuestion[] = [];
   if (lower === 'need led street lights.' || lower === 'need led street lights' || (lower.includes('led') && text.length < 35)) {
     clarification_questions.push({
@@ -722,13 +927,13 @@ export function extractWithPatternMatching(
     materials,
     environment,
     safety_requirements,
-    performance_requirements: [],
-    testing_requirements: [],
+    performance_requirements,
+    testing_requirements,
     installation_requirements,
     certification_mentions,
     quantity,
     quantity_source,
-    additional_requirements: [],
+    additional_requirements,
     missing_information,
     clarification_questions,
     overall_confidence,

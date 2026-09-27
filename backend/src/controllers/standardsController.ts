@@ -158,3 +158,33 @@ export async function getRegulatoryCheck(
     next(error);
   }
 }
+
+export async function validateIngestion(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const { validateStandardForIngestion } = await import('../services/standardsIngestionService');
+    const result = validateStandardForIngestion(req.body);
+    if (!result.valid) {
+      res.status(422).json({
+        success: false,
+        valid: false,
+        errors: result.errors,
+        warnings: result.warnings,
+      });
+      return;
+    }
+    res.json({
+      success: true,
+      valid: true,
+      errors: [],
+      warnings: result.warnings,
+      record: result.record,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+

@@ -59,6 +59,10 @@ export interface Standard {
   last_updated?: string;
   source_name?: string;
   description?: string;
+  lifecycle_status?: string;
+  has_regulatory_evidence?: boolean;
+  regulatory_scheme?: string;
+  relationship_count?: number;
   created_at: string;
   updated_at: string;
 }

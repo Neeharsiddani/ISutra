@@ -32,4 +32,8 @@ router.get('/:id/certifications', standardsController.getCertifications);
 router.get('/:id/regulatory', standardsController.getRegulatoryCheck);
 router.get('/:id/regulatory-evidence', standardsController.getRegulatoryCheck);
 
+// POST /api/standards/validate-ingestion — Ingestion schema validator for new standard records
+router.post('/validate-ingestion', standardsController.validateIngestion);
+
 export default router;
+

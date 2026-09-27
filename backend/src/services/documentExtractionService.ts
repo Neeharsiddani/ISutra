@@ -17,13 +17,16 @@ export interface DocumentExtractionResult {
   fileType: 'pdf' | 'docx' | 'doc';
   fileName: string;
   fileSize: number;
-  extractionMethod: 'pdf-parse' | 'mammoth' | 'text' | 'fallback';
+  extractionMethod: 'pdf-parse' | 'mammoth' | 'text' | 'fallback' | 'ocr';
   warnings: string[];
   isScannedOrEmpty: boolean;
   multipleProductsDetected: boolean;
   detectedProducts: string[];
   primaryProductAnalyzed?: string;
   sections?: DocumentSection[];
+  isOcrDerived?: boolean;
+  ocrEngine?: string;
+  ocrPageCount?: number;
 }
 
 export interface DocumentUploadInput {
@@ -31,6 +34,7 @@ export interface DocumentUploadInput {
   originalname: string;
   mimetype?: string;
   size?: number;
+  enableOcr?: boolean;
 }
 
 const MAX_FILE_SIZE_BYTES = 15 * 1024 * 1024; // 15 MB
@@ -279,13 +283,40 @@ export async function extractDocument(input: DocumentUploadInput): Promise<Docum
   }
 
   // 7. Check for Empty or Scanned (Image-Only) Document
-  const cleanedText = normalizeExtractedDocumentText(extractedRawText);
-  // An extract is considered scanned/empty if it contains fewer than 25 non-whitespace characters
-  const isScannedOrEmpty = cleanedText.replace(/\s/g, '').length < 25;
+  let cleanedText = normalizeExtractedDocumentText(extractedRawText);
+  let isScannedOrEmpty = cleanedText.replace(/\s/g, '').length < 25;
+  let isOcrDerived = false;
+  let ocrEngine: string | undefined = undefined;
+  let ocrPageCount: number | undefined = undefined;
+
+  // Optional real OCR processing when enabled via input flag or environment variable
+  const ocrRequested = input.enableOcr ?? (process.env.ENABLE_OPTIONAL_OCR === 'true');
+  if (isScannedOrEmpty && ocrRequested) {
+    try {
+      const ocrResult = await attemptOptionalOcrExtraction(input.buffer, extension);
+      if (ocrResult && ocrResult.text && ocrResult.text.trim().length >= 25) {
+        cleanedText = normalizeExtractedDocumentText(ocrResult.text);
+        isScannedOrEmpty = false;
+        isOcrDerived = true;
+        ocrEngine = ocrResult.engine;
+        ocrPageCount = ocrResult.pageCount || pageCount;
+        extractionMethod = 'ocr';
+        warnings.push(
+          `Document text extracted using optional Optical Character Recognition (${ocrResult.engine}). Source text is identified as OCR-derived.`
+        );
+      } else {
+        warnings.push(
+          'Optional OCR engine executed but insufficient machine-readable text was detected in the scanned document.'
+        );
+      }
+    } catch (ocrErr) {
+      warnings.push(`Optional OCR attempt encountered an error: ${(ocrErr as Error).message}`);
+    }
+  }
 
   if (isScannedOrEmpty) {
     warnings.push(
-      'This document appears to be scanned/image-based and no machine-readable text could be extracted.'
+      'This document appears to be scanned/image-based and no machine-readable text could be extracted. Please upload a machine-readable digital PDF or Word document.'
     );
   }
 
@@ -297,7 +328,7 @@ export async function extractDocument(input: DocumentUploadInput): Promise<Docum
 
   return {
     text: cleanedText,
-    pageCount,
+    pageCount: ocrPageCount || pageCount,
     fileType: extension.replace('.', '') as 'pdf' | 'docx' | 'doc',
     fileName: safeName,
     fileSize,
@@ -307,5 +338,40 @@ export async function extractDocument(input: DocumentUploadInput): Promise<Docum
     multipleProductsDetected: multiProductInfo.multipleDetected,
     detectedProducts: multiProductInfo.products,
     primaryProductAnalyzed: multiProductInfo.primaryProduct,
+    isOcrDerived,
+    ocrEngine,
+    ocrPageCount,
   };
+}
+
+/**
+ * Optional OCR Handler: Attempts extraction using Tesseract.js if available in the runtime,
+ * or delegates to a configured test/service OCR handler. Returns null if OCR is not installed.
+ */
+export async function attemptOptionalOcrExtraction(
+  buffer: Buffer,
+  extension: string
+): Promise<{ text: string; engine: string; pageCount?: number } | null> {
+  // Support custom/test OCR handler registration
+  const customOcr = (globalThis as any).__ISUTRA_OCR_HANDLER__;
+  if (typeof customOcr === 'function') {
+    return await customOcr(buffer, extension);
+  }
+
+  // Attempt dynamic import of tesseract.js if present in the runtime
+  try {
+    const tesseractMod = await import('tesseract.js' as any);
+    const Tesseract = tesseractMod.default || tesseractMod;
+    if (Tesseract && typeof Tesseract.recognize === 'function') {
+      const { data } = await Tesseract.recognize(buffer, 'eng');
+      return {
+        text: data?.text || '',
+        engine: 'tesseract.js',
+      };
+    }
+  } catch {
+    // Tesseract.js is not installed in this environment
+  }
+
+  return null;
 }

@@ -6,6 +6,9 @@
 
 import { getSupabaseClient } from '../database/supabase';
 import { VERIFIED_BIS_STANDARDS } from '../database/verifiedStandards';
+import { VERIFIED_STANDARD_LIFECYCLES } from '../database/verifiedStandardLifecycles';
+import { VERIFIED_REGULATORY_RECORDS } from '../database/verifiedRegulatoryRecords';
+import { VERIFIED_RELATIONSHIPS } from '../database/verifiedRelationships';
 import {
   DEMO_RELATIONSHIPS,
   DEMO_AMENDMENTS,
@@ -14,8 +17,28 @@ import {
 import { getResolvedRelationships } from './standardsRelationshipService';
 import type { Standard, StandardsSearchParams } from '../types';
 
-// Helper to normalize standard objects for backward compatibility
+// Helper to normalize standard objects with verified lifecycle, regulatory, and relationship indicators
 function formatStandard(s: any): Standard {
+  const stdId = (s.id || '').toLowerCase();
+  const stdNum = (s.standard_number || s.is_number || '').toLowerCase();
+  const stdNumClean = stdNum.replace(/\s+/g, '');
+
+  const lc = VERIFIED_STANDARD_LIFECYCLES.find(
+    (l) => l.standard_id.toLowerCase() === stdId || l.standard_number.toLowerCase().replace(/\s+/g, '') === stdNumClean
+  );
+
+  const reg = VERIFIED_REGULATORY_RECORDS.find(
+    (r) => r.standard_id.toLowerCase() === stdId || r.standard_number.toLowerCase().replace(/\s+/g, '') === stdNumClean
+  );
+
+  const relCount = VERIFIED_RELATIONSHIPS.filter(
+    (rel) =>
+      rel.source_standard_id.toLowerCase() === stdId ||
+      rel.target_standard_id.toLowerCase() === stdId ||
+      rel.source_standard_number.toLowerCase().replace(/\s+/g, '') === stdNumClean ||
+      rel.target_standard_number.toLowerCase().replace(/\s+/g, '') === stdNumClean
+  ).length;
+
   return {
     ...s,
     standard_number: s.standard_number || s.is_number,
@@ -23,8 +46,13 @@ function formatStandard(s: any): Standard {
     edition: s.edition || (s.edition_year ? String(s.edition_year) : ''),
     source_name: s.source_name || s.source_organization || 'Bureau of Indian Standards',
     description: s.description || s.scope || '',
+    lifecycle_status: lc ? lc.lifecycle_status : undefined,
+    has_regulatory_evidence: !!reg,
+    regulatory_scheme: reg ? (reg.regulation_name || reg.regulation_type) : undefined,
+    relationship_count: relCount,
   };
 }
+
 
 export async function getAllStandards(params: StandardsSearchParams) {
   const supabase = getSupabaseClient();
