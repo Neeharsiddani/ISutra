@@ -370,20 +370,28 @@ export function validateAndSanitizeRequirements(
 
   // 4. Quantity
   if (!existingParamNames.has('quantity') && rawQuantity) {
+    const cleanQty = rawQuantity.replace(/\s*units?\s*$/i, '').trim();
+    const qtyValue = rawQuantitySource && /\d+\s+[a-zA-Z]+/.test(rawQuantitySource)
+      ? rawQuantitySource.replace(/\bunits\s+units\b/gi, 'units')
+      : `${cleanQty} units`;
+
     technical_parameters.push({
       id: generateId('param'),
       parameter: 'Quantity',
-      value: rawQuantitySource && /\d+\s+\w+/.test(rawQuantitySource) ? rawQuantitySource : `${rawQuantity} units`,
+      value: qtyValue.replace(/\bunits\s+units\b/gi, 'units'),
       confidence: 'high',
-      source_text: rawQuantitySource || `${rawQuantity} units`,
+      source_text: rawQuantitySource || `${cleanQty} units`,
     });
-  } else if (existingParamNames.has('quantity') && !rawQuantity) {
+  } else if (existingParamNames.has('quantity')) {
     const qtyParam = technical_parameters.find((p) => p.parameter.toLowerCase() === 'quantity');
     if (qtyParam && qtyParam.value) {
-      const digits = qtyParam.value.match(/\d+/);
-      if (digits) {
-        rawQuantity = digits[0];
-        rawQuantitySource = qtyParam.value;
+      qtyParam.value = qtyParam.value.replace(/\bunits\s+units\b/gi, 'units');
+      if (!rawQuantity) {
+        const digits = qtyParam.value.match(/\d+/);
+        if (digits) {
+          rawQuantity = digits[0];
+          rawQuantitySource = qtyParam.value;
+        }
       }
     }
   }

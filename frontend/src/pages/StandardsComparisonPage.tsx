@@ -5,7 +5,7 @@
 // ============================================================
 
 import { useState, useEffect, useMemo } from 'react';
-import { useParams, useSearchParams, useLocation, Link } from 'react-router-dom';
+import { useParams, useSearchParams, useLocation, useNavigate, Link } from 'react-router-dom';
 import {
   ArrowLeft,
   ShieldCheck,
@@ -32,6 +32,7 @@ export default function StandardsComparisonPage() {
   const { id } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
   const location = useLocation();
+  const navigate = useNavigate();
 
   const standardsParam = searchParams.get('standards');
   const locationState = location.state as {
@@ -191,13 +192,22 @@ export default function StandardsComparisonPage() {
       {/* 1. Breadcrumbs & Header Actions */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-2 text-xs">
-          <Link
-            to={id ? `/analysis/${id}/recommendations` : '/analyze'}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-[#243B53]/15 text-[#0F766E] hover:bg-teal-50 transition-colors font-semibold shadow-2xs"
+          <button
+            type="button"
+            onClick={() => {
+              if (window.history.length > 1) {
+                navigate(-1);
+              } else {
+                navigate(id ? `/analysis/${id}/recommendations` : '/analyze', {
+                  state: { fromAnalysisId: id, requirements: locationState?.requirements },
+                });
+              }
+            }}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-[#243B53]/15 text-[#0F766E] hover:bg-teal-50 transition-colors font-semibold shadow-2xs cursor-pointer"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>Back to Recommendations</span>
-          </Link>
+          </button>
           <span className="text-slate-300">/</span>
           <span className="text-[#627D98] font-medium">Standards Comparison Workspace</span>
         </div>

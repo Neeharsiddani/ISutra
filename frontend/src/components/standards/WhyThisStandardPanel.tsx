@@ -784,7 +784,7 @@ export const WhyThisStandardPanel: React.FC<WhyThisStandardPanelProps> = ({
           {/* Action 2: View Lifecycle & Amendments */}
           <Link
             to={`/standards/${rec.standard.id}?fromAnalysis=${analysisId || ''}#lifecycle`}
-            state={{ fromAnalysisId: analysisId }}
+            state={{ fromAnalysisId: analysisId, requirements }}
             className="min-h-[42px] px-4 py-2 rounded-xl bg-white hover:bg-slate-100 text-[#102A43] border border-slate-300 text-xs font-bold flex items-center justify-center gap-2 transition-colors shadow-2xs"
           >
             <History className="w-4 h-4 text-[#0F766E] shrink-0" />

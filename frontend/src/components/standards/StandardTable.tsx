@@ -14,27 +14,27 @@ interface StandardTableProps {
 export default function StandardTable({ standards }: StandardTableProps) {
   return (
     <div className="space-y-4">
-      {/* Desktop / Tablet Table (Hidden on small mobile) */}
-      <div className="hidden md:block overflow-x-auto bg-white rounded-2xl border border-[#243B53]/10 shadow-xs">
-        <table className="w-full text-left border-collapse">
+      {/* Desktop / Tablet Table (No horizontal scroll needed) */}
+      <div className="hidden md:block overflow-hidden bg-white rounded-2xl border border-[#243B53]/10 shadow-xs">
+        <table className="w-full text-left border-collapse table-auto">
           <thead>
             <tr className="border-b border-[#243B53]/10 bg-[#F7F9FC]/60">
-              <th className="py-3.5 px-5 text-[12px] font-bold text-[#627D98] uppercase tracking-wider font-display">
+              <th className="py-3 px-3.5 text-[11px] sm:text-[12px] font-bold text-[#627D98] uppercase tracking-wider font-display w-[22%] sm:w-[18%]">
                 Standard Number
               </th>
-              <th className="py-3.5 px-5 text-[12px] font-bold text-[#627D98] uppercase tracking-wider font-display">
+              <th className="py-3 px-3.5 text-[11px] sm:text-[12px] font-bold text-[#627D98] uppercase tracking-wider font-display">
                 Title & Subcategory
               </th>
-              <th className="py-3.5 px-5 text-[12px] font-bold text-[#627D98] uppercase tracking-wider font-display">
+              <th className="py-3 px-2 text-[11px] sm:text-[12px] font-bold text-[#627D98] uppercase tracking-wider font-display text-center w-[10%]">
                 Edition
               </th>
-              <th className="py-3.5 px-5 text-[12px] font-bold text-[#627D98] uppercase tracking-wider font-display">
+              <th className="py-3 px-2 text-[11px] sm:text-[12px] font-bold text-[#627D98] uppercase tracking-wider font-display text-center w-[14%]">
                 Status
               </th>
-              <th className="py-3.5 px-5 text-[12px] font-bold text-[#627D98] uppercase tracking-wider font-display">
+              <th className="hidden xl:table-cell py-3 px-3 text-[11px] sm:text-[12px] font-bold text-[#627D98] uppercase tracking-wider font-display w-[14%]">
                 Source
               </th>
-              <th className="py-3.5 px-5 text-[12px] font-bold text-[#627D98] uppercase tracking-wider text-right font-display">
+              <th className="py-3 px-3.5 text-[11px] sm:text-[12px] font-bold text-[#627D98] uppercase tracking-wider text-right font-display w-[12%]">
                 Action
               </th>
             </tr>
@@ -49,16 +49,16 @@ export default function StandardTable({ standards }: StandardTableProps) {
                   key={standard.id}
                   className="hover:bg-[#F7F9FC]/80 transition-colors group"
                 >
-                  <td className="py-4 px-5 align-top">
-                    <span className="text-[14px] font-bold text-[#0F766E] font-display block whitespace-nowrap">
+                  <td className="py-3.5 px-3.5 align-top">
+                    <span className="text-[13px] sm:text-[14px] font-bold text-[#0F766E] font-display block whitespace-nowrap">
                       {stdNumber}
                     </span>
                   </td>
-                  <td className="py-4 px-5 max-w-md">
-                    <div className="text-[14px] font-medium text-[#102A43] leading-snug">
+                  <td className="py-3.5 px-3.5">
+                    <div className="text-[13px] sm:text-[14px] font-medium text-[#102A43] leading-snug">
                       {standard.title}
                     </div>
-                    <div className="text-[12px] text-[#627D98] mt-1 flex items-center gap-1.5">
+                    <div className="text-[11px] text-[#627D98] mt-0.5 flex items-center gap-1.5 flex-wrap">
                       <span>{standard.category}</span>
                       {standard.subcategory && (
                         <>
@@ -68,14 +68,14 @@ export default function StandardTable({ standards }: StandardTableProps) {
                       )}
                     </div>
                   </td>
-                  <td className="py-4 px-5 align-top whitespace-nowrap">
-                    <span className="text-[13px] font-semibold text-[#243B53]">
+                  <td className="py-3.5 px-2 align-top text-center whitespace-nowrap">
+                    <span className="text-[12px] sm:text-[13px] font-semibold text-[#243B53]">
                       {standard.edition_year || standard.edition || '—'}
                     </span>
                   </td>
-                  <td className="py-4 px-5 align-top whitespace-nowrap">
+                  <td className="py-3.5 px-2 align-top text-center whitespace-nowrap">
                     <span
-                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border ${
+                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] sm:text-[11px] font-semibold border ${
                         isCurrent
                           ? 'bg-emerald-50 text-[#16803C] border-emerald-300'
                           : 'bg-amber-50 text-[#D97706] border-amber-300'
@@ -89,18 +89,18 @@ export default function StandardTable({ standards }: StandardTableProps) {
                       {standard.status}
                     </span>
                   </td>
-                  <td className="py-4 px-5 align-top whitespace-nowrap">
-                    <span className="inline-flex items-center gap-1 text-[12px] font-medium text-[#627D98]">
-                      <ShieldCheck className="w-3.5 h-3.5 text-[#0F766E]" />
-                      Bureau of Indian Standards
+                  <td className="hidden xl:table-cell py-3.5 px-3 align-top whitespace-nowrap">
+                    <span className="inline-flex items-center gap-1 text-[11px] font-medium text-[#627D98]">
+                      <ShieldCheck className="w-3 h-3 text-[#0F766E]" />
+                      BIS
                     </span>
                   </td>
-                  <td className="py-4 px-5 text-right align-top whitespace-nowrap">
+                  <td className="py-3.5 px-3.5 text-right align-top whitespace-nowrap">
                     <Link
                       to={`/standards/${encodeURIComponent(standard.id)}`}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-[13px] font-semibold text-[#0F766E] hover:text-white hover:bg-[#0F766E] border border-[#0F766E]/30 hover:border-[#0F766E] transition-all shadow-2xs"
+                      className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold text-[#0F766E] hover:text-white bg-[#0F766E]/10 hover:bg-[#0F766E] border border-[#0F766E]/30 hover:border-[#0F766E] transition-all shadow-2xs"
                     >
-                      <span>View Details</span>
+                      <span>View</span>
                       <ArrowRight className="w-3.5 h-3.5" />
                     </Link>
                   </td>

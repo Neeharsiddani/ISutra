@@ -7,7 +7,7 @@
 // ============================================================
 
 import { useEffect, useState } from 'react';
-import { useParams, useSearchParams, useLocation, Link } from 'react-router-dom';
+import { useParams, useSearchParams, useLocation, useNavigate, Link } from 'react-router-dom';
 import {
   ArrowLeft,
   ExternalLink,
@@ -84,6 +84,7 @@ export default function StandardDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
   const location = useLocation();
+  const navigate = useNavigate();
   const fromAnalysis = searchParams.get('fromAnalysis') || location.state?.fromAnalysisId;
 
   const [standard, setStandard] = useState<Standard | null>(null);
@@ -209,13 +210,26 @@ export default function StandardDetailsPage() {
       {/* Back Navigation */}
       <div className="flex flex-wrap items-center gap-2 text-[13px] text-[#627D98]">
         {fromAnalysis ? (
-          <Link
-            to={`/analysis/${fromAnalysis}/recommendations`}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 text-[#0F766E] hover:bg-emerald-100 transition-colors font-semibold border border-emerald-200 shadow-xs"
+          <button
+            type="button"
+            onClick={() => {
+              if (window.history.length > 1) {
+                navigate(-1);
+              } else {
+                navigate(`/analysis/${fromAnalysis}/recommendations`, {
+                  state: {
+                    fromAnalysisId: fromAnalysis,
+                    requirements: location.state?.requirements,
+                    analysis: location.state?.analysis,
+                  },
+                });
+              }
+            }}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 text-[#0F766E] hover:bg-emerald-100 transition-colors font-semibold border border-emerald-200 shadow-xs cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Back to Recommendations</span>
-          </Link>
+          </button>
         ) : (
           <Link
             to="/standards"

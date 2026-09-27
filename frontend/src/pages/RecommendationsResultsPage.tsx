@@ -85,6 +85,10 @@ export default function RecommendationsResultsPage() {
         .then((res) => {
           if (isMounted) {
             setData(res);
+            try {
+              sessionStorage.setItem('isutra_recommendations_' + id, JSON.stringify(res));
+              sessionStorage.setItem('isutra_latest_recommendations', JSON.stringify(res));
+            } catch {}
             setLoading(false);
           }
         })
@@ -97,15 +101,38 @@ export default function RecommendationsResultsPage() {
             return;
           }
 
-          if (stateReqs) {
-            // Fallback: match using passed structured requirements
-            getRecommendations(stateReqs)
+          // Check sessionStorage cache first
+          try {
+            const cachedRecs = sessionStorage.getItem('isutra_recommendations_' + id) || sessionStorage.getItem('isutra_latest_recommendations');
+            if (cachedRecs) {
+              const parsed = JSON.parse(cachedRecs);
+              if (isMounted) {
+                setData(parsed);
+                setLoading(false);
+              }
+              return;
+            }
+          } catch {}
+
+          let effectiveReqs = stateReqs;
+          if (!effectiveReqs) {
+            try {
+              const cachedAnalysis = sessionStorage.getItem('isutra_analysis_' + id) || sessionStorage.getItem('isutra_latest_analysis');
+              if (cachedAnalysis) {
+                effectiveReqs = JSON.parse(cachedAnalysis)?.requirements;
+              }
+            } catch {}
+          }
+
+          if (effectiveReqs) {
+            // Fallback: match using passed or cached structured requirements
+            getRecommendations(effectiveReqs)
               .then((fallbackRes) => {
                 if (isMounted) {
                   setData({
                     ...fallbackRes,
                     analysisId: id,
-                    requirements: stateReqs,
+                    requirements: effectiveReqs,
                   });
                   setLoading(false);
                 }
@@ -738,7 +765,7 @@ export default function RecommendationsResultsPage() {
 
                       <Link
                         to={`/standards/${rec.standard.id}?fromAnalysis=${id || ''}#relationships`}
-                        state={{ fromAnalysisId: id }}
+                        state={{ fromAnalysisId: id, requirements: reqs, analysis: data }}
                         className="min-h-[36px] px-3.5 py-1.5 rounded-lg border border-[#243B53]/20 hover:bg-slate-50 text-xs font-semibold text-[#243B53] flex items-center gap-1.5 transition-colors shadow-2xs"
                       >
                         <Layers className="w-3.5 h-3.5 text-[#0F766E]" />
@@ -747,7 +774,7 @@ export default function RecommendationsResultsPage() {
 
                       <Link
                         to={`/standards/${rec.standard.id}?fromAnalysis=${id || ''}#lifecycle`}
-                        state={{ fromAnalysisId: id }}
+                        state={{ fromAnalysisId: id, requirements: reqs, analysis: data }}
                         className="min-h-[36px] px-3.5 py-1.5 rounded-lg border border-[#243B53]/20 hover:bg-slate-50 text-xs font-semibold text-[#243B53] flex items-center gap-1.5 transition-colors shadow-2xs"
                       >
                         <History className="w-3.5 h-3.5 text-[#0F766E]" />
@@ -756,7 +783,7 @@ export default function RecommendationsResultsPage() {
 
                       <Link
                         to={`/standards/${rec.standard.id}?fromAnalysis=${id || ''}#regulatory-check`}
-                        state={{ fromAnalysisId: id }}
+                        state={{ fromAnalysisId: id, requirements: reqs, analysis: data }}
                         className="min-h-[36px] px-3.5 py-1.5 rounded-lg border border-[#243B53]/20 hover:bg-slate-50 text-xs font-semibold text-[#243B53] flex items-center gap-1.5 transition-colors shadow-2xs"
                       >
                         <ShieldCheck className="w-3.5 h-3.5 text-[#0F766E]" />
@@ -765,7 +792,7 @@ export default function RecommendationsResultsPage() {
 
                       <Link
                         to={`/standards/${rec.standard.id}?fromAnalysis=${id || ''}`}
-                        state={{ fromAnalysisId: id }}
+                        state={{ fromAnalysisId: id, requirements: reqs, analysis: data }}
                         className="min-h-[36px] px-3 py-1.5 rounded-lg border border-[#243B53]/20 hover:bg-slate-50 text-xs font-semibold text-[#243B53] flex items-center gap-1 transition-colors"
                       >
                         <BookOpen className="w-3.5 h-3.5" />

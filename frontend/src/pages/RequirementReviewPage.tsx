@@ -31,6 +31,56 @@ import type {
   TechnicalParameterItem,
 } from '../types';
 
+function formatParamDisplay(p: TechnicalParameterItem): string {
+  let val = (p.value || '').trim();
+  val = val.replace(/\bunits\s+units\b/gi, 'units');
+
+  const paramName = (p.parameter || '').toLowerCase();
+
+  // If unit is explicitly set on parameter and not already in value
+  if (p.unit && p.unit.trim()) {
+    const unit = p.unit.trim();
+    if (!val.toLowerCase().includes(unit.toLowerCase())) {
+      val = `${val} ${unit}`;
+    }
+    return val;
+  }
+
+  // Infer missing standard unit if value is just numeric
+  if (/^\d+(\.\d+)?$/.test(val)) {
+    if (paramName.includes('power') || paramName.includes('wattage')) {
+      return `${val} W`;
+    }
+    if (paramName.includes('surge')) {
+      return `${val} kV`;
+    }
+    if (paramName.includes('ingress') || paramName.includes('ip rating') || paramName === 'ip') {
+      return `IP${val}`;
+    }
+    if (paramName.includes('voltage')) {
+      return `${val}V AC`;
+    }
+    if (paramName.includes('efficacy') || paramName.includes('lumen')) {
+      return `${val} lm/W`;
+    }
+    if (paramName.includes('cct') || paramName.includes('color temp')) {
+      return `${val}K`;
+    }
+    if (paramName.includes('warranty')) {
+      return `${val} Years`;
+    }
+    if (paramName.includes('quantity')) {
+      return `${val} units`;
+    }
+  }
+
+  if ((paramName.includes('ingress') || paramName.includes('ip rating')) && /^\d+$/.test(val)) {
+    return `IP${val}`;
+  }
+
+  return val;
+}
+
 export default function RequirementReviewPage() {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
@@ -87,8 +137,23 @@ export default function RequirementReviewPage() {
           setRequirements(res.requirements);
           setIsConfirmed(res.confirmed || false);
           syncDrafts(res.requirements);
+          try {
+            sessionStorage.setItem('isutra_analysis_' + res.analysis_id, JSON.stringify(res));
+            sessionStorage.setItem('isutra_latest_analysis', JSON.stringify(res));
+          } catch {}
         })
         .catch((err) => {
+          try {
+            const cached = sessionStorage.getItem('isutra_analysis_' + id) || sessionStorage.getItem('isutra_latest_analysis');
+            if (cached) {
+              const res = JSON.parse(cached);
+              setAnalysis(res);
+              setRequirements(res.requirements);
+              setIsConfirmed(res.confirmed || false);
+              syncDrafts(res.requirements);
+              return;
+            }
+          } catch {}
           setError(err.message || 'Failed to load analysis record.');
         })
         .finally(() => setLoading(false));
@@ -289,10 +354,28 @@ export default function RequirementReviewPage() {
       };
       setDraftCategory(optClean);
     } else if (qField.includes('quantity') || qText.includes('quantity')) {
+      const cleanQty = optClean.replace(/\s*units?\s*$/i, '').trim();
+      const formattedQty = `${cleanQty} units`;
+      const existingQtyIdx = updatedReqs.technical_parameters.findIndex((p) => p.parameter.toLowerCase() === 'quantity');
+      const newParam: TechnicalParameterItem = {
+        id: `param-qty-${Date.now()}`,
+        parameter: 'Quantity',
+        value: formattedQty,
+        confidence: 'high',
+        source_text: 'Clarification answer',
+      };
+      const params = [...updatedReqs.technical_parameters];
+      if (existingQtyIdx >= 0) {
+        params[existingQtyIdx] = newParam;
+      } else {
+        params.push(newParam);
+      }
       updatedReqs = {
         ...updatedReqs,
-        quantity: optClean,
+        quantity: formattedQty,
+        technical_parameters: params,
       };
+      setDraftParams(params);
     } else if (qField.includes('voltage') || qText.includes('voltage')) {
       const existingIdx = updatedReqs.technical_parameters.findIndex((p) =>
         p.parameter.toLowerCase().includes('voltage')
@@ -399,6 +482,10 @@ export default function RequirementReviewPage() {
       setRequirements(updated.requirements);
       setIsConfirmed(true);
       setEditingCard(null);
+      try {
+        sessionStorage.setItem('isutra_analysis_' + updated.analysis_id, JSON.stringify(updated));
+        sessionStorage.setItem('isutra_latest_analysis', JSON.stringify(updated));
+      } catch {}
     } catch {
       setError('Failed to confirm requirements.');
     } finally {
@@ -927,7 +1014,7 @@ export default function RequirementReviewPage() {
                       {p.parameter}
                     </span>
                     <span className="text-sm sm:text-base font-bold font-display text-[#243B53]">
-                      {p.value}
+                      {formatParamDisplay(p)}
                     </span>
                   </div>
                 ))
