@@ -2,10 +2,9 @@
 // ISutra — Document Extraction Service
 // Phase F: Real Procurement Document Ingestion (PDF / DOCX)
 // Safe, offline, zero-external-API document text parser
-// ============================================================
+// Note: Document parsers (pdf-parse, mammoth) are dynamically imported on-demand
+// so they never crash serverless startup when handling text analysis requests.
 
-import pdfParse from 'pdf-parse';
-import mammoth from 'mammoth';
 
 export interface DocumentSection {
   title: string;
@@ -205,8 +204,11 @@ export async function extractDocument(input: DocumentUploadInput): Promise<Docum
   // 4. PDF Extraction
   if (extension === '.pdf') {
     try {
-      const anyPdfLib: any = pdfParse;
-      const ParserClass = anyPdfLib.PDFParse || (typeof anyPdfLib === 'function' ? anyPdfLib : anyPdfLib.default);
+      const anyPdfLib: any = await import('pdf-parse');
+      const ParserClass =
+        anyPdfLib.PDFParse ||
+        anyPdfLib.default?.PDFParse ||
+        (typeof anyPdfLib.default === 'function' ? anyPdfLib.default : anyPdfLib);
 
       if (typeof ParserClass === 'function' && ParserClass.prototype && ParserClass.prototype.getText) {
         // Modern pdf-parse class API
@@ -243,7 +245,9 @@ export async function extractDocument(input: DocumentUploadInput): Promise<Docum
   // 5. DOCX Extraction
   else if (extension === '.docx') {
     try {
-      const docxResult = await mammoth.extractRawText({ buffer: input.buffer });
+      const mammothModule: any = await import('mammoth');
+      const mammothLib = mammothModule.default || mammothModule;
+      const docxResult = await mammothLib.extractRawText({ buffer: input.buffer });
       extractedRawText = docxResult.value || '';
       extractionMethod = 'mammoth';
 
