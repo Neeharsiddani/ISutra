@@ -142,12 +142,14 @@ export default function StandardDetailsPage() {
     loadData();
   }, [id]);
 
-  // Smooth scroll and pulse highlight when navigating with a hash (e.g. #lifecycle, #regulatory-check, #relationships)
+  // Smooth scroll and pulse highlight when navigating with a hash (e.g. #lifecycle, #regulatory, #regulatory-check, #relationships)
   useEffect(() => {
     if (!loading && location.hash) {
       const targetId = location.hash.replace('#', '');
       const timer = setTimeout(() => {
-        const element = document.getElementById(targetId);
+        const element =
+          document.getElementById(targetId) ||
+          (targetId === 'regulatory' ? document.getElementById('regulatory-check') : null);
         if (element) {
           element.scrollIntoView({ behavior: 'smooth', block: 'start' });
           element.classList.add('ring-4', 'ring-[#0F766E]/40', 'ring-offset-4', 'transition-all', 'duration-500');

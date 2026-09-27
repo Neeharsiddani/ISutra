@@ -23,6 +23,7 @@ import {
   FileArchive,
   Globe,
   Plus,
+  ShieldCheck,
 } from 'lucide-react';
 import { getAnalysisById, updateAnalysisRequirements } from '../services/api';
 import type {
@@ -538,6 +539,14 @@ export default function RequirementReviewPage() {
               ? 'Additional procurement clarification is required before matching applicable Indian Standards.'
               : 'Review the extracted specifications below before confirming for future standards matching.'}
           </p>
+
+          {/* Architecture Separation Banner */}
+          <div className="mt-2.5 text-[11px] text-[#486581] bg-slate-50 border border-slate-200/80 rounded-xl px-3 py-2 flex items-center gap-2">
+            <ShieldCheck className="w-3.5 h-3.5 text-[#0F766E] shrink-0" />
+            <span>
+              <strong className="text-[#102A43]">AI/NLP structures the requirement. Deterministic logic evaluates the verified standards dataset.</strong> Official BIS sources remain the authority for final verification.
+            </span>
+          </div>
         </div>
       </div>
 

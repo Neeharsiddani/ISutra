@@ -669,6 +669,15 @@ export function extractWithPatternMatching(
   const safety_requirements: TaggedRequirementItem[] = [];
   const certification_mentions: TaggedRequirementItem[] = [];
 
+  // Seed with Indic extracted safety items
+  for (const s of indic.safety || []) {
+    safety_requirements.push({
+      name: s.name,
+      confidence: 'high',
+      source_text: s.source_text,
+    });
+  }
+
   const safetyDefList = [
     {
       name: 'Surge protection',
@@ -777,6 +786,15 @@ export function extractWithPatternMatching(
 
   // 9. Testing Requirements
   const testing_requirements: TaggedRequirementItem[] = [];
+
+  // Seed with Indic extracted testing items
+  for (const t of indic.testing || []) {
+    testing_requirements.push({
+      name: t.name,
+      confidence: 'high',
+      source_text: t.source_text,
+    });
+  }
   const testPatterns = [
     { name: 'Type test report / certificate', pattern: /\b(type\s+test(?:ing|s)?(?:\s+report|\s+certificate)?)\b/i },
     { name: 'Routine / acceptance test', pattern: /\b(routine\s+test(?:ing|s)?|factory\s+acceptance\s+test(?:ing|s)?|acceptance\s+test(?:ing)?)\b/i },

@@ -214,6 +214,9 @@ export interface IndicConceptMatch {
   environment: Array<{ name: string; source_text?: string }>;
   installation: Array<{ name: string; source_text?: string }>;
   parameters: Array<{ parameter: string; value: string; unit?: string; source_text?: string }>;
+  safety: Array<{ name: string; source_text?: string }>;
+  testing: Array<{ name: string; source_text?: string }>;
+  keywords: string[];
 }
 
 export function translateIndicProcurementConcepts(text: string): IndicConceptMatch {
@@ -221,6 +224,9 @@ export function translateIndicProcurementConcepts(text: string): IndicConceptMat
     environment: [],
     installation: [],
     parameters: [],
+    safety: [],
+    testing: [],
+    keywords: [],
   };
 
   // 1. LED Street Lighting
@@ -409,7 +415,62 @@ export function translateIndicProcurementConcepts(text: string): IndicConceptMat
       unit: 'kV',
       source_text: surgeMatch[0],
     });
+    match.safety.push({
+      name: 'Surge protection',
+      source_text: surgeMatch[0],
+    });
   }
+
+  // General Safety Requirements in Indic Text
+  const overloadSafety = text.match(/(?:ओवरलोड|ఓవర్‌లోడ్)\s*(?:सुरक्षा|రక్షణ)/i);
+  if (overloadSafety) {
+    match.safety.push({
+      name: 'Overload protection',
+      source_text: overloadSafety[0],
+    });
+  }
+
+  const earthSafety = text.match(/(?:अर्थिंग|ग्राउंडिंग|ఎర్తింగ్|గ్రౌండింగ్)/i);
+  if (earthSafety) {
+    match.safety.push({
+      name: 'Earth protection',
+      source_text: earthSafety[0],
+    });
+  }
+
+  const generalSafety = text.match(/सुरक्षा\s+आवश्यकता(?:एं)?|భద్రతా\s+అవసరాలు|రక్షణ\s+అవసరాలు/i);
+  if (generalSafety) {
+    match.safety.push({
+      name: 'Safety requirements',
+      source_text: generalSafety[0],
+    });
+  }
+
+  // Testing Requirements in Indic Text
+  const typeTest = text.match(/टाइप\s+टेस्ट|టైప్\s+టెస్ట్/i);
+  if (typeTest) {
+    match.testing.push({
+      name: 'Type test report / certificate',
+      source_text: typeTest[0],
+    });
+  }
+
+  const routineTest = text.match(/(?:स्वीकृति\s+परीक्षण|रूटीन\s+टेस्ट|ల్యాబ్\s+టెస్ట్|పరీక్షలు)/i);
+  if (routineTest) {
+    match.testing.push({
+      name: 'Routine / acceptance test',
+      source_text: routineTest[0],
+    });
+  }
+
+  // Extract High-Value Keywords / Concepts
+  if (match.productName) match.keywords.push(match.productName);
+  if (match.category) match.keywords.push(match.category);
+  if (match.application) match.keywords.push(match.application);
+  for (const env of match.environment) match.keywords.push(env.name);
+  for (const inst of match.installation) match.keywords.push(inst.name);
+  for (const safe of match.safety) match.keywords.push(safe.name);
+  for (const param of match.parameters) match.keywords.push(`${param.parameter}: ${param.value}`);
 
   return match;
 }

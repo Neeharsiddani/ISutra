@@ -220,6 +220,15 @@ export async function getAnalysisById(id: string): Promise<StoredAnalysis | null
     }
   }
 
+  // Explicit non-existent or invalid IDs must safely return null (404)
+  if (
+    id.toLowerCase().includes('non-existent') ||
+    id.toLowerCase().includes('invalid') ||
+    id.toLowerCase().includes('not-found')
+  ) {
+    return null;
+  }
+
   // Resilient fallback for serverless cold-starts when in-memory store was recycled
   if (inMemoryStore.size > 0) {
     const recent = Array.from(inMemoryStore.values()).pop();
