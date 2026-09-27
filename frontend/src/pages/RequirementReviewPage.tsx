@@ -22,6 +22,7 @@ import {
   Info,
   FileArchive,
   Globe,
+  Plus,
 } from 'lucide-react';
 import { getAnalysisById, updateAnalysisRequirements } from '../services/api';
 import type {
@@ -41,6 +42,12 @@ export default function RequirementReviewPage() {
   const [isConfirmed, setIsConfirmed] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [showTextPreview, setShowTextPreview] = useState(false);
+
+  // Edit Requirements Modal state
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  // Clarification questions selected answers
+  const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({});
 
   // Inline editing state for individual cards
   const [editingCard, setEditingCard] = useState<string | null>(null);
@@ -235,6 +242,152 @@ export default function RequirementReviewPage() {
     const list = [...draftInst];
     list.splice(index, 1);
     setDraftInst(list);
+  };
+
+  // Save all requirements from Edit Modal
+  const handleSaveAllModal = () => {
+    if (!requirements) return;
+    const updated: StructuredRequirements = {
+      ...requirements,
+      product: {
+        ...requirements.product,
+        name: draftProduct.trim() || requirements.product.name,
+        category: draftCategory.trim() || requirements.product.category,
+      },
+      application: draftApplication.trim() || null,
+      technical_parameters: draftParams,
+      environment: draftEnv.map((name) => ({ id: `env-${Date.now()}-${name}`, name, confidence: 'high' })),
+      installation_requirements: draftInst.map((name) => ({ id: `inst-${Date.now()}-${name}`, name, confidence: 'high' })),
+    };
+    saveUpdatedRequirements(updated);
+    setIsEditModalOpen(false);
+  };
+
+  // Handle clicking a clarification question option
+  const handleSelectOption = (q: any, opt: string, idx: number) => {
+    if (!requirements) return;
+    const qKey = q.id || `q-${idx}`;
+    const isCurrentlySelected = selectedAnswers[qKey] === opt;
+    const newAnswer = isCurrentlySelected ? '' : opt;
+    setSelectedAnswers((prev) => ({ ...prev, [qKey]: newAnswer }));
+
+    if (isCurrentlySelected) return; // unselected
+
+    const qField = (q.field || '').toLowerCase();
+    const qText = (q.question || '').toLowerCase();
+    const optClean = opt.trim();
+
+    let updatedReqs = { ...requirements };
+
+    if (qField.includes('category') || qText.includes('category')) {
+      updatedReqs = {
+        ...updatedReqs,
+        product: {
+          ...updatedReqs.product,
+          category: optClean,
+        },
+      };
+      setDraftCategory(optClean);
+    } else if (qField.includes('quantity') || qText.includes('quantity')) {
+      updatedReqs = {
+        ...updatedReqs,
+        quantity: optClean,
+      };
+    } else if (qField.includes('voltage') || qText.includes('voltage')) {
+      const existingIdx = updatedReqs.technical_parameters.findIndex((p) =>
+        p.parameter.toLowerCase().includes('voltage')
+      );
+      const newParam: TechnicalParameterItem = {
+        id: `param-voltage-${Date.now()}`,
+        parameter: 'Operating Voltage',
+        value: optClean,
+        confidence: 'high',
+        source_text: 'Clarification answer',
+      };
+      const params = [...updatedReqs.technical_parameters];
+      if (existingIdx >= 0) {
+        params[existingIdx] = newParam;
+      } else {
+        params.push(newParam);
+      }
+      updatedReqs = { ...updatedReqs, technical_parameters: params };
+      setDraftParams(params);
+    } else if (
+      qField.includes('color') ||
+      qField.includes('cct') ||
+      qText.includes('color temperature') ||
+      qText.includes('cct')
+    ) {
+      const existingIdx = updatedReqs.technical_parameters.findIndex(
+        (p) =>
+          p.parameter.toLowerCase().includes('cct') ||
+          p.parameter.toLowerCase().includes('color temperature')
+      );
+      const newParam: TechnicalParameterItem = {
+        id: `param-cct-${Date.now()}`,
+        parameter: 'Color Temperature (CCT)',
+        value: optClean,
+        confidence: 'high',
+        source_text: 'Clarification answer',
+      };
+      const params = [...updatedReqs.technical_parameters];
+      if (existingIdx >= 0) {
+        params[existingIdx] = newParam;
+      } else {
+        params.push(newParam);
+      }
+      updatedReqs = { ...updatedReqs, technical_parameters: params };
+      setDraftParams(params);
+    } else if (qField.includes('product') || qText.includes('product name')) {
+      updatedReqs = {
+        ...updatedReqs,
+        product: {
+          ...updatedReqs.product,
+          name: optClean,
+        },
+      };
+      setDraftProduct(optClean);
+    } else if (qField.includes('environment') || qText.includes('environment')) {
+      if (!updatedReqs.environment.some((e) => e.name === optClean)) {
+        const env = [
+          ...updatedReqs.environment,
+          { id: `env-${Date.now()}`, name: optClean, confidence: 'high' as const },
+        ];
+        updatedReqs = { ...updatedReqs, environment: env };
+        setDraftEnv(env.map((e) => e.name));
+      }
+    } else if (qField.includes('application') || qText.includes('application') || qText.includes('intended use')) {
+      updatedReqs = {
+        ...updatedReqs,
+        application: optClean,
+      };
+      setDraftApplication(optClean);
+    } else if (qField.includes('mount') || qText.includes('mount') || qField.includes('install')) {
+      if (!updatedReqs.installation_requirements.some((i) => i.name === optClean)) {
+        const inst = [
+          ...updatedReqs.installation_requirements,
+          { id: `inst-${Date.now()}`, name: optClean, confidence: 'high' as const },
+        ];
+        updatedReqs = { ...updatedReqs, installation_requirements: inst };
+        setDraftInst(inst.map((i) => i.name));
+      }
+    } else {
+      const paramName = q.field || (q.question ? q.question.replace(/\?.*$/, '').slice(0, 32) : 'Clarification Detail');
+      const params = [
+        ...updatedReqs.technical_parameters,
+        {
+          id: `param-clar-${Date.now()}`,
+          parameter: paramName,
+          value: optClean,
+          confidence: 'high' as const,
+          source_text: 'Clarification answer',
+        },
+      ];
+      updatedReqs = { ...updatedReqs, technical_parameters: params };
+      setDraftParams(params);
+    }
+
+    saveUpdatedRequirements(updatedReqs);
   };
 
   // Confirm Requirements Action
@@ -996,28 +1149,27 @@ export default function RequirementReviewPage() {
                     <span>{q.question}</span>
                   </div>
                   {q.options && q.options.length > 0 && (
-                    <div className="mt-2 flex flex-wrap gap-1.5 pl-4">
-                      {q.options.map((opt, optIdx) => (
-                        <button
-                          key={optIdx}
-                          type="button"
-                          onClick={() => {
-                            if (q.field === 'product.name' || q.field === 'product') {
-                              setDraftProduct(opt);
-                              handleStartEdit('product');
-                            } else if (q.field === 'product.category' || q.field === 'category') {
-                              setDraftCategory(opt);
-                              handleStartEdit('product');
-                            } else {
-                              handleStartEdit('product');
-                            }
-                          }}
-                          className="px-2.5 py-1 text-[11px] font-medium bg-amber-50 hover:bg-amber-100 text-[#8F4A00] border border-amber-200/80 rounded-lg transition-colors cursor-pointer text-left"
-                          title={`Click to set as ${q.field || 'value'}`}
-                        >
-                          {opt}
-                        </button>
-                      ))}
+                    <div className="mt-2.5 flex flex-wrap gap-2 pl-4">
+                      {q.options.map((opt, optIdx) => {
+                        const qKey = q.id || `q-${idx}`;
+                        const isSelected = selectedAnswers[qKey] === opt;
+                        return (
+                          <button
+                            key={optIdx}
+                            type="button"
+                            onClick={() => handleSelectOption(q, opt, idx)}
+                            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center gap-1.5 border shadow-2xs ${
+                              isSelected
+                                ? 'bg-[#0F766E] text-white border-[#0F766E] ring-2 ring-[#0F766E]/30'
+                                : 'bg-amber-50 hover:bg-amber-100/90 text-[#8F4A00] border-amber-200/90 hover:border-amber-300'
+                            }`}
+                            title={`Select '${opt}'`}
+                          >
+                            {isSelected && <Check className="w-3.5 h-3.5 stroke-[2.5]" />}
+                            <span>{opt}</span>
+                          </button>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
@@ -1077,14 +1229,12 @@ export default function RequirementReviewPage() {
         {/* Buttons (Desktop: Right aligned, Mobile: Stack vertically, min-h-[44px]) */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full sm:w-auto">
           <button
+            type="button"
             onClick={() => {
-              if (editingCard) {
-                setEditingCard(null);
-              } else {
-                handleStartEdit('product');
-              }
+              if (requirements) syncDrafts(requirements);
+              setIsEditModalOpen(true);
             }}
-            className="min-h-[44px] px-5 py-2.5 rounded-xl border border-[#0F766E] text-[#0F766E] hover:bg-[#0F766E]/5 text-xs font-semibold transition-all text-center flex items-center justify-center gap-2 active:scale-[0.99] cursor-pointer"
+            className="min-h-[44px] px-5 py-2.5 rounded-xl border-2 border-[#0F766E] bg-white text-[#0F766E] hover:bg-[#0F766E]/10 text-xs font-bold transition-all text-center flex items-center justify-center gap-2 active:scale-[0.99] cursor-pointer shadow-xs"
           >
             <Edit2 className="w-4 h-4" />
             <span>{!isReady ? 'Edit to Provide Clarification' : 'Edit Requirements'}</span>
@@ -1138,6 +1288,278 @@ export default function RequirementReviewPage() {
           )}
         </div>
       </div>
+
+      {/* ============================================================
+          6. EDIT REQUIREMENTS MODAL
+         ============================================================ */}
+      {isEditModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fade-in">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+            {/* Modal Header */}
+            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
+              <div className="flex items-center gap-2">
+                <Edit2 className="w-4 h-4 text-[#0F766E]" />
+                <h3 className="text-base font-bold text-[#102A43] font-display">
+                  Edit Procurement Requirements
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsEditModalOpen(false)}
+                className="p-1 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 space-y-4 overflow-y-auto flex-1 text-xs">
+              {/* Product Name */}
+              <div>
+                <label className="block text-[11px] uppercase font-bold text-slate-500 tracking-wider mb-1">
+                  Product Name *
+                </label>
+                <input
+                  type="text"
+                  value={draftProduct}
+                  onChange={(e) => setDraftProduct(e.target.value)}
+                  className="w-full text-sm font-semibold bg-white border border-slate-300 rounded-xl p-2.5 focus:border-[#0F766E] focus:ring-1 focus:ring-[#0F766E] outline-hidden"
+                  placeholder="e.g., Outdoor LED street lighting system"
+                />
+              </div>
+
+              {/* Category & Application */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] uppercase font-bold text-slate-500 tracking-wider mb-1">
+                    Category
+                  </label>
+                  <input
+                    type="text"
+                    value={draftCategory}
+                    onChange={(e) => setDraftCategory(e.target.value)}
+                    className="w-full text-xs font-medium bg-white border border-slate-300 rounded-xl p-2.5 focus:border-[#0F766E] focus:ring-1 focus:ring-[#0F766E] outline-hidden"
+                    placeholder="e.g., Lighting"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] uppercase font-bold text-slate-500 tracking-wider mb-1">
+                    Intended Application
+                  </label>
+                  <input
+                    type="text"
+                    value={draftApplication}
+                    onChange={(e) => setDraftApplication(e.target.value)}
+                    className="w-full text-xs font-medium bg-white border border-slate-300 rounded-xl p-2.5 focus:border-[#0F766E] focus:ring-1 focus:ring-[#0F766E] outline-hidden"
+                    placeholder="e.g., municipal highway lighting"
+                  />
+                </div>
+              </div>
+
+              {/* Technical Parameters */}
+              <div className="space-y-2 pt-2 border-t border-slate-100">
+                <div className="flex items-center justify-between">
+                  <label className="block text-[11px] uppercase font-bold text-slate-500 tracking-wider">
+                    Technical Parameters
+                  </label>
+                  <span className="text-[11px] text-slate-400">
+                    {draftParams.length} parameters configured
+                  </span>
+                </div>
+
+                <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                  {draftParams.map((p, idx) => (
+                    <div
+                      key={p.id || idx}
+                      className="flex items-center gap-2 p-2 bg-slate-50 rounded-xl border border-slate-200"
+                    >
+                      <input
+                        type="text"
+                        value={p.parameter}
+                        onChange={(e) => {
+                          const updated = [...draftParams];
+                          updated[idx] = { ...updated[idx], parameter: e.target.value };
+                          setDraftParams(updated);
+                        }}
+                        className="w-1/3 px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs font-semibold outline-hidden"
+                        placeholder="Parameter Name"
+                      />
+                      <input
+                        type="text"
+                        value={p.value}
+                        onChange={(e) => {
+                          const updated = [...draftParams];
+                          updated[idx] = { ...updated[idx], value: e.target.value };
+                          setDraftParams(updated);
+                        }}
+                        className="flex-1 px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs outline-hidden"
+                        placeholder="Value"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveDraftParam(idx)}
+                        className="p-1 text-slate-400 hover:text-red-600 rounded cursor-pointer"
+                        title="Delete parameter"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Add New Parameter row */}
+                <div className="flex items-center gap-2 p-2 bg-teal-50/50 border border-teal-200/60 rounded-xl">
+                  <input
+                    type="text"
+                    placeholder="New Parameter (e.g., Voltage)"
+                    value={newParamName}
+                    onChange={(e) => setNewParamName(e.target.value)}
+                    className="w-1/3 px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs outline-hidden"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Value (e.g., 230V AC)"
+                    value={newParamValue}
+                    onChange={(e) => setNewParamValue(e.target.value)}
+                    className="flex-1 px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs outline-hidden"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddDraftParam}
+                    disabled={!newParamName.trim() || !newParamValue.trim()}
+                    className="px-3 py-1.5 bg-[#0F766E] text-white rounded-lg text-xs font-semibold hover:bg-[#0C5D57] disabled:opacity-40 flex items-center gap-1 shrink-0 cursor-pointer"
+                  >
+                    <Plus className="w-3.5 h-3.5" /> Add
+                  </button>
+                </div>
+              </div>
+
+              {/* Environment & Installation Tags */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-100">
+                {/* Environment Tags */}
+                <div>
+                  <label className="block text-[11px] uppercase font-bold text-slate-500 tracking-wider mb-1">
+                    Environment Conditions
+                  </label>
+                  <div className="flex flex-wrap gap-1.5 mb-2 min-h-[34px] p-2 bg-slate-50 rounded-xl border border-slate-200">
+                    {draftEnv.length === 0 ? (
+                      <span className="text-[11px] text-slate-400 italic">No environment tags</span>
+                    ) : (
+                      draftEnv.map((env, idx) => (
+                        <span
+                          key={idx}
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-semibold bg-white border border-slate-300 text-slate-700 shadow-2xs"
+                        >
+                          {env}
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveDraftEnv(idx)}
+                            className="text-slate-400 hover:text-red-500 cursor-pointer"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </span>
+                      ))
+                    )}
+                  </div>
+                  <div className="flex gap-1.5">
+                    <input
+                      type="text"
+                      placeholder="e.g., Outdoor, IP65"
+                      value={newEnvInput}
+                      onChange={(e) => setNewEnvInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleAddDraftEnv();
+                        }
+                      }}
+                      className="flex-1 px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs outline-hidden"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddDraftEnv}
+                      disabled={!newEnvInput.trim()}
+                      className="px-2.5 py-1.5 bg-slate-700 text-white rounded-lg text-xs font-semibold hover:bg-slate-800 disabled:opacity-40 cursor-pointer"
+                    >
+                      Add
+                    </button>
+                  </div>
+                </div>
+
+                {/* Installation Tags */}
+                <div>
+                  <label className="block text-[11px] uppercase font-bold text-slate-500 tracking-wider mb-1">
+                    Installation / Mounting
+                  </label>
+                  <div className="flex flex-wrap gap-1.5 mb-2 min-h-[34px] p-2 bg-slate-50 rounded-xl border border-slate-200">
+                    {draftInst.length === 0 ? (
+                      <span className="text-[11px] text-slate-400 italic">No installation tags</span>
+                    ) : (
+                      draftInst.map((inst, idx) => (
+                        <span
+                          key={idx}
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-semibold bg-white border border-slate-300 text-slate-700 shadow-2xs"
+                        >
+                          {inst}
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveDraftInst(idx)}
+                            className="text-slate-400 hover:text-red-500 cursor-pointer"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </span>
+                      ))
+                    )}
+                  </div>
+                  <div className="flex gap-1.5">
+                    <input
+                      type="text"
+                      placeholder="e.g., Pole mount"
+                      value={newInstInput}
+                      onChange={(e) => setNewInstInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleAddDraftInst();
+                        }
+                      }}
+                      className="flex-1 px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs outline-hidden"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddDraftInst}
+                      disabled={!newInstInput.trim()}
+                      className="px-2.5 py-1.5 bg-slate-700 text-white rounded-lg text-xs font-semibold hover:bg-slate-800 disabled:opacity-40 cursor-pointer"
+                    >
+                      Add
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-6 py-3.5 border-t border-slate-100 flex items-center justify-end gap-2.5 bg-slate-50/70">
+              <button
+                type="button"
+                onClick={() => setIsEditModalOpen(false)}
+                className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-900 rounded-xl hover:bg-slate-100 cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveAllModal}
+                className="px-5 py-2 text-xs font-bold text-white bg-[#0F766E] hover:bg-[#0C5D57] rounded-xl shadow-xs transition-colors cursor-pointer"
+              >
+                Save Requirements
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
