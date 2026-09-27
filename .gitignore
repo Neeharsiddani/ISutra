@@ -15,6 +15,7 @@ dist/
 dist-ssr/
 build/
 *.tsbuildinfo
+.vercel/
 
 # Logs
 logs/

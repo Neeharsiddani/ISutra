@@ -231,3 +231,21 @@ npm --prefix backend run build
 # Build frontend
 npm --prefix frontend run build
 ```
+
+---
+
+## ☁️ Deploying to Vercel
+
+ISutra is ready for one-click deployment on [Vercel](https://vercel.com):
+
+1. **Push your code to GitHub**.
+2. **Import the repository** into Vercel.
+3. Vercel automatically detects the configuration:
+   - **Build Command**: `npm run build --prefix frontend`
+   - **Output Directory**: `frontend/dist`
+   - **Serverless API**: Pre-configured via `api/index.ts` and `vercel.json`
+4. Add environment variables if using Google Gemini or Supabase (`AI_API_KEY`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`).
+5. Click **Deploy**.
+
+For detailed setup options (including CLI and split frontend/backend hosting), see [VERCEL_DEPLOYMENT_GUIDE.md](file:///c:/Users/Eshwar%20Ajay%20Sai/Documents/ISutra/ISutra/VERCEL_DEPLOYMENT_GUIDE.md).
+
