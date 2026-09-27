@@ -23,13 +23,22 @@ export async function extractRequirementsWithAI(
   inputLanguage?: string,
   languageMeta?: LanguageMetadata
 ): Promise<AIClientResponse> {
-  const provider = (process.env.AI_PROVIDER || 'gemini').trim().toLowerCase().replace(/^['"]|['"]$/g, '');
+  const configuredProvider = (process.env.AI_PROVIDER || 'gemini').trim().toLowerCase().replace(/^['"]|['"]$/g, '');
   const apiKey = (process.env.AI_API_KEY || '').trim().replace(/^['"]|['"]$/g, '');
-  const rawModel = (process.env.AI_MODEL || (provider === 'gemini' ? 'gemini-1.5-flash' : 'gpt-4o-mini'))
-    .trim()
-    .replace(/^['"]|['"]$/g, '')
-    .replace(/^models\//, '');
-  const model = rawModel || 'gemini-1.5-flash';
+  let rawModel = (process.env.AI_MODEL || '').trim().replace(/^['"]|['"]$/g, '').replace(/^models\//, '');
+
+  // Auto-detect provider if key prefix clearly identifies it
+  let provider = configuredProvider;
+  if (apiKey.startsWith('sk-') && provider === 'gemini') {
+    console.log('[ISutra AI] API key format indicates OpenAI (starts with sk-). Switching provider to openai.');
+    provider = 'openai';
+  }
+
+  // Automatically upgrade deprecated 1.5 models to supported 2.5/2.0 models
+  let model = rawModel;
+  if (!model || model === 'gemini-1.5-flash' || model === 'gemini-1.5-pro' || model.includes('1.5-flash')) {
+    model = provider === 'gemini' ? 'gemini-2.5-flash' : 'gpt-4o-mini';
+  }
 
   // If no external API key is provided, clearly mark as Demo Mode
   if (!apiKey) {
@@ -49,8 +58,8 @@ export async function extractRequirementsWithAI(
   if (provider === 'gemini') {
     try {
       console.log(`[ISutra AI] Calling Google Gemini API (${model})...`);
-      const callGeminiModel = async (targetModel: string) => {
-        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${targetModel}:generateContent?key=${apiKey}`;
+      const callGeminiModel = async (targetModel: string, apiVer: string = 'v1beta') => {
+        const endpoint = `https://generativelanguage.googleapis.com/${apiVer}/models/${targetModel}:generateContent?key=${apiKey}`;
         const payload = {
           contents: [
             {
@@ -82,7 +91,7 @@ export async function extractRequirementsWithAI(
               detail = errJson.error.message;
             }
           } catch {}
-          throw new Error(`Gemini API error (${res.status}): ${detail}`);
+          throw new Error(`Gemini API error (${res.status} [${apiVer}/${targetModel}]): ${detail}`);
         }
 
         const data = (await res.json()) as any;
@@ -93,59 +102,43 @@ export async function extractRequirementsWithAI(
         return { parsed: JSON.parse(rawText) as StructuredRequirements, usedModel: targetModel };
       };
 
+      const candidatesToTry = [
+        model,
+        'gemini-2.5-flash',
+        'gemini-2.0-flash',
+        'gemini-3.5-flash-lite',
+        'gemini-3.8-flash',
+        'gemini-2.5-pro',
+      ].filter((v, i, a) => a.indexOf(v) === i);
+
       let result;
-      try {
-        result = await callGeminiModel(model);
-      } catch (firstErr) {
-        // If 404 (model deprecated or retired), query Google's ListModels API to discover the active model
-        if ((firstErr as Error).message.includes('404')) {
-          console.warn(`[ISutra AI] Model ${model} returned 404. Discovering active models from Google API...`);
-          let discoveredModel: string | null = null;
+      const attemptErrors: string[] = [];
+
+      for (const cand of candidatesToTry) {
+        try {
+          // Try v1beta first, then v1
           try {
-            const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
-            if (listRes.ok) {
-              const listData = (await listRes.json()) as any;
-              const available = listData?.models || [];
-              const match = available.find(
-                (m: any) =>
-                  m.supportedGenerationMethods?.includes('generateContent') &&
-                  (m.name?.includes('flash') || m.name?.includes('gemini'))
-              );
-              if (match?.name) {
-                discoveredModel = match.name.replace(/^models\//, '');
-                console.log(`[ISutra AI] Discovered active model: ${discoveredModel}`);
-              }
-            }
-          } catch (listErr) {
-            console.warn('[ISutra AI] Failed to query ListModels:', listErr);
-          }
-
-          const fallbackCandidates = [
-            discoveredModel,
-            'gemini-2.5-flash',
-            'gemini-2.0-flash',
-            'gemini-1.5-flash-8b',
-          ].filter(Boolean) as string[];
-
-          let fallbackSuccess = false;
-          for (const cand of fallbackCandidates) {
-            if (cand === model) continue;
-            try {
-              console.log(`[ISutra AI] Retrying with model: ${cand}...`);
-              result = await callGeminiModel(cand);
-              fallbackSuccess = true;
+            result = await callGeminiModel(cand, 'v1beta');
+            break;
+          } catch (betaErr) {
+            if ((betaErr as Error).message.includes('404')) {
+              result = await callGeminiModel(cand, 'v1');
               break;
-            } catch (candErr) {
-              console.warn(`[ISutra AI] Candidate ${cand} failed:`, (candErr as Error).message);
+            } else {
+              throw betaErr;
             }
           }
-
-          if (!fallbackSuccess) {
-            throw firstErr;
+        } catch (err) {
+          attemptErrors.push((err as Error).message);
+          // If error is an invalid API key, stop retrying models
+          if ((err as Error).message.includes('API_KEY_INVALID') || (err as Error).message.includes('400')) {
+            break;
           }
-        } else {
-          throw firstErr;
         }
+      }
+
+      if (!result) {
+        throw new Error(attemptErrors[0] || 'Unable to connect to Gemini API');
       }
 
       return {
