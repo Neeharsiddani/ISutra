@@ -40,8 +40,25 @@ async function fetchApi<T>(
   });
 
   if (!response.ok) {
-    const errorBody = await response.json().catch(() => null);
-    throw new Error(errorBody?.error?.message || `API error: ${response.status}`);
+    let errorMessage = `API error: ${response.status}`;
+    try {
+      const errorBody = await response.json();
+      if (errorBody?.error?.message) {
+        errorMessage = errorBody.error.message;
+      } else if (errorBody?.message) {
+        errorMessage = errorBody.message;
+      }
+    } catch {
+      try {
+        const errorText = await response.text();
+        if (errorText && errorText.trim().length > 0 && errorText.length < 300) {
+          errorMessage = `API error ${response.status}: ${errorText.trim()}`;
+        }
+      } catch {
+        // Fallback to default errorMessage
+      }
+    }
+    throw new Error(errorMessage);
   }
 
   return await response.json();
