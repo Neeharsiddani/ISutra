@@ -533,7 +533,7 @@ export default function RecommendationsResultsPage() {
               </span>
             </div>
             {processedRecommendations.map((rec) => {
-              const isExpanded = expandedCards[rec.standardId] ?? (rec.rank === 1);
+              const isExpanded = Boolean(expandedCards[rec.standardId]);
               const isHigh = rec.category === 'high';
 
               return (
@@ -725,26 +725,8 @@ export default function RecommendationsResultsPage() {
                     />
                   )}
 
-                  {/* Card Footer: Action Links & Toggle */}
-                  <div className="mt-4 pt-3.5 border-t border-[#243B53]/10 flex flex-wrap items-center justify-between gap-3">
-                    <button
-                      onClick={() => toggleExpand(rec.standardId)}
-                      className={`min-h-[36px] px-3.5 py-1.5 rounded-lg border text-xs font-bold flex items-center gap-1.5 transition-all shadow-2xs ${
-                        isExpanded
-                          ? 'bg-[#102A43] text-white border-[#102A43]'
-                          : 'bg-teal-50 hover:bg-teal-100 text-[#0F766E] border-teal-300'
-                      }`}
-                    >
-                      <Sparkles className="w-3.5 h-3.5" />
-                      <span>{isExpanded ? 'Hide Decision Trail' : 'Why This Standard?'}</span>
-                      {isExpanded ? (
-                        <ChevronUp className="w-3.5 h-3.5" />
-                      ) : (
-                        <ChevronDown className="w-3.5 h-3.5" />
-                      )}
-                    </button>
-
-                    <div className="flex flex-wrap items-center gap-2">
+                  {/* Card Footer: Action Links */}
+                  <div className="mt-4 pt-3.5 border-t border-[#243B53]/10 flex flex-wrap items-center justify-end gap-2">
                       <Link
                         to={`/analysis/${id || ''}/recommendations/${rec.standard.id}/gap-analysis`}
                         state={{ fromAnalysisId: id, standard: rec.standard, requirements: reqs }}
@@ -802,7 +784,6 @@ export default function RecommendationsResultsPage() {
                           <ExternalLink className="w-3 h-3 opacity-80" />
                         </a>
                       )}
-                    </div>
                   </div>
                 </div>
               );

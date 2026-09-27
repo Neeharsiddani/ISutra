@@ -141,6 +141,24 @@ export default function StandardDetailsPage() {
     loadData();
   }, [id]);
 
+  // Smooth scroll and pulse highlight when navigating with a hash (e.g. #lifecycle, #regulatory-check, #relationships)
+  useEffect(() => {
+    if (!loading && location.hash) {
+      const targetId = location.hash.replace('#', '');
+      const timer = setTimeout(() => {
+        const element = document.getElementById(targetId);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          element.classList.add('ring-4', 'ring-[#0F766E]/40', 'ring-offset-4', 'transition-all', 'duration-500');
+          setTimeout(() => {
+            element.classList.remove('ring-4', 'ring-[#0F766E]/40', 'ring-offset-4');
+          }, 3000);
+        }
+      }, 200);
+      return () => clearTimeout(timer);
+    }
+  }, [loading, location.hash]);
+
   if (loading) {
     return (
       <div className="w-full py-16">
@@ -406,7 +424,9 @@ export default function StandardDetailsPage() {
           </div>
 
           {/* CARD 5: REGULATORY / CERTIFICATION CHECK */}
-          <RegulatoryCheckSection assessment={regulatoryRes} loading={loading} />
+          <div id="regulatory-check" className="scroll-mt-24 rounded-2xl">
+            <RegulatoryCheckSection assessment={regulatoryRes} loading={loading} />
+          </div>
         </div>
 
         {/* ==========================================================
@@ -416,7 +436,7 @@ export default function StandardDetailsPage() {
         <div className="w-full lg:w-[30%] space-y-6">
           <div
             id="lifecycle"
-            className="bg-white rounded-2xl border border-[#243B53]/10 p-5 sm:p-6 shadow-xs space-y-5 scroll-mt-6"
+            className="bg-white rounded-2xl border border-[#243B53]/10 p-5 sm:p-6 shadow-xs space-y-5 scroll-mt-24"
           >
             {/* Header with Title & Badge */}
             <div className="flex items-center justify-between gap-2 border-b border-[#243B53]/10 pb-3">
@@ -744,13 +764,15 @@ export default function StandardDetailsPage() {
           5. ASSOCIATED & ALLIED STANDARDS EXPLORER
           Full-width section below the main 2-column layout
          ============================================================ */}
-      <AlliedStandardsExplorer
-        currentStandard={standard}
-        relationships={relationships}
-        coverage={coverage}
-        procurementGuidance={procurementGuidance}
-        fromAnalysis={fromAnalysis}
-      />
+      <div id="relationships" className="scroll-mt-24 rounded-2xl">
+        <AlliedStandardsExplorer
+          currentStandard={standard}
+          relationships={relationships}
+          coverage={coverage}
+          procurementGuidance={procurementGuidance}
+          fromAnalysis={fromAnalysis}
+        />
+      </div>
     </div>
   );
 }

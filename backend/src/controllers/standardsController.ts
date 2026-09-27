@@ -5,6 +5,8 @@
 
 import { Request, Response, NextFunction } from 'express';
 import * as standardsService from '../services/standardsService';
+import { getStandardLifecycle } from '../services/standardLifecycleService';
+import { getStandardRegulatoryCheck } from '../services/regulatoryService';
 
 export async function getAll(
   req: Request,
@@ -126,7 +128,6 @@ export async function getLifecycle(
   next: NextFunction
 ): Promise<void> {
   try {
-    const { getStandardLifecycle } = await import('../services/standardLifecycleService');
     const result = getStandardLifecycle(req.params.id);
     res.json({
       lifecycle: result.lifecycle,
@@ -147,7 +148,6 @@ export async function getRegulatoryCheck(
   next: NextFunction
 ): Promise<void> {
   try {
-    const { getStandardRegulatoryCheck } = await import('../services/regulatoryService');
     const result = await getStandardRegulatoryCheck(req.params.id);
     res.json({
       success: true,

@@ -7,6 +7,9 @@ import { Request, Response, NextFunction } from 'express';
 import { matchRequirementsToStandards } from '../services/standardsMatcher';
 import * as analysisService from '../services/analysisService';
 import { VERIFIED_BIS_STANDARDS } from '../database/verifiedStandards';
+import { analyzeRequirementGaps } from '../services/requirementGapAnalyzer';
+import { compareStandards } from '../services/standardsComparator';
+import { generateProcurementReportData, generatePrintableHtmlReport } from '../services/procurementReportService';
 
 export async function getRecommendations(
   req: Request,
@@ -202,8 +205,7 @@ export async function getRequirementGapAnalysis(
       return;
     }
 
-    // Import and execute gap analyzer
-    const { analyzeRequirementGaps } = await import('../services/requirementGapAnalyzer');
+    // Execute gap analyzer
     const gapAnalysis = analyzeRequirementGaps(requirements, standard);
 
     res.json({
@@ -311,7 +313,6 @@ export async function compareStandardsHandler(
       resolvedStandards.push(std);
     }
 
-    const { compareStandards } = await import('../services/standardsComparator');
     const comparisonResult = compareStandards(requirements, resolvedStandards);
 
     res.json({
@@ -331,7 +332,6 @@ export async function getProcurementReport(
 ): Promise<void> {
   try {
     const analysisId = req.params.id;
-    const { generateProcurementReportData } = await import('../services/procurementReportService');
     const reportData = await generateProcurementReportData(analysisId);
     res.json({
       success: true,
@@ -349,7 +349,6 @@ export async function getProcurementReportHtml(
 ): Promise<void> {
   try {
     const analysisId = req.params.id;
-    const { generateProcurementReportData, generatePrintableHtmlReport } = await import('../services/procurementReportService');
     const reportData = await generateProcurementReportData(analysisId);
     const html = generatePrintableHtmlReport(reportData);
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
