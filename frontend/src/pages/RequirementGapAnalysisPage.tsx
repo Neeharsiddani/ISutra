@@ -61,10 +61,16 @@ export default function RequirementGapAnalysisPage() {
       try {
         let result;
         if (id && id !== 'undefined') {
-          // Fetch using stored analysis ID
-          result = await getRequirementGapAnalysis(id, standardId);
+          try {
+            result = await getRequirementGapAnalysis(id, standardId);
+          } catch (fetchErr) {
+            if (locationState?.requirements) {
+              result = await analyzeRequirementGapsDirect(locationState.requirements, standardId);
+            } else {
+              throw fetchErr;
+            }
+          }
         } else if (locationState?.requirements) {
-          // Fallback to direct analysis if requirements object was passed
           result = await analyzeRequirementGapsDirect(locationState.requirements, standardId);
         } else {
           throw new Error('Analysis context not found. Please navigate from recommendations results.');
