@@ -24,7 +24,6 @@ import {
 } from 'lucide-react';
 import { getAnalysisHistory } from '../services/api';
 import type { AnalysisHistoryItem } from '../types';
-import DifferentiationPanel from '../components/common/DifferentiationPanel';
 
 export default function DashboardPage() {
   const navigate = useNavigate();
@@ -204,11 +203,6 @@ export default function DashboardPage() {
           })}
         </div>
       </div>
-
-      {/* ============================================================
-          SECTION: DIFFERENTIATION PANEL
-         ============================================================ */}
-      <DifferentiationPanel />
 
       {/* ============================================================
           4. SECTION E: COMPACT 4-STEP HOW IT WORKS

@@ -25,7 +25,6 @@ import {
 import { useAnalysis } from '../hooks/useAnalysis';
 import type { InputType } from '../types';
 import AnalysisLoading from '../components/analysis/AnalysisLoading';
-import DifferentiationPanel from '../components/common/DifferentiationPanel';
 
 const EXAMPLE_SPECS = [
   {
@@ -646,10 +645,7 @@ export default function AnalyzePage() {
         </div>
       </div>
 
-      {/* ============================================================
-          3. DIFFERENTIATION PANEL: SEARCH VS ISUTRA INTELLIGENCE
-         ============================================================ */}
-      <DifferentiationPanel />
     </div>
   );
 }
+

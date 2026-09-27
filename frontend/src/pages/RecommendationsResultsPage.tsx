@@ -368,23 +368,15 @@ export default function RecommendationsResultsPage() {
           </span>
         </div>
 
-        {/* Dataset boundary & architecture clarification notice */}
+        {/* Dataset boundary clarification notice */}
         <div className="text-xs text-[#486581] bg-slate-50/90 rounded-xl p-3 border border-slate-200/70 flex items-start gap-2.5">
           <Info className="w-4 h-4 text-[#0F766E] shrink-0 mt-0.5" />
-          <div className="space-y-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="font-semibold text-[#102A43]">
-                Deterministic Decision Intelligence • 40 Verified BIS Records
-              </span>
-              <span className="text-[10px] px-2 py-0.2 rounded bg-teal-50 text-[#0F766E] border border-teal-200 font-semibold">
-                AI/NLP Structured → Deterministic Evaluated
-              </span>
-            </div>
-            <span className="text-[#102A43] font-medium block">
-              AI/NLP structures the requirement. Deterministic logic evaluates the verified standards dataset.
+          <div className="space-y-0.5">
+            <span className="font-semibold text-[#102A43]">
+              40 Verified BIS Reference Records
             </span>
             <span className="text-[#627D98] block">
-              Official BIS sources remain the authority for final verification. This prototype evaluates confirmed requirements against 40 verified reference standards; recommendations are limited to the verified reference dataset.
+              This prototype is not an exhaustive BIS catalogue. Recommendations are limited to the verified reference dataset. The matching and evidence model is designed to operate over a larger verified BIS catalogue when additional records are incorporated. Absence from results does not mean that no other BIS standard exists.
             </span>
           </div>
         </div>
