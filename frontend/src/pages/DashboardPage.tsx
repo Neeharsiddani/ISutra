@@ -124,16 +124,6 @@ export default function DashboardPage() {
               <ArrowRight className="w-4 h-4" />
             </button>
 
-            <button
-              type="button"
-              onClick={() => navigate('/analyze')}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-teal-50 hover:bg-teal-100 text-[#0F766E] border border-teal-200 text-xs sm:text-sm font-semibold transition-colors cursor-pointer"
-              title="Launch Controlled Municipal Outdoor LED Street Lighting Demo"
-            >
-              <Sparkles className="w-4 h-4 text-[#0F766E]" />
-              <span>Flagship LED Demo</span>
-            </button>
-
             <Link
               to="/standards"
               className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-[#102A43] border border-slate-200 text-xs sm:text-sm font-semibold transition-colors"

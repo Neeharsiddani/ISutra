@@ -266,96 +266,11 @@ export default function AnalyzePage() {
 
         {/* Card Body */}
         <div className="p-3.5 sm:p-5 space-y-4">
-          {/* ============================================================
-              FLAGSHIP DEMO SCENARIO: MUNICIPAL OUTDOOR LED STREET LIGHTING
-             ============================================================ */}
-          <div className="p-4 bg-gradient-to-r from-teal-50/70 via-slate-50 to-indigo-50/40 rounded-xl border border-[#0F766E]/30 space-y-3">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-[#0F766E] animate-pulse" />
-                <h3 className="text-xs font-bold text-[#102A43] uppercase tracking-wider font-display">
-                  Flagship Demo: Municipal Outdoor LED Street Lighting
-                </h3>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#0F766E]/10 text-[#0F766E] font-semibold border border-[#0F766E]/20">
-                  Multilingual Controlled Scenario
-                </span>
-              </div>
-              <span className="text-[11px] text-slate-500 font-medium hidden sm:inline">
-                One-Click Load in Any Supported Language
-              </span>
-            </div>
-
-            <p className="text-xs text-slate-600 leading-relaxed">
-              Demonstrates the end-to-end intelligence workflow: messy procurement text is structured via AI/NLP, reviewed by the user, and deterministically matched against <strong>IS 10322 (Part 5/Sec 3):2026</strong> with complete evidence, gap analysis, lifecycle history, and procurement report.
-            </p>
-
-            <div className="flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setInputText('Outdoor LED street lighting system, 100W, weather resistant, pole mounted, IP65 enclosure, surge protection 10kV.');
-                  setInputLanguage('en');
-                  setUploadedFile(null);
-                  setValidationError(null);
-                }}
-                className="text-xs px-3 py-1.5 rounded-lg bg-white hover:bg-[#0F766E]/10 text-[#102A43] hover:text-[#0F766E] border border-slate-200 font-semibold transition-colors cursor-pointer shadow-2xs flex items-center gap-1.5"
-              >
-                <span>🇬🇧 Load English Scenario</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setInputText('नगर निगम सड़क प्रकाश व्यवस्था के लिए 100 वाट एलईडी स्ट्रीट लाइट, बाहरी मौसम प्रतिरोधी, पोल माउंटेड, आईपी65, 10 केवी सर्ज सुरक्षा');
-                  setInputLanguage('hi');
-                  setUploadedFile(null);
-                  setValidationError(null);
-                }}
-                className="text-xs px-3 py-1.5 rounded-lg bg-white hover:bg-[#0F766E]/10 text-[#102A43] hover:text-[#0F766E] border border-slate-200 font-semibold transition-colors cursor-pointer shadow-2xs flex items-center gap-1.5"
-              >
-                <span>🇮🇳 लोड करें (हिंदी - Hindi)</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setInputText('మున్సిపల్ రోడ్ల కోసం 100 వాట్లు ఎల్‌ఈడీ స్ట్రీట్ లైట్లు, బహిరంగ వాతావరణ నిరోధక, పోల్ మౌంటెడ్, ఐపీ65, 10 కేవీ సర్జ్ రక్షణ');
-                  setInputLanguage('te');
-                  setUploadedFile(null);
-                  setValidationError(null);
-                }}
-                className="text-xs px-3 py-1.5 rounded-lg bg-white hover:bg-[#0F766E]/10 text-[#102A43] hover:text-[#0F766E] border border-slate-200 font-semibold transition-colors cursor-pointer shadow-2xs flex items-center gap-1.5"
-              >
-                <span>🇮🇳 లోడ్ చేయండి (తెలుగు - Telugu)</span>
-              </button>
-            </div>
-
-            {/* End-to-End Workflow Pipeline stepper */}
-            <div className="pt-1.5 border-t border-slate-200/60 flex items-center gap-1 overflow-x-auto text-[10px] text-slate-500 font-medium">
-              <span className="font-bold text-[#0F766E] uppercase tracking-wider shrink-0">Journey:</span>
-              <span className="px-1.5 py-0.5 rounded bg-white border border-slate-200 shrink-0 text-[#102A43]">1. Analyze</span>
-              <span>→</span>
-              <span className="px-1.5 py-0.5 rounded bg-white border border-slate-200 shrink-0 text-[#102A43]">2. Review</span>
-              <span>→</span>
-              <span className="px-1.5 py-0.5 rounded bg-white border border-slate-200 shrink-0 text-[#102A43]">3. Recommendations</span>
-              <span>→</span>
-              <span className="px-1.5 py-0.5 rounded bg-white border border-slate-200 shrink-0 text-[#102A43]">4. Evidence</span>
-              <span>→</span>
-              <span className="px-1.5 py-0.5 rounded bg-white border border-slate-200 shrink-0 text-[#102A43]">5. Gap Analysis</span>
-              <span>→</span>
-              <span className="px-1.5 py-0.5 rounded bg-white border border-slate-200 shrink-0 text-[#102A43]">6. Lifecycle</span>
-              <span>→</span>
-              <span className="px-1.5 py-0.5 rounded bg-white border border-slate-200 shrink-0 text-[#102A43]">7. Compare</span>
-              <span>→</span>
-              <span className="px-1.5 py-0.5 rounded bg-teal-50 border border-teal-200 shrink-0 text-[#0F766E] font-bold">8. Report</span>
-            </div>
-          </div>
-
           {/* Quick Test Inputs */}
           <div>
             <div className="flex items-center justify-between mb-1.5">
               <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 font-display">
-                Other Quick Test Inputs
+                Quick Test Inputs
               </span>
               <span className="text-[11px] text-slate-400 hidden sm:inline">
                 Click any sample to populate
