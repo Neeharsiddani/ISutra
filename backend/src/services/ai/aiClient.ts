@@ -97,10 +97,52 @@ export async function extractRequirementsWithAI(
       try {
         result = await callGeminiModel(model);
       } catch (firstErr) {
-        // If 404 (model not found), try stable fallback model
-        if ((firstErr as Error).message.includes('404') && model !== 'gemini-1.5-flash') {
-          console.warn(`[ISutra AI] Model ${model} returned 404. Retrying with gemini-1.5-flash...`);
-          result = await callGeminiModel('gemini-1.5-flash');
+        // If 404 (model deprecated or retired), query Google's ListModels API to discover the active model
+        if ((firstErr as Error).message.includes('404')) {
+          console.warn(`[ISutra AI] Model ${model} returned 404. Discovering active models from Google API...`);
+          let discoveredModel: string | null = null;
+          try {
+            const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+            if (listRes.ok) {
+              const listData = (await listRes.json()) as any;
+              const available = listData?.models || [];
+              const match = available.find(
+                (m: any) =>
+                  m.supportedGenerationMethods?.includes('generateContent') &&
+                  (m.name?.includes('flash') || m.name?.includes('gemini'))
+              );
+              if (match?.name) {
+                discoveredModel = match.name.replace(/^models\//, '');
+                console.log(`[ISutra AI] Discovered active model: ${discoveredModel}`);
+              }
+            }
+          } catch (listErr) {
+            console.warn('[ISutra AI] Failed to query ListModels:', listErr);
+          }
+
+          const fallbackCandidates = [
+            discoveredModel,
+            'gemini-2.5-flash',
+            'gemini-2.0-flash',
+            'gemini-1.5-flash-8b',
+          ].filter(Boolean) as string[];
+
+          let fallbackSuccess = false;
+          for (const cand of fallbackCandidates) {
+            if (cand === model) continue;
+            try {
+              console.log(`[ISutra AI] Retrying with model: ${cand}...`);
+              result = await callGeminiModel(cand);
+              fallbackSuccess = true;
+              break;
+            } catch (candErr) {
+              console.warn(`[ISutra AI] Candidate ${cand} failed:`, (candErr as Error).message);
+            }
+          }
+
+          if (!fallbackSuccess) {
+            throw firstErr;
+          }
         } else {
           throw firstErr;
         }
