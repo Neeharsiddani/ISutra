@@ -23,12 +23,16 @@ export async function extractRequirementsWithAI(
   inputLanguage?: string,
   languageMeta?: LanguageMetadata
 ): Promise<AIClientResponse> {
-  const provider = (process.env.AI_PROVIDER || '').toLowerCase();
-  const apiKey = process.env.AI_API_KEY;
-  const model = process.env.AI_MODEL || (provider === 'gemini' ? 'gemini-1.5-flash' : 'gpt-4o-mini');
+  const provider = (process.env.AI_PROVIDER || 'gemini').trim().toLowerCase().replace(/^['"]|['"]$/g, '');
+  const apiKey = (process.env.AI_API_KEY || '').trim().replace(/^['"]|['"]$/g, '');
+  const rawModel = (process.env.AI_MODEL || (provider === 'gemini' ? 'gemini-1.5-flash' : 'gpt-4o-mini'))
+    .trim()
+    .replace(/^['"]|['"]$/g, '')
+    .replace(/^models\//, '');
+  const model = rawModel || 'gemini-1.5-flash';
 
   // If no external API key is provided, clearly mark as Demo Mode
-  if (!apiKey || apiKey.trim() === '') {
+  if (!apiKey) {
     console.log('[ISutra AI] AI_API_KEY is not configured. Operating in Demo Mode.');
     const result = extractWithPatternMatching(inputText, inputType, languageMeta);
     return {
@@ -45,46 +49,67 @@ export async function extractRequirementsWithAI(
   if (provider === 'gemini') {
     try {
       console.log(`[ISutra AI] Calling Google Gemini API (${model})...`);
-      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-      const payload = {
-        contents: [
-          {
-            role: 'user',
-            parts: [
-              { text: REQUIREMENT_EXTRACTION_SYSTEM_PROMPT },
-              { text: createExtractionUserPrompt(inputType, inputText, inputLanguage) },
-            ],
+      const callGeminiModel = async (targetModel: string) => {
+        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${targetModel}:generateContent?key=${apiKey}`;
+        const payload = {
+          contents: [
+            {
+              role: 'user',
+              parts: [
+                { text: REQUIREMENT_EXTRACTION_SYSTEM_PROMPT },
+                { text: createExtractionUserPrompt(inputType, inputText, inputLanguage) },
+              ],
+            },
+          ],
+          generationConfig: {
+            responseMimeType: 'application/json',
+            temperature: 0.1,
           },
-        ],
-        generationConfig: {
-          responseMimeType: 'application/json',
-          temperature: 0.1,
-        },
+        };
+
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        if (!res.ok) {
+          const errorText = await res.text();
+          let detail = res.statusText;
+          try {
+            const errJson = JSON.parse(errorText);
+            if (errJson?.error?.message) {
+              detail = errJson.error.message;
+            }
+          } catch {}
+          throw new Error(`Gemini API error (${res.status}): ${detail}`);
+        }
+
+        const data = (await res.json()) as any;
+        const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (!rawText) {
+          throw new Error('Empty response from Gemini API');
+        }
+        return { parsed: JSON.parse(rawText) as StructuredRequirements, usedModel: targetModel };
       };
 
-      const res = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) {
-        const errorText = await res.text();
-        console.warn(`[ISutra AI] Gemini API returned status ${res.status}: ${errorText.substring(0, 200)}`);
-        throw new Error(`Gemini API error: ${res.statusText}`);
+      let result;
+      try {
+        result = await callGeminiModel(model);
+      } catch (firstErr) {
+        // If 404 (model not found), try stable fallback model
+        if ((firstErr as Error).message.includes('404') && model !== 'gemini-1.5-flash') {
+          console.warn(`[ISutra AI] Model ${model} returned 404. Retrying with gemini-1.5-flash...`);
+          result = await callGeminiModel('gemini-1.5-flash');
+        } else {
+          throw firstErr;
+        }
       }
 
-      const data = (await res.json()) as any;
-      const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (!rawText) {
-        throw new Error('Empty response from Gemini API');
-      }
-
-      const parsed: StructuredRequirements = JSON.parse(rawText);
       return {
-        requirements: parsed,
+        requirements: result.parsed,
         provider: 'gemini',
-        modelUsed: model,
+        modelUsed: result.usedModel,
         isConfigured: true,
         demo: false,
       };
