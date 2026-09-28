@@ -10,6 +10,7 @@ import { VERIFIED_BIS_STANDARDS } from '../database/verifiedStandards';
 import { analyzeRequirementGaps } from '../services/requirementGapAnalyzer';
 import { compareStandards } from '../services/standardsComparator';
 import { generateProcurementReportData, generatePrintableHtmlReport } from '../services/procurementReportService';
+import { saveRecommendations } from '../repositories/recommendationRepository';
 
 export async function getRecommendations(
   req: Request,
@@ -103,6 +104,11 @@ export async function getAnalysisRecommendations(
       VERIFIED_BIS_STANDARDS,
       options
     );
+
+    // Asynchronously persist recommendations to MongoDB repository
+    saveRecommendations(id, result.recommendations).catch((err) => {
+      console.warn('[RecommendationsController] Error saving recommendations to repository:', err?.message);
+    });
 
     res.json({
       success: true,

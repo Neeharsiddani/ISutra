@@ -192,7 +192,7 @@ node backend/test_differentiation.mjs
 | **Backend** | Node.js, Express, TypeScript (compiles cleanly via `tsc`) |
 | **AI / NLP** | Modular AI client supporting Google Gemini, OpenAI, and built-in offline regex NLP engine |
 | **Document Ingestion** | `pdf-parse`, `mammoth` (DOCX), stream signature validation, optional OCR interface |
-| **Persistence** | In-memory operational store + Supabase PostgreSQL schema |
+| **Persistence** | MongoDB with Mongoose (with in-memory & verified dataset cold-start fallback) |
 
 ---
 
@@ -222,8 +222,25 @@ node backend/test_differentiation.mjs
 ### Prerequisites
 - Node.js v18+ (tested on Node.js v24.21.0)
 - npm v9+
+- MongoDB (local or MongoDB Atlas connection string; application automatically provides a verified reference fallback if unconfigured)
 
-### 1. Start the Backend API
+### 1. Database Configuration & Seeding
+Configure your environment in `backend/.env` (see `.env.example`):
+```bash
+# Example local MongoDB
+MONGODB_URI=mongodb://127.0.0.1:27017/isutra
+
+# Example production / Atlas MongoDB
+# MONGODB_URI=mongodb+srv://<username>:<password>@cluster0.abcde.mongodb.net/isutra?retryWrites=true&w=majority
+```
+
+To seed the 40 verified BIS reference standards into MongoDB:
+```bash
+npm --prefix backend run seed:standards
+```
+*(The seed process is strictly idempotent: executing multiple times preserves exactly 40 records with 0 duplicate records).*
+
+### 2. Start the Backend API
 ```bash
 cd backend
 npm install
@@ -231,7 +248,7 @@ npm run dev
 ```
 Backend starts at `http://localhost:3001` with API routes under `/api`.
 
-### 2. Start the Frontend Workspace
+### 3. Start the Frontend Workspace
 ```bash
 cd frontend
 npm install
@@ -239,7 +256,7 @@ npm run dev
 ```
 Frontend development server starts at `http://localhost:5173`.
 
-### 3. Build Verification
+### 4. Build Verification
 ```bash
 # Build backend
 npm --prefix backend run build

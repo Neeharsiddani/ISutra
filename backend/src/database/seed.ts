@@ -1,55 +1,28 @@
 // ============================================================
-// ISutra: Phase 3 — Database Seed & Verification Script
+// ISutra — Database Seed & Verification Script
+// Seeds 40 verified BIS reference records into MongoDB
 // ============================================================
 
-import { getSupabaseClient } from './supabase';
+import { seedVerifiedStandards } from './seedMongo';
+import { disconnectFromDatabase } from '../config/database';
 import { VERIFIED_BIS_STANDARDS } from './verifiedStandards';
 
 export async function seedStandards() {
-  console.log('📦 Validating Phase 3 Verified BIS Dataset...');
-  console.log(`Total verified records: ${VERIFIED_BIS_STANDARDS.length}`);
-
-  // 1. Verify exact 40 standards count
-  if (VERIFIED_BIS_STANDARDS.length !== 40) {
-    throw new Error(`Expected exactly 40 verified standards, found ${VERIFIED_BIS_STANDARDS.length}`);
-  }
-
-  // 2. Verify all records have mandatory fields
-  for (const std of VERIFIED_BIS_STANDARDS) {
-    if (!std.id || !std.standard_number || !std.title || !std.source_url) {
-      throw new Error(`Invalid record integrity for: ${std.standard_number}`);
-    }
-  }
-
-  // 3. If Supabase is configured, upsert into database
-  const supabase = getSupabaseClient();
-  if (supabase) {
-    console.log('🔄 Seeding verified standards into Supabase...');
-    const { data, error } = await supabase
-      .from('standards')
-      .upsert(VERIFIED_BIS_STANDARDS, { onConflict: 'standard_number' });
-
-    if (error) {
-      console.warn('⚠️  Supabase seed failed (falling back to in-memory verified dataset):', error.message);
-    } else {
-      console.log('✅ Supabase seeded successfully with verified standards!');
-    }
-  } else {
-    console.log('ℹ️  Supabase not configured. In-memory verified BIS dataset active and verified (40 records).');
-  }
-
-  return { count: VERIFIED_BIS_STANDARDS.length, success: true };
+  const result = await seedVerifiedStandards();
+  return { count: result.finalCollectionCount || VERIFIED_BIS_STANDARDS.length, success: result.success };
 }
 
 // Run directly if invoked from command line
-if (require.main === module) {
+if (require.main === module || process.argv[1]?.includes('seed')) {
   seedStandards()
-    .then((res) => {
-      console.log(`🎉 Seeding completed successfully. Verified standards ready: ${res.count}`);
+    .then(async (res) => {
+      console.log(`🎉 Seeding completed. Verified standards count: ${res.count}`);
+      await disconnectFromDatabase();
       process.exit(0);
     })
-    .catch((err) => {
+    .catch(async (err) => {
       console.error('❌ Seeding error:', err);
+      await disconnectFromDatabase();
       process.exit(1);
     });
 }

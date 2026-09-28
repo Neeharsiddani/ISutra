@@ -44,8 +44,7 @@ In the **Environment Variables** section on Vercel, you can add:
 | `AI_PROVIDER` | AI provider for extraction (`gemini` or `openai`) | `gemini` |
 | `AI_API_KEY` | Google Gemini API Key or OpenAI API Key | Uses offline deterministic NLP rule extractor if omitted |
 | `AI_MODEL` | Model name (e.g. `gemini-1.5-flash`) | `gemini-1.5-flash` |
-| `SUPABASE_URL` | Supabase Project URL | Uses memory fallback if omitted |
-| `SUPABASE_ANON_KEY` | Supabase Anon Public Key | Uses memory fallback if omitted |
+| `MONGODB_URI` | MongoDB connection URI (Atlas or direct connection) | Uses in-memory & verified reference fallback if omitted |
 | `NODE_ENV` | Environment mode | `production` |
 
 > [!NOTE]
