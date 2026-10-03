@@ -18,6 +18,21 @@ Procurement teams often rely on manual catalog lookups or copy-pasting from outd
 
 ---
 
+## 📚 Documentation Suite
+
+For detailed technical and user documentation, refer to the **[docs/](file:///c:/Users/Eshwar%20Ajay%20Sai/Documents/ISutra/ISutra/docs/README.md)** directory:
+
+| Documentation Guide | Target Audience & Focus |
+| :--- | :--- |
+| **[Master Architecture & Technical Specification](file:///c:/Users/Eshwar%20Ajay%20Sai/Documents/ISutra/ISutra/docs/ARCHITECTURE_AND_SPECIFICATION.md)** | 5-layer architecture, AI Perception vs. Deterministic Decision Engine, 6-signal scoring formula, specificity tiers, contradiction cuts, and database design. |
+| **[REST API Reference & Integration Guide](file:///c:/Users/Eshwar%20Ajay%20Sai/Documents/ISutra/ISutra/docs/API_REFERENCE.md)** | Complete HTTP endpoints, request/response schemas, document upload protocols, error handling, and e-Procurement integration patterns. |
+| **[Procurement Officer & User Workflow Guide](file:///c:/Users/Eshwar%20Ajay%20Sai/Documents/ISutra/ISutra/docs/USER_WORKFLOW_GUIDE.md)** | Step-by-step manual: multi-modal tender input, Human-in-the-Loop review, interpreting 6-factor scores, 4-state gap analysis, and printable audit reports. |
+| **[Developer & Operations Runbook](file:///c:/Users/Eshwar%20Ajay%20Sai/Documents/ISutra/ISutra/docs/DEVELOPER_OPERATIONS_GUIDE.md)** | Developer environment setup, database seeding, running 280+ automated tests, catalog ingestion validation, and Vercel/Docker deployment. |
+| **[Regulatory & Standards Compliance Guide](file:///c:/Users/Eshwar%20Ajay%20Sai/Documents/ISutra/ISutra/docs/REGULATORY_COMPLIANCE_GUIDE.md)** | Statutory alignment with GFR 2017 Rule 144(i), BIS Act 2016, Quality Control Orders (QCOs), MeitY CRS scheme, and anti-hallucination guardrails. |
+| **[Master Documentation Index](file:///c:/Users/Eshwar%20Ajay%20Sai/Documents/ISutra/ISutra/docs/README.md)** | Central index and navigation hub across all guides. |
+
+---
+
 ## 🏛 CURRENT IMPLEMENTATION STATUS
 
 Below is the verified implementation status for capabilities required by SIH problem statement SIH26108:
